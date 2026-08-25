@@ -54,6 +54,11 @@ func (m *Manager) GetToken(ctx context.Context) (string, string, error) {
 		return "", "", fmt.Errorf("failed to get settings: %w", err)
 	}
 
+	authMode := settings.AuthMode
+	if authMode == "" {
+		authMode = "gh_cli"
+	}
+
 	// 1. If user explicitly configured PAT mode and provided a PAT token
 	if settings.AuthMode == "pat" && strings.TrimSpace(settings.PATToken) != "" {
 		return strings.TrimSpace(settings.PATToken), "pat", nil
@@ -70,7 +75,7 @@ func (m *Manager) GetToken(ctx context.Context) (string, string, error) {
 		return strings.TrimSpace(settings.PATToken), "pat", nil
 	}
 
-	return "", "", errors.New("no GitHub authentication found (gh CLI not authenticated and no PAT provided)")
+	return "", authMode, errors.New("no GitHub authentication found (gh CLI not authenticated and no PAT provided)")
 }
 
 func (m *Manager) getGhCliToken(ctx context.Context) (string, error) {
