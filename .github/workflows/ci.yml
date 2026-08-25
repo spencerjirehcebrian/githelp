@@ -1,0 +1,89 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-and-lint:
+    name: Test & Lint (Standard Toolchain)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.x'
+          cache-dependency-path: backend/go.sum
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          make deps
+
+      - name: Install Playwright browsers & dependencies
+        run: |
+          npx --prefix frontend playwright install --with-deps chromium
+
+      - name: Run code linters
+        run: |
+          make lint
+
+      - name: Run test suite (Backend, Frontend, E2E)
+        run: |
+          make test
+
+  bazel-check:
+    name: Bazel Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.x'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install frontend dependencies
+        run: |
+          cd frontend && npm install
+
+      - name: Install Playwright browsers & dependencies
+        run: |
+          npx --prefix frontend playwright install --with-deps chromium
+
+      - name: Mount Bazel Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/bazel
+            ~/.cache/bazelisk
+          key: bazel-${{ runner.os }}-${{ hashFiles('MODULE.bazel', 'backend/go.sum', 'frontend/package-lock.json') }}
+          restore-keys: |
+            bazel-${{ runner.os }}-
+
+      - name: Run Bazel Build
+        run: |
+          ./bazel build //...
+
+      - name: Run Bazel Test Suite
+        run: |
+          ./bazel test //... --test_output=errors
