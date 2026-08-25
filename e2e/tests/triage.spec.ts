@@ -39,12 +39,12 @@ test.describe('GitHelp Triage & Launcher E2E Workflows', () => {
 
     // Navigate down with 'j'
     await page.keyboard.press('j');
-    const secondCard = page.getByText('Fix memory leak in worker').locator('xpath=ancestor::div[contains(@class, "rounded-xl")]');
+    const secondCard = page.locator('div.group.rounded-xl').filter({ hasText: 'Fix memory leak in worker' });
     await expect(secondCard).toHaveClass(/ring-github-accent/);
 
     // Navigate back up with 'k'
     await page.keyboard.press('k');
-    const firstCard = page.getByText('Add biometric login support').locator('xpath=ancestor::div[contains(@class, "rounded-xl")]');
+    const firstCard = page.locator('div.group.rounded-xl').filter({ hasText: 'Add biometric login support' });
     await expect(firstCard).toHaveClass(/ring-github-accent/);
   });
 
