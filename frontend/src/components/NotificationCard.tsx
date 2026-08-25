@@ -216,6 +216,8 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
     <div
       ref={cardRef}
       onClick={onSelect}
+      data-testid="notification-card"
+      data-selected={isSelected ? 'true' : 'false'}
       className={cn(
         'group relative flex items-start justify-between gap-4 p-3.5 rounded-xl border transition-all cursor-pointer select-none',
         isSelected

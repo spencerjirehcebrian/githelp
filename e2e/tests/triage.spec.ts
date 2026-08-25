@@ -34,18 +34,20 @@ test.describe('GitHelp Triage & Launcher E2E Workflows', () => {
   test('2. supports keyboard navigation (j/k) and active highlighting', async ({ page }) => {
     await expect(page.getByText('Add biometric login support')).toBeVisible();
 
-    // Verify initial active highlight on first card
-    const firstCard = page.locator('div.group.rounded-xl').filter({ hasText: 'Add biometric login support' });
-    await expect(firstCard).toHaveClass(/ring-github-accent/);
+    // Verify initial active selection on first card
+    const firstCard = page.locator('[data-testid="notification-card"]').filter({ hasText: 'Add biometric login support' });
+    await expect(firstCard).toHaveAttribute('data-selected', 'true');
 
     // Navigate down with 'j'
     await page.keyboard.press('j');
-    const secondCard = page.locator('div.group.rounded-xl').filter({ hasText: 'Fix memory leak in worker' });
-    await expect(secondCard).toHaveClass(/ring-github-accent/);
+    const secondCard = page.locator('[data-testid="notification-card"]').filter({ hasText: 'Fix memory leak in worker' });
+    await expect(secondCard).toHaveAttribute('data-selected', 'true');
+    await expect(firstCard).toHaveAttribute('data-selected', 'false');
 
     // Navigate back up with 'k'
     await page.keyboard.press('k');
-    await expect(firstCard).toHaveClass(/ring-github-accent/);
+    await expect(firstCard).toHaveAttribute('data-selected', 'true');
+    await expect(secondCard).toHaveAttribute('data-selected', 'false');
   });
 
   test('3. search filtering with / shortcut', async ({ page }) => {
