@@ -24,8 +24,7 @@ GitHelp categorizes GitHub notifications into actionable buckets (**Action Requi
 
 ### Build and Run Standalone
 ```bash
-make build
-./bin/githelp
+make run
 ```
 Open **http://127.0.0.1:8080**.
 
@@ -60,6 +59,7 @@ make dev
 
 ### Make
 ```bash
+make run            # Build and launch standalone binary
 make build          # Build standalone binary (./bin/githelp)
 make test           # Run backend, frontend, and Playwright E2E tests
 make lint           # Go vet & TypeScript check

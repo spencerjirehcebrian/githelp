@@ -2,7 +2,7 @@ SHELL := /bin/bash
 GO := $(shell which go 2>/dev/null || echo "/opt/homebrew/bin/go")
 NPM := npm
 
-.PHONY: all dev build test test-backend test-frontend test-e2e lint clean bazel-build bazel-test bazel-gazelle bazel-clean
+.PHONY: all dev run build test test-backend test-frontend test-e2e lint clean bazel-build bazel-test bazel-gazelle bazel-clean
 
 all: build
 
@@ -21,6 +21,11 @@ build:
 	@mkdir -p bin
 	@cd backend && $(GO) build -ldflags="-s -w" -o ../bin/githelp ./cmd/server
 	@echo "Standalone binary ready at ./bin/githelp"
+
+# Build and run standalone binary
+run: build
+	@echo "Starting GitHelp standalone binary on http://127.0.0.1:8080..."
+	@./bin/githelp
 
 # Run dev mode (backend + frontend dev servers)
 dev:
