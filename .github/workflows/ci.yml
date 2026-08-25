@@ -34,7 +34,7 @@ jobs:
 
       - name: Install Playwright browsers & dependencies
         run: |
-          npx --prefix frontend playwright install --with-deps chromium
+          cd frontend && npx playwright install --with-deps chromium
 
       - name: Run code linters
         run: |
@@ -62,13 +62,13 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install frontend dependencies
+      - name: Install dependencies
         run: |
-          cd frontend && npm install
+          make deps
 
       - name: Install Playwright browsers & dependencies
         run: |
-          npx --prefix frontend playwright install --with-deps chromium
+          cd frontend && npx playwright install --with-deps chromium
 
       - name: Mount Bazel Cache
         uses: actions/cache@v4

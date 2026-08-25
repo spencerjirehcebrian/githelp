@@ -2,7 +2,21 @@
 
 Local-first, keyboard-driven GitHub notification triage and launch hub.
 
+![GitHelp Dashboard](docs/screenshots/dashboard.png)
+
 GitHelp categorizes GitHub notifications into actionable buckets (**Action Required**, **Waiting on Others**, **Mentions**, **Assigned**, **Participating**, **Snoozed**, **Done**) and ships as a single self-contained binary with embedded SQLite and a React frontend.
+
+---
+
+## Features & Interface
+
+- **Linear-Style Triage**: Automatically partitions review requests, mentions, failing CI checks, and authored PRs.
+- **Keyboard-First Launcher**: Fast single-key actions (`j`/`k` navigation, `e` archive, `z` snooze, `c` branch checkout, `/` search).
+- **Zero-Config Auth**: Automatically uses existing `gh` CLI credentials (or configured PAT).
+
+| Snooze Triage | Keyboard Shortcuts |
+| :---: | :---: |
+| ![Snooze Modal](docs/screenshots/snooze-modal.png) | ![Shortcuts Modal](docs/screenshots/shortcuts-modal.png) |
 
 ---
 
@@ -13,7 +27,7 @@ GitHelp categorizes GitHub notifications into actionable buckets (**Action Requi
 make build
 ./bin/githelp
 ```
-Open **http://127.0.0.1:8080**. GitHelp automatically detects your `gh` CLI credentials (or configured PAT).
+Open **http://127.0.0.1:8080**.
 
 ### Development Mode
 ```bash
@@ -70,4 +84,4 @@ make lint           # Go vet & TypeScript check
 
 ## License
 
-MIT
+[MIT](LICENSE)
