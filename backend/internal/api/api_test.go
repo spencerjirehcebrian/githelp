@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -14,7 +15,7 @@ import (
 	"github.com/spencerjireh/githelp/backend/internal/github"
 )
 
-func TestAPIRoutes(t *testing.T) {
+func TestAPIRoutesComprehensive(t *testing.T) {
 	tempDir := t.TempDir()
 	dbPath := filepath.Join(tempDir, "api_test.db")
 	database, err := db.Open(dbPath)
@@ -40,24 +41,42 @@ func TestAPIRoutes(t *testing.T) {
 
 	handler := server.Handler()
 
-	// 1. Test GET /api/status
-	req, _ := http.NewRequest("GET", "/api/status", nil)
+	// 1. Security & CORS Headers Test
+	req, _ := http.NewRequest("OPTIONS", "/api/status", nil)
+	req.Header.Set("Origin", "http://localhost:5173")
 	rr := httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+	if rr.Code != http.StatusOK {
+		t.Errorf("expected 200 for OPTIONS preflight, got %d", rr.Code)
+	}
+	if rr.Header().Get("Access-Control-Allow-Origin") != "http://localhost:5173" {
+		t.Errorf("missing or invalid CORS origin header: %s", rr.Header().Get("Access-Control-Allow-Origin"))
+	}
+	if rr.Header().Get("X-Content-Type-Options") != "nosniff" || rr.Header().Get("X-Frame-Options") != "SAMEORIGIN" {
+		t.Errorf("missing security headers: %+v", rr.Header())
+	}
+
+	// 2. GET /api/status
+	req, _ = http.NewRequest("GET", "/api/status", nil)
+	rr = httptest.NewRecorder()
 	handler.ServeHTTP(rr, req)
 	if rr.Code != http.StatusOK {
 		t.Fatalf("expected 200 OK for /api/status, got %d: %s", rr.Code, rr.Body.String())
 	}
 
-	// 2. Insert dummy notification & triage
+	// 3. Seed notification item
 	now := time.Now().UTC()
 	n := &db.Notification{
 		ID:              "n-100",
 		Repository:      "owner/test-repo",
-		Title:           "Test PR",
+		Title:           "Test PR for API integration",
 		Type:            "PullRequest",
 		Reason:          "review_requested",
 		State:           "open",
 		Author:          "alice",
+		Branch:          "feature/test",
+		Number:          100,
+		Unread:          true,
 		GitHubUpdatedAt: now,
 	}
 	_ = database.UpsertNotification(n)
@@ -65,11 +84,12 @@ func TestAPIRoutes(t *testing.T) {
 		NotificationID: "n-100",
 		Bucket:         "action_required",
 		Status:         "inbox",
+		Pinned:         false,
 		UpdatedAt:      now,
 	})
 
-	// 3. Test GET /api/notifications
-	req, _ = http.NewRequest("GET", "/api/notifications?bucket=action_required", nil)
+	// 4. GET /api/notifications with filtering
+	req, _ = http.NewRequest("GET", "/api/notifications?bucket=action_required&q=API", nil)
 	rr = httptest.NewRecorder()
 	handler.ServeHTTP(rr, req)
 	if rr.Code != http.StatusOK {
@@ -80,29 +100,53 @@ func TestAPIRoutes(t *testing.T) {
 		t.Fatalf("expected 1 notification decoded, got %d (err: %v)", len(notifs), err)
 	}
 
-	// 4. Test PATCH /api/notifications/n-100/state (mark done)
-	payload := []byte(`{"status":"done"}`)
-	req, _ = http.NewRequest("PATCH", "/api/notifications/n-100/state", bytes.NewReader(payload))
+	// 5. PATCH /api/notifications/{id}/state (snooze)
+	snoozeUntil := now.Add(2 * time.Hour).Format(time.RFC3339)
+	pinTrue := true
+	unreadFalse := false
+	note := "High priority review"
+	statePayload, _ := json.Marshal(map[string]interface{}{
+		"status":        "snoozed",
+		"snoozed_until": snoozeUntil,
+		"pinned":        pinTrue,
+		"notes":         note,
+		"unread":        unreadFalse,
+	})
+
+	req, _ = http.NewRequest("PATCH", "/api/notifications/n-100/state", bytes.NewReader(statePayload))
 	rr = httptest.NewRecorder()
 	handler.ServeHTTP(rr, req)
 	if rr.Code != http.StatusOK {
 		t.Fatalf("expected 200 OK for PATCH state, got %d: %s", rr.Code, rr.Body.String())
 	}
 
-	// Verify status is now done
-	req, _ = http.NewRequest("GET", "/api/notifications?status=done", nil)
+	// Verify updated state in database
+	snoozedList, _ := database.ListEnrichedNotifications("", "", "snoozed", "")
+	if len(snoozedList) != 1 || !snoozedList[0].Triage.Pinned || snoozedList[0].Triage.Notes != note {
+		t.Fatalf("expected 1 snoozed and pinned item, got: %+v", snoozedList)
+	}
+
+	// 6. POST /api/notifications/bulk
+	bulkPayload, _ := json.Marshal(map[string]interface{}{
+		"ids":    []string{"n-100"},
+		"status": "done",
+	})
+	req, _ = http.NewRequest("POST", "/api/notifications/bulk", bytes.NewReader(bulkPayload))
 	rr = httptest.NewRecorder()
 	handler.ServeHTTP(rr, req)
 	if rr.Code != http.StatusOK {
-		t.Fatalf("expected 200 OK for /api/notifications?status=done, got %d", rr.Code)
-	}
-	notifs = nil
-	_ = json.NewDecoder(rr.Body).Decode(&notifs)
-	if len(notifs) != 1 || notifs[0].Triage.Status != "done" {
-		t.Fatalf("expected 1 done notification, got %d", len(notifs))
+		t.Fatalf("expected 200 for bulk update, got %d", rr.Code)
 	}
 
-	// 5. Test Settings GET and PUT
+	// 7. Malformed JSON payload tests
+	badReq, _ := http.NewRequest("PATCH", "/api/notifications/n-100/state", strings.NewReader("invalid-json"))
+	rr = httptest.NewRecorder()
+	handler.ServeHTTP(rr, badReq)
+	if rr.Code != http.StatusBadRequest {
+		t.Errorf("expected 400 Bad Request for malformed JSON, got %d", rr.Code)
+	}
+
+	// 8. Settings GET and PUT
 	settingsReq, _ := http.NewRequest("GET", "/api/settings", nil)
 	rr = httptest.NewRecorder()
 	handler.ServeHTTP(rr, settingsReq)
@@ -110,7 +154,14 @@ func TestAPIRoutes(t *testing.T) {
 		t.Fatalf("expected 200 for /api/settings, got %d", rr.Code)
 	}
 
-	updatePayload := []byte(`{"theme":"light","poll_interval_sec":120,"enable_browser_notifications":true,"enable_sound":true,"ignored_repos":["ignored/repo"]}`)
+	updatePayload, _ := json.Marshal(db.AppSettings{
+		AuthMode:                   "gh_cli",
+		PollIntervalSec:            45,
+		EnableBrowserNotifications: true,
+		EnableSound:                true,
+		IgnoredRepos:               []string{"noisy/repo"},
+		Theme:                      "light",
+	})
 	putReq, _ := http.NewRequest("PUT", "/api/settings", bytes.NewReader(updatePayload))
 	rr = httptest.NewRecorder()
 	handler.ServeHTTP(rr, putReq)
@@ -118,7 +169,7 @@ func TestAPIRoutes(t *testing.T) {
 		t.Fatalf("expected 200 for PUT /api/settings, got %d: %s", rr.Code, rr.Body.String())
 	}
 
-	// 6. Test GET /api/counts and /api/repos
+	// 9. Repos and Counts endpoints
 	countsReq, _ := http.NewRequest("GET", "/api/counts", nil)
 	rr = httptest.NewRecorder()
 	handler.ServeHTTP(rr, countsReq)

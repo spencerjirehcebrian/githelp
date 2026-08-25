@@ -38,7 +38,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     }).catch(console.error);
     setAuthError(null);
     setAuthSuccess(null);
-  }, [isOpen]);
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen || !settings) return null;
 

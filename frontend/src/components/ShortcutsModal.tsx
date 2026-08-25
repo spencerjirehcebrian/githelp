@@ -7,6 +7,17 @@ interface ShortcutsModalProps {
 }
 
 export const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose }) => {
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const shortcutGroups = [
@@ -46,7 +57,7 @@ export const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose 
         <div className="flex items-center justify-between px-6 py-4 border-b border-github-border bg-github-dark">
           <div className="flex items-center gap-2 text-white font-medium">
             <Keyboard className="w-5 h-5 text-github-accent" />
-            <span>Keyboard Shortcuts</span>
+            <h2 className="text-sm font-semibold text-white">Keyboard Shortcuts</h2>
           </div>
           <button
             onClick={onClose}

@@ -2,7 +2,7 @@ SHELL := /bin/bash
 GO := $(shell which go 2>/dev/null || echo "/opt/homebrew/bin/go")
 NPM := npm
 
-.PHONY: all dev build test lint clean frontend backend
+.PHONY: all dev build test test-backend test-frontend test-e2e lint clean frontend backend
 
 all: build
 
@@ -30,12 +30,23 @@ dev:
 	(cd frontend && $(NPM) run dev) & \
 	wait
 
-# Run backend unit tests and frontend typechecks
-test:
-	@echo "Running backend tests..."
-	@cd backend && $(GO) test -v ./...
-	@echo "Running frontend typecheck..."
-	@cd frontend && $(NPM) run lint
+# Run backend unit and integration tests with race detector
+test-backend:
+	@echo "Running backend unit and integration tests..."
+	@cd backend && $(GO) test -v -race ./...
+
+# Run frontend unit and component tests via Vitest
+test-frontend:
+	@echo "Running frontend unit and component tests..."
+	@cd frontend && ./node_modules/.bin/vitest run
+
+# Run end-to-end browser tests via Playwright
+test-e2e: build
+	@echo "Running Playwright E2E browser tests..."
+	@NODE_PATH=$(CURDIR)/frontend/node_modules ./frontend/node_modules/.bin/playwright test --config=e2e/playwright.config.ts
+
+# Run all test suites (unit, integration, E2E)
+test: test-backend test-frontend test-e2e
 
 # Lint codebase
 lint:
@@ -44,7 +55,7 @@ lint:
 	@echo "Linting frontend code..."
 	@cd frontend && $(NPM) run lint
 
-# Clean build artifacts
+# Clean build artifacts and temporary test databases
 clean:
-	@rm -rf bin/ backend/bin/ frontend/dist/ backend/cmd/server/dist/assets/ *.db *.db-wal *.db-shm
-	@echo "Cleaned build artifacts."
+	@rm -rf bin/ backend/bin/ frontend/dist/ backend/cmd/server/dist/assets/ *.db *.db-wal *.db-shm /tmp/e2e_githelp.db* /tmp/live_test.db* test-results/ playwright-report/
+	@echo "Cleaned build and test artifacts."

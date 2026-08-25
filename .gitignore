@@ -24,3 +24,6 @@ yarn-error.log*
 .idea/
 *.swp
 *.swo
+
+test-results/
+playwright-report/

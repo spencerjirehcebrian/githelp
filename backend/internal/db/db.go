@@ -457,10 +457,30 @@ func (d *DB) ListEnrichedNotifications(bucket, repo, status, query string) ([]*E
 
 	sqlQuery := fmt.Sprintf(`
 		SELECT
-			n.id, n.github_id, n.repository, n.title, n.type, n.reason, n.url, n.html_url,
-			n.state, n.ci_status, n.author, n.author_avatar, n.branch, n.number, n.unread,
-			n.github_updated_at, n.last_read_at, n.raw_data,
-			t.bucket, t.status, t.snoozed_until, t.pinned, t.notes, t.updated_at
+			n.id,
+			COALESCE(n.github_id, ''),
+			n.repository,
+			n.title,
+			n.type,
+			n.reason,
+			COALESCE(n.url, ''),
+			COALESCE(n.html_url, ''),
+			COALESCE(n.state, ''),
+			COALESCE(n.ci_status, ''),
+			COALESCE(n.author, ''),
+			COALESCE(n.author_avatar, ''),
+			COALESCE(n.branch, ''),
+			COALESCE(n.number, 0),
+			COALESCE(n.unread, 1),
+			COALESCE(n.github_updated_at, ''),
+			n.last_read_at,
+			COALESCE(n.raw_data, ''),
+			COALESCE(t.bucket, 'participating'),
+			COALESCE(t.status, 'inbox'),
+			t.snoozed_until,
+			COALESCE(t.pinned, 0),
+			COALESCE(t.notes, ''),
+			t.updated_at
 		FROM notifications n
 		LEFT JOIN triage t ON n.id = t.notification_id
 		%s

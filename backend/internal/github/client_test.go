@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
+	"sync"
 	"testing"
 	"time"
 
@@ -13,14 +14,17 @@ import (
 )
 
 type mockBroadcaster struct {
+	mu     sync.Mutex
 	events []string
 }
 
 func (m *mockBroadcaster) Broadcast(event string, data interface{}) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.events = append(m.events, event)
 }
 
-func TestClientAndPoller(t *testing.T) {
+func TestClientAndPollerComprehensive(t *testing.T) {
 	tempDir := t.TempDir()
 	dbPath := filepath.Join(tempDir, "gh_test.db")
 	database, err := db.Open(dbPath)
@@ -59,6 +63,27 @@ func TestClientAndPoller(t *testing.T) {
 							"avatar_url": "https://avatar.test/org"
 						}
 					}
+				},
+				{
+					"id": "1002",
+					"unread": false,
+					"reason": "mention",
+					"updated_at": "2026-08-25T09:30:00Z",
+					"subject": {
+						"title": "Issue with ignored repo",
+						"url": "` + "http://" + r.Host + `/repos/ignored/repo/issues/100",
+						"type": "Issue"
+					},
+					"repository": {
+						"id": 2,
+						"name": "repo",
+						"full_name": "ignored/repo",
+						"html_url": "https://github.com/ignored/repo",
+						"owner": {
+							"login": "ignored",
+							"avatar_url": "https://avatar.test/ignored"
+						}
+					}
 				}
 			]`))
 			return
@@ -93,10 +118,11 @@ func TestClientAndPoller(t *testing.T) {
 	authMgr.SetBaseURL(ts.URL)
 	authMgr.SetHTTPClient(ts.Client())
 
-	// Save PAT
+	// Save PAT and set ignored repos
 	settings, _ := database.GetSettings()
 	settings.AuthMode = "pat"
 	settings.PATToken = "valid-pat"
+	settings.IgnoredRepos = []string{"ignored/repo"}
 	_ = database.SaveSettings(settings)
 
 	client := NewClient(authMgr, database)
@@ -111,8 +137,9 @@ func TestClientAndPoller(t *testing.T) {
 	if err != nil {
 		t.Fatalf("client.Sync failed: %v", err)
 	}
+	// Only 1 item should sync because ignored/repo is ignored
 	if count != 1 {
-		t.Errorf("expected 1 synced notification, got %d", count)
+		t.Errorf("expected 1 synced notification (1 ignored), got %d", count)
 	}
 
 	items, err := database.ListEnrichedNotifications("", "", "", "")
@@ -122,11 +149,11 @@ func TestClientAndPoller(t *testing.T) {
 	if len(items) != 1 {
 		t.Fatalf("expected 1 enriched item, got %d", len(items))
 	}
-	if items[0].Branch != "feature-x" || items[0].Number != 42 || items[0].Triage.Bucket != "action_required" {
+	if items[0].Branch != "feature-x" || items[0].Number != 42 || items[0].CIStatus != "success" {
 		t.Errorf("unexpected enriched item: %+v", items[0])
 	}
 
-	// Trigger poller cycle
+	// Trigger poller background sync
 	poller.TriggerSync()
 	time.Sleep(50 * time.Millisecond)
 	poller.Stop()
