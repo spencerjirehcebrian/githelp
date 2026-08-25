@@ -21,10 +21,11 @@ genrule(
     srcs = [":src_files"],
     outs = ["dist_output.tar"],
     cmd = """
+        OUT_PATH="$$(pwd)/$@"
         export HOME=$$(mktemp -d)
         cd frontend
         npm run build >/dev/null 2>&1
-        tar -cf ../$@ -C ../backend/cmd/server/dist .
+        tar -cf "$$OUT_PATH" -C ../backend/cmd/server/dist .
     """,
     local = 1,
 )
