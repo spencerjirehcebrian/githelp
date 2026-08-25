@@ -25,6 +25,9 @@ jobs:
         with:
           node-version: 22
 
+      - name: Upgrade npm
+        run: npm install -g npm@latest
+
       - name: Install backend dependencies
         run: |
           cd backend && go mod download
@@ -32,7 +35,7 @@ jobs:
       - name: Install frontend dependencies
         working-directory: frontend
         run: |
-          npm ci --no-audit --no-fund --omit=optional
+          npm ci --no-audit --no-fund
 
       - name: Install Playwright browsers & dependencies
         working-directory: frontend
@@ -65,6 +68,9 @@ jobs:
         with:
           node-version: 22
 
+      - name: Upgrade npm
+        run: npm install -g npm@latest
+
       - name: Install backend dependencies
         run: |
           cd backend && go mod download
@@ -72,7 +78,7 @@ jobs:
       - name: Install frontend dependencies
         working-directory: frontend
         run: |
-          npm ci --no-audit --no-fund --omit=optional
+          npm ci --no-audit --no-fund
 
       - name: Install Playwright browsers & dependencies
         working-directory: frontend
