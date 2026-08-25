@@ -9,11 +9,7 @@ filegroup(
 go_library(
     name = "server_lib",
     srcs = ["main.go"],
-    embedsrcs = [
-        "dist/assets/index-C0xZf2RS.css",
-        "dist/assets/index-D12ISYQh.js",
-        "dist/index.html",
-    ],
+    embedsrcs = glob(["dist/**"]),
     importpath = "github.com/spencerjireh/githelp/backend/cmd/server",
     visibility = ["//visibility:private"],
     deps = [
