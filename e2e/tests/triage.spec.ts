@@ -34,8 +34,9 @@ test.describe('GitHelp Triage & Launcher E2E Workflows', () => {
   test('2. supports keyboard navigation (j/k) and active highlighting', async ({ page }) => {
     await expect(page.getByText('Add biometric login support')).toBeVisible();
 
-    // Select first card to ensure focus
-    await page.getByText('Add biometric login support').click();
+    // Verify initial active highlight on first card
+    const firstCard = page.locator('div.group.rounded-xl').filter({ hasText: 'Add biometric login support' });
+    await expect(firstCard).toHaveClass(/ring-github-accent/);
 
     // Navigate down with 'j'
     await page.keyboard.press('j');
@@ -44,7 +45,6 @@ test.describe('GitHelp Triage & Launcher E2E Workflows', () => {
 
     // Navigate back up with 'k'
     await page.keyboard.press('k');
-    const firstCard = page.locator('div.group.rounded-xl').filter({ hasText: 'Add biometric login support' });
     await expect(firstCard).toHaveClass(/ring-github-accent/);
   });
 
