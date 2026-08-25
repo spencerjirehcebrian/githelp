@@ -1,0 +1,18 @@
+# Enable Bzlmod (modern Bazel module system)
+common --enable_bzlmod
+
+# Environment & PATH
+build --action_env=PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+test --action_env=PATH=/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin
+
+# Build options
+build --color=yes
+build --curses=yes
+build --show_timestamps
+
+# Test options
+test --test_output=errors
+test --test_summary=short
+
+# macOS Specific
+build:macos --apple_platform_type=macos

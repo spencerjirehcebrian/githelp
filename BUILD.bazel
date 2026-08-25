@@ -1,0 +1,20 @@
+load("@gazelle//:def.bzl", "gazelle")
+
+# gazelle:prefix github.com/spencerjireh/githelp
+# gazelle:proto disable
+gazelle(name = "gazelle")
+
+gazelle(
+    name = "gazelle-update-repos",
+    args = [
+        "-from_file=backend/go.mod",
+        "-to_macro=deps.bzl%go_dependencies",
+        "-prune",
+    ],
+    command = "update-repos",
+)
+
+alias(
+    name = "githelp",
+    actual = "//backend/cmd/server:githelp",
+)

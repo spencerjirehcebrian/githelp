@@ -2,7 +2,7 @@ SHELL := /bin/bash
 GO := $(shell which go 2>/dev/null || echo "/opt/homebrew/bin/go")
 NPM := npm
 
-.PHONY: all dev build test test-backend test-frontend test-e2e lint clean frontend backend
+.PHONY: all dev build test test-backend test-frontend test-e2e lint clean bazel-build bazel-test bazel-gazelle bazel-clean
 
 all: build
 
@@ -58,4 +58,18 @@ lint:
 # Clean build artifacts and temporary test databases
 clean:
 	@rm -rf bin/ backend/bin/ frontend/dist/ backend/cmd/server/dist/assets/ *.db *.db-wal *.db-shm /tmp/e2e_githelp.db* /tmp/live_test.db* test-results/ playwright-report/
+
+# Bazel monorepo targets
+bazel-build:
+	@./bazel build //...
+
+bazel-test:
+	@./bazel test //...
+
+bazel-gazelle:
+	@./bazel run //:gazelle
+
+bazel-clean:
+	@./bazel clean --expunge
+
 	@echo "Cleaned build and test artifacts."

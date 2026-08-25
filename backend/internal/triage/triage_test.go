@@ -16,7 +16,6 @@ func TestCategorizeComprehensive(t *testing.T) {
 		notif    *db.Notification
 		expected string
 	}{
-		// 1. Review requested cases
 		{
 			name: "Review requested on open PR",
 			user: currentUser,
@@ -39,8 +38,6 @@ func TestCategorizeComprehensive(t *testing.T) {
 			},
 			expected: BucketActionRequired,
 		},
-
-		// 2. Direct and Team Mentions
 		{
 			name: "Direct mention in issue",
 			user: currentUser,
@@ -63,8 +60,6 @@ func TestCategorizeComprehensive(t *testing.T) {
 			},
 			expected: BucketActionRequired,
 		},
-
-		// 3. CI Failures and Activity
 		{
 			name: "CI activity reason with failure",
 			user: currentUser,
@@ -86,8 +81,6 @@ func TestCategorizeComprehensive(t *testing.T) {
 			},
 			expected: BucketActionRequired,
 		},
-
-		// 4. PRs Authored by Current User
 		{
 			name: "Author PR open with changes requested",
 			user: currentUser,
@@ -137,8 +130,6 @@ func TestCategorizeComprehensive(t *testing.T) {
 			},
 			expected: BucketWaitingOnOthers,
 		},
-
-		// 5. Assigned items
 		{
 			name: "Assigned open issue",
 			user: currentUser,
@@ -161,8 +152,6 @@ func TestCategorizeComprehensive(t *testing.T) {
 			},
 			expected: BucketAssigned,
 		},
-
-		// 6. Participating / Subscribed / Other
 		{
 			name: "Comment on subscribed issue",
 			user: currentUser,
@@ -215,13 +204,11 @@ func TestComputeTriageStateTransitions(t *testing.T) {
 		Type:   "PullRequest",
 	}
 
-	// 1. Initial creation
 	initial := ComputeTriageState(n, "user", nil)
 	if initial.Bucket != BucketActionRequired || initial.Status != StatusInbox || initial.Pinned {
 		t.Errorf("unexpected initial state: %+v", initial)
 	}
 
-	// 2. Preserves user-assigned status (done, snoozed, pinned, notes)
 	snoozeTime := time.Now().Add(2 * time.Hour)
 	existing := &db.TriageState{
 		NotificationID: "notif-999",

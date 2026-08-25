@@ -1,0 +1,18 @@
+load("@rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "db",
+    srcs = [
+        "db.go",
+        "models.go",
+    ],
+    importpath = "github.com/spencerjireh/githelp/backend/internal/db",
+    visibility = ["//visibility:public"],
+    deps = ["@org_modernc_sqlite//:sqlite"],
+)
+
+go_test(
+    name = "db_test",
+    srcs = ["db_test.go"],
+    embed = [":db"],
+)

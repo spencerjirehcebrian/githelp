@@ -1,0 +1,21 @@
+package(default_visibility = ["//visibility:public"])
+
+filegroup(
+    name = "e2e_files",
+    srcs = glob([
+        "tests/**/*",
+        "playwright.config.ts",
+        "seed.sh",
+    ]),
+)
+
+# End-to-End browser test target using compiled GitHelp binary
+sh_test(
+    name = "test",
+    srcs = ["e2e_runner.sh"],
+    data = [
+        ":e2e_files",
+        "//backend/cmd/server:githelp",
+    ],
+    tags = ["local"],
+)

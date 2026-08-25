@@ -27,3 +27,9 @@ yarn-error.log*
 
 test-results/
 playwright-report/
+
+# Bazel
+.bazel/
+bazel-*
+
+.local/

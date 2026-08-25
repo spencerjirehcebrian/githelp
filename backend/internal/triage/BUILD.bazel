@@ -1,0 +1,16 @@
+load("@rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "triage",
+    srcs = ["triage.go"],
+    importpath = "github.com/spencerjireh/githelp/backend/internal/triage",
+    visibility = ["//visibility:public"],
+    deps = ["//backend/internal/db"],
+)
+
+go_test(
+    name = "triage_test",
+    srcs = ["triage_test.go"],
+    embed = [":triage"],
+    deps = ["//backend/internal/db"],
+)

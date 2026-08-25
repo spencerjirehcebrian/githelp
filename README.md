@@ -89,8 +89,34 @@ make dev
 
 ---
 
+## Build & Test Tooling
+
+GitHelp supports both **Make** and hermetic **Bazel** (via Bzlmod and `@rules_go`):
+
+### Make
+```bash
+make build          # Build embedded standalone binary
+make test           # Run all unit, integration, and E2E browser tests
+make test-backend   # Run Go tests with -race detector
+make test-frontend  # Run Vitest unit/component tests
+make test-e2e       # Run Playwright E2E browser tests
+make lint           # Run Go vet and TypeScript linting
+```
+
+### Bazel
+The repository includes a standalone `./bazel` launcher wrapper that automatically manages Bazelisk without requiring pre-installed system packages:
+```bash
+./bazel build //...        # Hermetically build all backend and frontend targets
+./bazel test //...         # Run all Go, Vitest, and Playwright test targets
+./bazel run //:gazelle     # Automatically synchronize Go dependencies with BUILD files
+./bazel run //:githelp     # Compile and launch GitHelp standalone binary
+```
+
+---
+
 ## Architecture & Technology Stack
 
+- **Build System**: Bazel 7.x (Bzlmod, rules_go, Gazelle) and Make.
 - **Backend**: Go 1.24+ standard library `net/http` router, `modernc.org/sqlite` (pure Go SQLite driver, zero CGO).
 - **Frontend**: React 19, TypeScript, Tailwind CSS, Lucide React icons, `date-fns`.
 - **Distribution**: Single binary with embedded frontend (`//go:embed all:dist`).

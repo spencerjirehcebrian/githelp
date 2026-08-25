@@ -137,9 +137,8 @@ func TestClientAndPollerComprehensive(t *testing.T) {
 	if err != nil {
 		t.Fatalf("client.Sync failed: %v", err)
 	}
-	// Only 1 item should sync because ignored/repo is ignored
 	if count != 1 {
-		t.Errorf("expected 1 synced notification (1 ignored), got %d", count)
+		t.Errorf("expected 1 synced notification, got %d", count)
 	}
 
 	items, err := database.ListEnrichedNotifications("", "", "", "")
@@ -153,7 +152,6 @@ func TestClientAndPollerComprehensive(t *testing.T) {
 		t.Errorf("unexpected enriched item: %+v", items[0])
 	}
 
-	// Trigger poller background sync
 	poller.TriggerSync()
 	time.Sleep(50 * time.Millisecond)
 	poller.Stop()

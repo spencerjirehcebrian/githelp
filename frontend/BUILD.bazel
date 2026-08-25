@@ -1,0 +1,38 @@
+package(default_visibility = ["//visibility:public"])
+
+filegroup(
+    name = "src_files",
+    srcs = glob([
+        "src/**/*",
+        "index.html",
+        "package.json",
+        "postcss.config.js",
+        "tailwind.config.js",
+        "tsconfig.json",
+        "tsconfig.node.json",
+        "vite.config.ts",
+        "vitest.config.ts",
+    ]),
+)
+
+# Rule to build production frontend assets
+genrule(
+    name = "dist",
+    srcs = [":src_files"],
+    outs = ["dist_output.tar"],
+    cmd = """
+        export HOME=$$(mktemp -d)
+        cd frontend
+        npm run build >/dev/null 2>&1
+        tar -cf ../$@ -C ../backend/cmd/server/dist .
+    """,
+    local = 1,
+)
+
+# Rule to test frontend components and hooks via Vitest
+sh_test(
+    name = "test",
+    srcs = ["test_runner.sh"],
+    data = [":src_files"],
+    tags = ["local"],
+)

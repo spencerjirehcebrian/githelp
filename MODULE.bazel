@@ -1,0 +1,24 @@
+module(
+    name = "githelp",
+    version = "1.0.0",
+)
+
+# Standard Bazel dependencies
+bazel_dep(name = "bazel_skylib", version = "1.7.1")
+bazel_dep(name = "platforms", version = "0.0.10")
+
+# Go rules
+bazel_dep(name = "rules_go", version = "0.51.0")
+bazel_dep(name = "gazelle", version = "0.41.0")
+
+# Configure hermetic Go SDK (Go 1.24.0)
+go_sdk = use_extension("@rules_go//go:extensions.bzl", "go_sdk")
+go_sdk.download(version = "1.24.0")
+
+# Gazelle dependencies from go.mod
+go_deps = use_extension("@gazelle//:extensions.bzl", "go_deps")
+go_deps.from_file(go_mod = "//backend:go.mod")
+use_repo(
+    go_deps,
+    "org_modernc_sqlite",
+)

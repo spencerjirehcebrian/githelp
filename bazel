@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# If bazelisk is in PATH, use it directly
+if command -v bazelisk >/dev/null 2>&1; then
+  exec bazelisk "$@"
+fi
+
+# If bazel is in PATH, use it directly
+if command -v bazel >/dev/null 2>&1; then
+  exec bazel "$@"
+fi
+
+# Otherwise, download bazelisk locally into .bazel/bin
+BAZEL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.bazel/bin"
+mkdir -p "$BAZEL_DIR"
+BAZELISK_BIN="$BAZEL_DIR/bazelisk"
+
+if [[ ! -x "$BAZELISK_BIN" ]]; then
+  OS="$(uname -s | tr '[:upper:]' '[:lower:]')"
+  ARCH="$(uname -m)"
+  case "$ARCH" in
+    x86_64) ARCH="amd64" ;;
+    arm64|aarch64) ARCH="arm64" ;;
+    *) echo "Unsupported architecture: $ARCH" >&2; exit 1 ;;
+  esac
+
+  BAZELISK_VERSION="v1.25.0"
+  BAZELISK_URL="https://github.com/bazelbuild/bazelisk/releases/download/${BAZELISK_VERSION}/bazelisk-${OS}-${ARCH}"
+
+  echo "Downloading bazelisk ${BAZELISK_VERSION} for ${OS}-${ARCH}..." >&2
+  curl -sSL -o "$BAZELISK_BIN" "$BAZELISK_URL"
+  chmod +x "$BAZELISK_BIN"
+fi
+
+exec "$BAZELISK_BIN" "$@"

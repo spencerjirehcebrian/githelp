@@ -1,0 +1,26 @@
+load("@rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "github",
+    srcs = [
+        "client.go",
+        "poller.go",
+    ],
+    importpath = "github.com/spencerjireh/githelp/backend/internal/github",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//backend/internal/auth",
+        "//backend/internal/db",
+        "//backend/internal/triage",
+    ],
+)
+
+go_test(
+    name = "github_test",
+    srcs = ["client_test.go"],
+    embed = [":github"],
+    deps = [
+        "//backend/internal/auth",
+        "//backend/internal/db",
+    ],
+)
