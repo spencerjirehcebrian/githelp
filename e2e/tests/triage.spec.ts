@@ -34,6 +34,9 @@ test.describe('GitHelp Triage & Launcher E2E Workflows', () => {
   test('2. supports keyboard navigation (j/k) and active highlighting', async ({ page }) => {
     await expect(page.getByText('Add biometric login support')).toBeVisible();
 
+    // Select first card to ensure focus
+    await page.getByText('Add biometric login support').click();
+
     // Navigate down with 'j'
     await page.keyboard.press('j');
     const secondCard = page.getByText('Fix memory leak in worker').locator('xpath=ancestor::div[contains(@class, "rounded-xl")]');
