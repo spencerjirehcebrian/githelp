@@ -17,6 +17,7 @@ interface UseKeyboardNavigationProps {
   onSync: () => void;
   onOpenShortcuts: () => void;
   onOpenCommandPalette?: () => void;
+  onOpenDrawer?: () => void;
   onToggleLayoutMode?: () => void;
   layoutMode?: DashboardLayoutMode;
   activeColumnId?: PipelineColumnId;
@@ -44,6 +45,7 @@ export function useKeyboardNavigation({
   onSync,
   onOpenShortcuts,
   onOpenCommandPalette,
+  onOpenDrawer,
   onToggleLayoutMode,
   layoutMode = 'stream',
   activeColumnId = 'review_required',
@@ -135,8 +137,18 @@ export function useKeyboardNavigation({
           break;
         }
 
-        // Open in browser
+        // Open Inspection Drawer on Enter, i, or d
         case 'Enter':
+        case 'i':
+        case 'd': {
+          if (selectedItem && onOpenDrawer) {
+            e.preventDefault();
+            onOpenDrawer();
+          }
+          break;
+        }
+
+        // Open in browser (o)
         case 'o': {
           if (selectedItem?.html_url) {
             e.preventDefault();
@@ -238,6 +250,7 @@ export function useKeyboardNavigation({
       onSync,
       onOpenShortcuts,
       onOpenCommandPalette,
+      onOpenDrawer,
       onToggleLayoutMode,
       layoutMode,
       activeColumnId,

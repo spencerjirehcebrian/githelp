@@ -60,11 +60,11 @@ async function main() {
 
     const page = await context.newPage();
 
-    // 1. Dashboard screenshot (Task Workstation)
+    // 1. Dashboard screenshot (Zen Task Workstation)
     console.log('Capturing dashboard.png...');
     await page.goto(BASE_URL);
     await page.waitForLoadState('networkidle');
-    await page.waitForSelector('[data-testid="inspection-cockpit"]');
+    await page.waitForSelector('[data-testid="task-section-list"]');
     await wait(600);
     await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'dashboard.png') });
 
@@ -85,13 +85,15 @@ async function main() {
     await page.keyboard.press('v');
     await wait(300);
 
-    // 3. Files Changed & Diff view in Cockpit
+    // 3. Inspection Drawer & Diff view
     console.log('Capturing diff-inspector.png...');
-    await page.locator('[data-testid="inspection-cockpit"]').getByRole('button', { name: /Files Changed/i }).click();
+    await page.keyboard.press('Enter');
+    await page.waitForSelector('[data-testid="inspection-drawer"]');
+    await page.locator('[data-testid="inspection-drawer"]').getByRole('button', { name: /Files Changed/i }).click();
     await wait(400);
     await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'diff-inspector.png') });
-    await page.locator('[data-testid="inspection-cockpit"]').getByRole('button', { name: /Overview/i }).click();
-    await wait(200);
+    await page.keyboard.press('Escape');
+    await wait(300);
 
     // 4. Command Palette screenshot
     console.log('Capturing command-palette.png...');

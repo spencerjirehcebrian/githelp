@@ -6,13 +6,14 @@ import { useKeyboardNavigation } from './hooks/useKeyboardNavigation';
 import type {
   DashboardLayoutMode,
   PipelineColumnId,
+  EnrichedNotification,
 } from './types';
 import { computeVisibilityMetrics, computeTaskBurndownMetrics } from './lib/utils';
 
 import { TopBar } from './components/TopBar';
 import { TaskSectionList } from './components/TaskSectionList';
 import { PipelineBoard } from './components/PipelineBoard';
-import { InspectionCockpit } from './components/InspectionCockpit';
+import { InspectionDrawer } from './components/InspectionDrawer';
 import { CommandPalette } from './components/CommandPalette';
 import { AuthBanner } from './components/AuthBanner';
 import { SnoozeModal } from './components/SnoozeModal';
@@ -58,6 +59,7 @@ export default function App() {
   const [showCI, setShowCI] = useState<boolean>(false);
 
   // Modals & Overlays state
+  const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState<boolean>(false);
   const [snoozeModalId, setSnoozeModalId] = useState<string | null>(null);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState<boolean>(false);
@@ -93,7 +95,7 @@ export default function App() {
 
   // Global Keyboard Navigation
   const isModalOpen = Boolean(
-    isCommandPaletteOpen || snoozeModalId || isShortcutsOpen || isSettingsOpen
+    isCommandPaletteOpen || snoozeModalId || isShortcutsOpen || isSettingsOpen || isDrawerOpen
   );
 
   const selectedItem = notifications[selectedIndex] || null;
@@ -110,6 +112,12 @@ export default function App() {
     });
   };
 
+  const handleInspectItem = (item: EnrichedNotification) => {
+    const idx = notifications.findIndex((n) => n.id === item.id);
+    if (idx !== -1) setSelectedIndex(idx);
+    setIsDrawerOpen(true);
+  };
+
   useKeyboardNavigation({
     notifications,
     selectedIndex,
@@ -121,6 +129,7 @@ export default function App() {
     onSync: triggerSync,
     onOpenShortcuts: () => setIsShortcutsOpen(true),
     onOpenCommandPalette: () => setIsCommandPaletteOpen(true),
+    onOpenDrawer: () => setIsDrawerOpen(true),
     onToggleLayoutMode: handleToggleLayoutMode,
     layoutMode,
     activeColumnId,
@@ -187,10 +196,10 @@ export default function App() {
         onToggleCI={handleToggleCI}
       />
 
-      {/* Main 2-Pane Workstation Container */}
+      {/* Main Single-Feed / Pipeline Workstation Container */}
       <main className="flex-1 flex min-w-0 overflow-hidden bg-github-dark">
         {layoutMode === 'board' ? (
-          /* Pipeline Board Mode (Full Width) */
+          /* Pipeline Board Mode (Full Screen) */
           <div className="flex-1 flex min-w-0 overflow-hidden">
             <PipelineBoard
               notifications={notifications}
@@ -212,43 +221,41 @@ export default function App() {
             />
           </div>
         ) : (
-          /* 2-Pane Stream Mode: Task Queue (Left) + Inspection Cockpit (Right) */
-          <div className="flex-1 flex min-w-0 overflow-hidden">
-            {/* Left Pane: Collapsible Task Section List */}
-            <div className="w-full lg:w-[520px] xl:w-[580px] 2xl:w-[640px] shrink-0 border-r border-github-border flex flex-col min-w-0 h-full overflow-hidden bg-github-dark">
-              <TaskSectionList
-                notifications={notifications}
-                selectedItemId={selectedItem?.id || null}
-                onSelectItem={(item) => {
-                  const idx = notifications.findIndex((n) => n.id === item.id);
-                  if (idx !== -1) setSelectedIndex(idx);
-                }}
-                onMarkDone={markItemDone}
-                onOpenSnooze={(id) => setSnoozeModalId(id)}
-                onTogglePin={togglePin}
-                onToggleUnread={toggleUnread}
-                onToast={(msg) => setToastMessage(msg)}
-                isLoading={isLoading}
-                searchQuery={searchQuery}
-                showCI={showCI}
-              />
-            </div>
-
-            {/* Right Pane: Expansive Git & PR Inspection Cockpit */}
-            <div className="hidden lg:flex flex-1 min-w-0 h-full overflow-hidden">
-              <InspectionCockpit
-                item={selectedItem}
-                onMarkDone={markItemDone}
-                onOpenSnooze={(id) => setSnoozeModalId(id)}
-                onTogglePin={togglePin}
-                onToggleUnread={toggleUnread}
-                onUpdateNotes={updateNotes}
-                onToast={(msg) => setToastMessage(msg)}
-              />
-            </div>
+          /* Centered Zen Single-Feed Task List */
+          <div className="flex-1 flex justify-center min-w-0 h-full overflow-hidden bg-github-dark">
+            <TaskSectionList
+              notifications={notifications}
+              selectedItemId={selectedItem?.id || null}
+              onSelectItem={(item) => {
+                const idx = notifications.findIndex((n) => n.id === item.id);
+                if (idx !== -1) setSelectedIndex(idx);
+              }}
+              onMarkDone={markItemDone}
+              onOpenSnooze={(id) => setSnoozeModalId(id)}
+              onTogglePin={togglePin}
+              onToggleUnread={toggleUnread}
+              onToast={(msg) => setToastMessage(msg)}
+              onInspect={handleInspectItem}
+              isLoading={isLoading}
+              searchQuery={searchQuery}
+              showCI={showCI}
+            />
           </div>
         )}
       </main>
+
+      {/* On-Demand Slide-over Inspection Drawer */}
+      <InspectionDrawer
+        isOpen={isDrawerOpen && Boolean(selectedItem)}
+        onClose={() => setIsDrawerOpen(false)}
+        item={selectedItem}
+        onMarkDone={markItemDone}
+        onOpenSnooze={(id) => setSnoozeModalId(id)}
+        onTogglePin={togglePin}
+        onToggleUnread={toggleUnread}
+        onUpdateNotes={updateNotes}
+        onToast={(msg) => setToastMessage(msg)}
+      />
 
       {/* Global Command Palette */}
       <CommandPalette

@@ -24,12 +24,13 @@ export const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose 
     {
       title: 'Task Execution & Actions',
       items: [
+        { key: 'Enter / i / d', desc: 'Inspect PR / Diffs Drawer' },
         { key: 'Space / e', desc: 'Complete Task (Mark Done)' },
         { key: 't', desc: "Pin / Toggle Today's Focus" },
         { key: 'c', desc: 'Copy git checkout / branch' },
+        { key: 'o', desc: 'Open in GitHub' },
         { key: 'z', desc: 'Snooze task' },
         { key: 'u', desc: 'Toggle read / unread' },
-        { key: 'p', desc: 'Pin to top' },
       ],
     },
     {
@@ -39,15 +40,15 @@ export const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose 
         { key: 'v', desc: 'Toggle Task Sections / Board View' },
         { key: 'h / l / ← / →', desc: 'Switch Board Columns (in Board mode)' },
         { key: 'j / k / ↓ / ↑', desc: 'Navigate Tasks / Cards' },
-        { key: 'o / Enter', desc: 'Open in GitHub' },
         { key: '/', desc: 'Focus search bar' },
-        { key: 'Esc', desc: 'Close modal / Clear focus' },
+        { key: 'Esc', desc: 'Close drawer / modal' },
       ],
     },
     {
       title: 'General',
       items: [
         { key: 'r', desc: 'Sync tasks with GitHub' },
+        { key: 's', desc: 'Open Preferences & Settings' },
         { key: '?', desc: 'Show keyboard shortcuts' },
       ],
     },

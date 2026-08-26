@@ -4,26 +4,28 @@ Local-first, keyboard-driven Git & PR Developer Task Workstation and workflow ex
 
 ![GitHelp Task Workstation](docs/screenshots/dashboard.png)
 
-GitHelp bridges remote GitHub activity with your local terminal and IDE. It transforms passive notification triage into an active **Developer Task Command Center** organized into actionable sections: **Today's Focus**, **PRs Needing Your Review**, **Your Authored PRs**, and **Assigned Issues**, equipped with an interactive **PR inspection cockpit**, one-click **Git checkout runners**, and a spotlight **Command Palette (`Cmd+K`)**.
+GitHelp bridges remote GitHub activity with your local terminal and IDE. Built with a distraction-free, centered single-feed layout inspired by Superhuman and Linear, GitHelp transforms passive notification noise into an active **Developer Task Workstation** organized into prioritized sections: **Today's Focus**, **PRs Needing Your Review**, **Your Authored PRs**, and **Assigned Issues**, with an on-demand **Slide-over Inspection Drawer (`Enter`/`i`/`d`)**, instant **Git checkout runners**, and a spotlight **Command Palette (`Cmd+K`)**.
 
 ---
 
-## Features & Workstation Layout
+## Features & Workstation Architecture
 
-- **Developer Task Execution Architecture**:
-  - **Today's Focus Queue (`t`)**: Pin 2–4 priority tasks you plan to tackle today with a real-time burndown progress pill (`Today: 2/4 Done`).
-  - **Collapsible Task Sections**: Grouped into *Today's Focus*, *PRs Needing Your Review*, *Your Authored PRs*, *Assigned Issues & Tasks*, and *Completed Today*.
+- **Zen Task Workstation (Linear & Superhuman Style)**:
+  - **Centered Single-Feed Interface**: A distraction-free, centered work queue (~780px) with clean negative space and single-line task rows, eliminating 100% of split-panel clutter.
+  - **Today's Focus Queue (`t`)**: Pin top daily priority tasks with a real-time burndown progress pill (`Today: 2/4 Done`).
+  - **Collapsible Priority Sections**: Structured into *Today's Focus*, *PRs Needing Your Review*, *Your Authored PRs*, *Assigned Issues & Tasks*, and *Completed Today*.
   - **1-Click Checkbox Completion (`Space` / `e`)**: Complete tasks immediately with tactile checkmark feedback and automatic archiving.
+- **On-Demand Slide-Over Inspection Drawer (`Enter` / `i` / `d`)**:
+  - Review rich PR overviews, line diffs, file trees, commits, and private notes in an on-demand slide-over sheet that dismisses cleanly on `Esc` or `q`.
 - **Dual View Modes (`v`)**:
-  - **Task Sections View**: High-density, scan-optimized task queue with inline diff metrics (`+284 -42`), branch tags, and vim-style `j`/`k` navigation.
+  - **Single-Feed Task View**: High-density, scan-optimized task queue with inline diff metrics (`+284 -42`), branch tags, and vim-style `j`/`k` navigation.
   - **Pipeline Board View**: 4-column visual kanban (*Needs Your Review*, *CI Failing*, *Ready to Merge*, *Waiting on Others*) with full 2D keyboard navigation (`h`/`l`/arrows for columns, `j`/`k` for items).
 - **Clean CI by Default**: Passing CI badges are hidden by default to eliminate noise, with a global toggle button in the top bar to reveal status badges on demand.
-- **Deep Inspection Cockpit**: Deep PR overview, file changes with line diffs, CI diagnostics, and private review notes, accessible in both Task and Board modes.
 - **One-Click Git Actions**: Immediately checkout branches (`git checkout <branch>` / `gh pr checkout <num>`), copy PR diffs, or open repositories in Cursor/VS Code.
 - **Global Command Palette (`Cmd+K` / `Ctrl+K`)**: Fast spotlight launcher for search, task completion, focus pinning, and navigation.
 - **Zero-Config Auth**: Automatically uses existing `gh` CLI credentials (or configured PAT).
 
-| Pipeline Board (`v`) | Diff Inspector |
+| Pipeline Board (`v`) | Inspection Drawer (`Enter`/`i`) |
 | :---: | :---: |
 | ![Pipeline Board](docs/screenshots/pipeline-board.png) | ![Diff Inspector](docs/screenshots/diff-inspector.png) |
 
@@ -58,13 +60,14 @@ make dev
 
 | Key | Action |
 | :--- | :--- |
+| `Enter` / `i` / `d` | Inspect PR / Open Slide-Over Drawer |
 | `Space` / `e` | Complete Task (Mark Done) |
 | `t` | Pin / Toggle item in Today's Focus |
 | `Cmd+K` / `Ctrl+K` | Open Command Palette |
 | `v` | Toggle Task Sections / Pipeline Board View |
 | `h` / `l` / `←` / `→` | Switch Pipeline Board Columns (in Board mode) |
 | `j` / `k` / `↓` / `↑` | Navigate items in task list or column |
-| `o` / `Enter` | Open in browser / GitHub |
+| `o` | Open in browser / GitHub |
 | `z` | Snooze (`1`: 1h, `2`: 3h, `3`: tomorrow, `4`: next Monday) |
 | `c` | Copy `git checkout <branch>` or URL |
 | `u` | Toggle Read / Unread |
@@ -72,7 +75,7 @@ make dev
 | `/` | Focus search bar |
 | `r` | Sync tasks with GitHub |
 | `?` | Keyboard shortcuts reference cheat sheet |
-| `Esc` | Close modal / command palette / clear search |
+| `Esc` / `q` | Close drawer / modal / command palette |
 
 ---
 

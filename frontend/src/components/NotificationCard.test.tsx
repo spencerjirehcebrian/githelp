@@ -47,11 +47,9 @@ describe('components/NotificationCard', () => {
     );
 
     expect(screen.getByText('Feat: Add lightning-fast notification sync')).toBeInTheDocument();
-    expect(screen.getByText('owner/awesome-repo')).toBeInTheDocument();
-    expect(screen.getByText('Review requested')).toBeInTheDocument();
+    expect(screen.getByText('awesome-repo')).toBeInTheDocument();
+    expect(screen.getByText('Review')).toBeInTheDocument();
     expect(screen.getByText('feat/fast-sync')).toBeInTheDocument();
-    expect(screen.getByText('@alice')).toBeInTheDocument();
-    expect(screen.getByText('Checks passed')).toBeInTheDocument();
   });
 
   it('triggers onMarkDone when checkbox or complete button is clicked', () => {

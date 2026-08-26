@@ -156,6 +156,36 @@ describe('hooks/useKeyboardNavigation', () => {
     expect(onTogglePin).toHaveBeenCalledWith('item-1', false);
   });
 
+  it('handles Enter, i, and d (open inspection drawer)', () => {
+    const onOpenDrawer = vi.fn();
+    renderHook(() =>
+      useKeyboardNavigation({
+        notifications: mockNotifications,
+        selectedIndex: 0,
+        setSelectedIndex,
+        onMarkDone,
+        onOpenSnooze,
+        onTogglePin,
+        onToggleUnread,
+        onSync,
+        onOpenShortcuts,
+        onOpenDrawer,
+        onFocusSearch,
+        onToast,
+        isModalOpen: false,
+      })
+    );
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+    expect(onOpenDrawer).toHaveBeenCalledTimes(1);
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'i' }));
+    expect(onOpenDrawer).toHaveBeenCalledTimes(2);
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'd' }));
+    expect(onOpenDrawer).toHaveBeenCalledTimes(3);
+  });
+
   it('handles z (snooze)', () => {
     renderHook(() =>
       useKeyboardNavigation({

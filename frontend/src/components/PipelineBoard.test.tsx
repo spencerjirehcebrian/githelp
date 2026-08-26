@@ -145,7 +145,7 @@ describe('components/PipelineBoard', () => {
     expect(onSelectColumn).toHaveBeenCalledWith('ci_failing');
 
     // Clicking a card triggers onSelectItem
-    fireEvent.click(screen.getByText('owner/repo-b'));
+    fireEvent.click(screen.getByText('Fix: Database race condition'));
     expect(onSelectItem).toHaveBeenCalled();
   });
 

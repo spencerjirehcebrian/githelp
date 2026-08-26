@@ -21,8 +21,8 @@ test.describe('Capture Workstation Documentation Screenshots', () => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
-    // 1. Dashboard screenshot (Task Workstation)
-    await page.waitForSelector('[data-testid="inspection-cockpit"]');
+    // 1. Dashboard screenshot (Zen Task Workstation)
+    await page.waitForSelector('[data-testid="task-section-list"]');
     await wait(600);
     await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'dashboard.png') });
 
@@ -41,12 +41,14 @@ test.describe('Capture Workstation Documentation Screenshots', () => {
     await page.keyboard.press('v');
     await wait(300);
 
-    // 4. Files Changed & Diff view in Cockpit
-    await page.locator('[data-testid="inspection-cockpit"]').getByRole('button', { name: /Files Changed/i }).click();
+    // 4. On-Demand Inspection Drawer & Diff view
+    await page.keyboard.press('Enter');
+    await page.waitForSelector('[data-testid="inspection-drawer"]');
+    await page.locator('[data-testid="inspection-drawer"]').getByRole('button', { name: /Files Changed/i }).click();
     await wait(400);
     await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'diff-inspector.png') });
-    await page.locator('[data-testid="inspection-cockpit"]').getByRole('button', { name: /Overview/i }).click();
-    await wait(200);
+    await page.keyboard.press('Escape');
+    await wait(300);
 
     // 5. Command Palette screenshot
     await page.getByRole('button', { name: /Command Palette/i }).click();

@@ -12,7 +12,7 @@ test.describe('GitHelp Triage & Workstation E2E Workflows', () => {
     await page.waitForLoadState('networkidle');
   });
 
-  test('1. loads home page, renders top bar scope, card stream and inspection cockpit', async ({ page }) => {
+  test('1. loads home page, renders top bar scope, clean single-feed task stream, and opens inspection drawer on demand', async ({ page }) => {
     // Check brand title
     await expect(page.locator('text=GitHelp').first()).toBeVisible();
 
@@ -26,33 +26,35 @@ test.describe('GitHelp Triage & Workstation E2E Workflows', () => {
     await expect(page.locator('[data-testid="notification-card"]').filter({ hasText: 'Fix memory leak in worker' })).toBeVisible();
     await expect(page.locator('[data-testid="notification-card"]').filter({ hasText: 'Investigate database deadlock' })).toBeVisible();
 
-    // Check inspection cockpit is open with active PR details
-    const cockpit = page.locator('[data-testid="inspection-cockpit"]');
-    await expect(cockpit).toBeVisible();
-    await expect(cockpit.getByText('feature/biometrics').first()).toBeVisible();
-    await expect(cockpit.getByRole('button', { name: /Checkout/i }).first()).toBeVisible();
+    // Inspection drawer is closed by default
+    await expect(page.locator('[data-testid="inspection-drawer"]')).not.toBeVisible();
+
+    // Open drawer on demand with Enter
+    await page.keyboard.press('Enter');
+    const drawer = page.locator('[data-testid="inspection-drawer"]');
+    await expect(drawer).toBeVisible();
+    await expect(drawer.getByText('feature/biometrics').first()).toBeVisible();
+    await expect(drawer.getByRole('button', { name: /Checkout/i }).first()).toBeVisible();
+
+    // Close drawer with Escape
+    await page.keyboard.press('Escape');
+    await expect(drawer).not.toBeVisible();
   });
 
-  test('2. supports keyboard navigation (j/k) and active highlighting in stream and cockpit', async ({ page }) => {
+  test('2. supports keyboard navigation (j/k) and active highlighting in stream', async ({ page }) => {
     const firstCard = page.locator('[data-testid="notification-card"]').filter({ hasText: 'Add biometric login support' });
     await expect(firstCard).toHaveAttribute('data-selected', 'true');
-
-    // Cockpit shows first card details
-    const cockpit = page.locator('[data-testid="inspection-cockpit"]');
-    await expect(cockpit.getByRole('heading', { name: 'Add biometric login support' })).toBeVisible();
 
     // Navigate down with 'j'
     await page.keyboard.press('j');
     const secondCard = page.locator('[data-testid="notification-card"]').filter({ hasText: 'Fix memory leak in worker' });
     await expect(secondCard).toHaveAttribute('data-selected', 'true');
     await expect(firstCard).toHaveAttribute('data-selected', 'false');
-    await expect(cockpit.getByRole('heading', { name: 'Fix memory leak in worker' })).toBeVisible();
 
     // Navigate back up with 'k'
     await page.keyboard.press('k');
     await expect(firstCard).toHaveAttribute('data-selected', 'true');
     await expect(secondCard).toHaveAttribute('data-selected', 'false');
-    await expect(cockpit.getByRole('heading', { name: 'Add biometric login support' })).toBeVisible();
   });
 
   test('3. search filtering with / shortcut', async ({ page }) => {
@@ -78,7 +80,7 @@ test.describe('GitHelp Triage & Workstation E2E Workflows', () => {
     // Click shortcuts button in top bar
     await page.click('button[title*="Keyboard shortcuts"]');
     await expect(page.getByRole('heading', { name: 'Keyboard Shortcuts' })).toBeVisible();
-    await expect(page.getByText('Navigate Tasks / Cards')).toBeVisible();
+    await expect(page.getByText('Task Execution & Actions')).toBeVisible();
 
     // Press 'Escape'
     await page.keyboard.press('Escape');
@@ -136,27 +138,33 @@ test.describe('GitHelp Triage & Workstation E2E Workflows', () => {
     await expect(page.getByText('All Tasks Completed!')).toBeVisible();
   });
 
-  test('8. inspects tabs in Cockpit: Files Changed, Git Recipes, and Notes', async ({ page }) => {
-    const cockpit = page.locator('[data-testid="inspection-cockpit"]');
-    await expect(cockpit).toBeVisible();
+  test('8. inspects tabs in Cockpit Drawer: Files Changed, Git Recipes, and Notes', async ({ page }) => {
+    // Open drawer with Enter
+    await page.keyboard.press('Enter');
+    const drawer = page.locator('[data-testid="inspection-drawer"]');
+    await expect(drawer).toBeVisible();
 
     // Switch to Files Changed tab
-    await cockpit.getByRole('button', { name: /Files Changed/i }).click();
-    await expect(cockpit.getByText('src/auth/biometrics.ts')).toBeVisible();
-    await expect(cockpit.getByText('src/components/LoginModal.tsx')).toBeVisible();
+    await drawer.getByRole('button', { name: /Files Changed/i }).click();
+    await expect(drawer.getByText('src/auth/biometrics.ts')).toBeVisible();
+    await expect(drawer.getByText('src/components/LoginModal.tsx')).toBeVisible();
 
     // Switch to Git Recipes tab
-    await cockpit.getByRole('button', { name: /Git Recipes/i }).click();
-    await expect(cockpit.getByText('1. Checkout & Switch to Branch')).toBeVisible();
-    await expect(cockpit.getByText('git checkout feature/biometrics')).toBeVisible();
+    await drawer.getByRole('button', { name: /Git Recipes/i }).click();
+    await expect(drawer.getByText('1. Checkout & Switch to Branch')).toBeVisible();
+    await expect(drawer.getByText('git checkout feature/biometrics')).toBeVisible();
 
     // Switch to Notes tab
-    await cockpit.getByRole('button', { name: /Notes/i }).click();
-    const textarea = cockpit.getByPlaceholder(/Write your private review notes/i);
+    await drawer.getByRole('button', { name: /Notes/i }).click();
+    const textarea = drawer.getByPlaceholder(/Write your private review notes/i);
     await expect(textarea).toBeVisible();
     await textarea.fill('Tested biometrics on iOS and Chrome. Everything looks solid.');
-    await cockpit.getByRole('button', { name: /Save Notes/i }).click();
+    await drawer.getByRole('button', { name: /Save Notes/i }).click();
     await expect(page.getByText('Notes saved')).toBeVisible();
+
+    // Close drawer
+    await page.keyboard.press('Escape');
+    await expect(drawer).not.toBeVisible();
   });
 
   test('9. opens and searches Global Command Palette (Cmd+K)', async ({ page }) => {
@@ -180,7 +188,7 @@ test.describe('GitHelp Triage & Workstation E2E Workflows', () => {
 
     // Press 't' to toggle Today's Focus
     await page.keyboard.press('t');
-    await expect(firstCard.getByText("Today's Focus")).toBeVisible();
+    await expect(firstCard.getByText("Today")).toBeVisible();
 
     // Toggle CI badges via top bar button
     const ciBtn = page.getByRole('button', { name: /CI/i }).filter({ hasText: /CI (Off|On)/i });
