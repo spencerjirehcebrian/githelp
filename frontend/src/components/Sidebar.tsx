@@ -12,6 +12,7 @@ import {
   Inbox,
   Terminal,
   FilterX,
+  Layers,
 } from 'lucide-react';
 import type { BucketType, StatusResponse, AppViewMode } from '../types';
 import { cn } from '../lib/utils';
@@ -91,42 +92,40 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const repoList = Object.entries(repoCounts).sort((a, b) => b[1] - a[1]);
 
   return (
-    <aside className="w-64 h-screen bg-github-darker border-r border-github-border flex flex-col select-none shrink-0">
+    <aside className="w-60 h-screen bg-github-darker border-r border-github-border flex flex-col select-none shrink-0 text-github-text">
       {/* App Brand Header */}
-      <div className="p-4 border-b border-github-border flex items-center justify-between">
+      <div className="p-3.5 border-b border-github-border flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-md">
-            <Inbox className="w-4 h-4" />
+          <div className="w-6 h-6 rounded-md bg-zinc-900 border border-zinc-800 flex items-center justify-center text-white">
+            <Layers className="w-3.5 h-3.5 text-zinc-200" />
           </div>
-          <div>
-            <div className="font-semibold text-sm tracking-tight text-white flex items-center gap-1.5">
-              <span>GitHelp</span>
-              <span className="text-[10px] uppercase font-mono px-1.5 py-0.2 bg-github-accent/20 text-github-accent border border-github-accent/30 rounded">
-                v2.0
-              </span>
-            </div>
-            <div className="text-[11px] text-github-muted">Git & PR Workstation</div>
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-xs tracking-tight text-white">GitHelp</span>
+            <span className="text-[9px] uppercase font-mono px-1 py-0.2 bg-zinc-900 text-zinc-400 border border-zinc-800 rounded">
+              v2.0
+            </span>
           </div>
         </div>
       </div>
 
       {/* Primary Workstation Modes */}
-      <div className="p-3 border-b border-github-border/60 space-y-1">
+      <div className="p-2 border-b border-github-border space-y-0.5">
         <button
           onClick={() => onSelectView && onSelectView('triage')}
+          aria-label="Triage Workstation"
           className={cn(
-            'w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all group',
+            'w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs transition-colors',
             currentView === 'triage'
-              ? 'bg-github-accent/15 text-github-accent border border-github-accent/30 shadow-sm font-semibold'
-              : 'text-github-text hover:bg-github-hover/50 hover:text-white'
+              ? 'bg-zinc-900 text-white font-medium border border-zinc-800'
+              : 'text-zinc-400 hover:bg-zinc-900/60 hover:text-zinc-200'
           )}
         >
           <div className="flex items-center gap-2">
-            <Inbox className="w-4 h-4 text-github-accent" />
+            <Inbox className="w-3.5 h-3.5 text-zinc-300" />
             <span>Triage Workstation</span>
           </div>
           {bucketCounts['inbox_total'] ? (
-            <span className="px-1.5 py-0.2 text-[10px] font-mono rounded bg-github-dark border border-github-border text-github-muted">
+            <span className="px-1.5 py-0.2 text-[10px] font-mono rounded bg-black border border-zinc-800 text-zinc-400 tabular-nums">
               {bucketCounts['inbox_total']}
             </span>
           ) : null}
@@ -135,27 +134,27 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <button
           onClick={() => onSelectView && onSelectView('git_assistant')}
           className={cn(
-            'w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all group',
+            'w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs transition-colors',
             currentView === 'git_assistant'
-              ? 'bg-github-accent/15 text-github-accent border border-github-accent/30 shadow-sm font-semibold'
-              : 'text-github-text hover:bg-github-hover/50 hover:text-white'
+              ? 'bg-zinc-900 text-white font-medium border border-zinc-800'
+              : 'text-zinc-400 hover:bg-zinc-900/60 hover:text-zinc-200'
           )}
         >
           <div className="flex items-center gap-2">
-            <Terminal className="w-4 h-4 text-emerald-400" />
+            <Terminal className="w-3.5 h-3.5 text-zinc-300" />
             <span>Git Assistant</span>
           </div>
-          <kbd className="px-1 py-0.2 text-[9px] font-mono text-github-muted bg-github-dark border border-github-border rounded">
+          <kbd className="px-1.5 py-0.2 text-[9px] font-mono text-zinc-500 bg-black border border-zinc-800 rounded">
             g
           </kbd>
         </button>
       </div>
 
       {/* Navigation Sections */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-6">
+      <div className="flex-1 overflow-y-auto p-2 space-y-5">
         {/* Primary Buckets */}
-        <div className="space-y-1">
-          <div className="px-2 py-1 text-[11px] font-semibold uppercase tracking-wider text-github-muted">
+        <div className="space-y-0.5">
+          <div className="px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-zinc-500">
             Triage Buckets
           </div>
           {primaryBuckets.map((bucket) => {
@@ -172,25 +171,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   onSelectRepo('');
                 }}
                 className={cn(
-                  'w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all group',
+                  'w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs transition-colors group',
                   isSelected
-                    ? 'bg-github-hover text-white border border-github-border/80 shadow-sm font-semibold'
-                    : 'text-github-text hover:bg-github-hover/50 hover:text-white'
+                    ? 'bg-zinc-900 text-white font-medium border border-zinc-800'
+                    : 'text-zinc-400 hover:bg-zinc-900/50 hover:text-zinc-200'
                 )}
               >
-                <div className="flex items-center gap-2.5">
-                  <Icon className={cn('w-4 h-4 transition-colors', bucket.color)} />
-                  <span>{bucket.label}</span>
+                <div className="flex items-center gap-2">
+                  <Icon className={cn('w-3.5 h-3.5', isSelected ? 'text-white' : 'text-zinc-400 group-hover:text-zinc-300')} />
+                  <span className="truncate">{bucket.label}</span>
                 </div>
                 {count > 0 && (
                   <span
                     className={cn(
-                      'px-2 py-0.5 text-[10px] font-mono rounded-full font-semibold',
+                      'px-1.5 py-0.2 text-[10px] font-mono rounded tabular-nums',
                       isSelected
-                        ? 'bg-github-accent text-white'
+                        ? 'bg-black text-white border border-zinc-700'
                         : bucket.id === 'action_required'
-                        ? 'bg-amber-500/20 text-amber-300'
-                        : 'bg-github-border/60 text-github-muted group-hover:text-github-text'
+                        ? 'bg-amber-950/60 text-amber-300 border border-amber-800/40'
+                        : 'bg-black/60 text-zinc-500 border border-zinc-800/60 group-hover:text-zinc-400'
                     )}
                   >
                     {count}
@@ -202,8 +201,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* Secondary Views (Snoozed, Done) */}
-        <div className="space-y-1">
-          <div className="px-2 py-1 text-[11px] font-semibold uppercase tracking-wider text-github-muted">
+        <div className="space-y-0.5">
+          <div className="px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-zinc-500">
             Saved & Completed
           </div>
           {secondaryBuckets.map((bucket) => {
@@ -220,23 +219,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   onSelectRepo('');
                 }}
                 className={cn(
-                  'w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all group',
+                  'w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs transition-colors group',
                   isSelected
-                    ? 'bg-github-hover text-white border border-github-border/80 shadow-sm font-semibold'
-                    : 'text-github-text hover:bg-github-hover/50 hover:text-white'
+                    ? 'bg-zinc-900 text-white font-medium border border-zinc-800'
+                    : 'text-zinc-400 hover:bg-zinc-900/50 hover:text-zinc-200'
                 )}
               >
-                <div className="flex items-center gap-2.5">
-                  <Icon className={cn('w-4 h-4 transition-colors', bucket.color)} />
-                  <span>{bucket.label}</span>
+                <div className="flex items-center gap-2">
+                  <Icon className={cn('w-3.5 h-3.5', isSelected ? 'text-white' : 'text-zinc-400 group-hover:text-zinc-300')} />
+                  <span className="truncate">{bucket.label}</span>
                 </div>
                 {count > 0 && (
                   <span
                     className={cn(
-                      'px-2 py-0.5 text-[10px] font-mono rounded-full font-semibold',
+                      'px-1.5 py-0.2 text-[10px] font-mono rounded tabular-nums',
                       isSelected
-                        ? 'bg-github-accent text-white'
-                        : 'bg-github-border/60 text-github-muted group-hover:text-github-text'
+                        ? 'bg-black text-white border border-zinc-700'
+                        : 'bg-black/60 text-zinc-500 border border-zinc-800/60 group-hover:text-zinc-400'
                     )}
                   >
                     {count}
@@ -249,22 +248,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Repositories Filter */}
         {repoList.length > 0 && (
-          <div className="space-y-1">
+          <div className="space-y-0.5">
             <div className="flex items-center justify-between px-2 py-1">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-github-muted">
+              <span className="text-[10px] font-medium uppercase tracking-wider text-zinc-500">
                 Repositories
               </span>
               {selectedRepo && (
                 <button
                   onClick={() => onSelectRepo('')}
-                  className="text-[10px] text-github-accent hover:underline flex items-center gap-0.5"
+                  className="text-[10px] text-zinc-400 hover:text-white flex items-center gap-0.5"
                 >
                   <FilterX className="w-3 h-3" />
                   Clear
                 </button>
               )}
             </div>
-            <div className="space-y-0.5 max-h-48 overflow-y-auto">
+            <div className="space-y-0.5 max-h-44 overflow-y-auto">
               {repoList.map(([repo, count]) => {
                 const isSelected = selectedRepo === repo;
                 return (
@@ -275,17 +274,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       onSelectRepo(isSelected ? '' : repo);
                     }}
                     className={cn(
-                      'w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-all text-left truncate group',
+                      'w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs transition-colors text-left truncate group',
                       isSelected
-                        ? 'bg-github-accent/15 border border-github-accent/40 text-github-accent font-medium'
-                        : 'text-github-muted hover:bg-github-hover/50 hover:text-github-text'
+                        ? 'bg-zinc-900 border border-zinc-800 text-white font-medium'
+                        : 'text-zinc-400 hover:bg-zinc-900/50 hover:text-zinc-200'
                     )}
                   >
                     <div className="flex items-center gap-2 truncate">
-                      <FolderGit2 className="w-3.5 h-3.5 shrink-0 opacity-70" />
+                      <FolderGit2 className="w-3 h-3 shrink-0 text-zinc-500" />
                       <span className="truncate">{repo}</span>
                     </div>
-                    <span className="text-[10px] font-mono text-github-muted shrink-0 pl-1">
+                    <span className="text-[10px] font-mono text-zinc-500 shrink-0 pl-1 tabular-nums">
                       {count}
                     </span>
                   </button>
@@ -297,24 +296,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* User Profile Footer */}
-      <div className="p-3 border-t border-github-border bg-github-dark/60 flex items-center justify-between">
-        <div className="flex items-center gap-2.5 min-w-0">
+      <div className="p-3 border-t border-github-border bg-black/40 flex items-center justify-between">
+        <div className="flex items-center gap-2 min-w-0">
           {status?.auth.avatar_url ? (
             <img
               src={status.auth.avatar_url}
               alt={status.auth.username || 'User avatar'}
-              className="w-7 h-7 rounded-full border border-github-border shrink-0 object-cover"
+              className="w-6 h-6 rounded-full border border-zinc-800 shrink-0 object-cover"
             />
           ) : (
-            <div className="w-7 h-7 rounded-full bg-github-hover border border-github-border flex items-center justify-center text-xs font-semibold text-github-muted shrink-0">
+            <div className="w-6 h-6 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-[10px] font-semibold text-zinc-400 shrink-0">
               ?
             </div>
           )}
           <div className="min-w-0">
-            <div className="text-xs font-medium text-white truncate">
+            <div className="text-xs font-medium text-zinc-200 truncate">
               {status?.auth.name || status?.auth.username || 'Not Connected'}
             </div>
-            <div className="text-[10px] text-github-muted flex items-center gap-1.5 truncate">
+            <div className="text-[10px] text-zinc-500 flex items-center gap-1.5 truncate">
               {status?.auth.authenticated ? (
                 <>
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
@@ -334,12 +333,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         <button
           onClick={onOpenSettings}
-          className="p-1.5 rounded-lg text-github-muted hover:text-white hover:bg-github-hover transition-colors"
+          className="p-1.5 rounded-md text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors"
           title="Settings (s)"
         >
-          <SettingsIcon className="w-4 h-4" />
+          <SettingsIcon className="w-3.5 h-3.5" />
         </button>
       </div>
     </aside>
   );
 };
+

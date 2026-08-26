@@ -4,15 +4,20 @@
 
 @layer base {
   body {
-    @apply bg-github-dark text-github-text;
+    @apply bg-github-dark text-github-text antialiased selection:bg-github-accent/20 selection:text-github-textBright;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  /* Smooth interactive state transitions */
+  button, a, input, textarea, select {
+    @apply transition-colors duration-100 ease-out;
   }
 }
 
-/* Custom scrollbar styling for sleek high-density interface */
+/* Custom ultra-sleek minimalist scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
@@ -20,19 +25,20 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #30363d;
+  background: #202024;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #8b949e;
+  background: #3f3f46;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.98); }
+  from { opacity: 0; transform: scale(0.99); }
   to { opacity: 1; transform: scale(1); }
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.15s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: fadeIn 0.12s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+

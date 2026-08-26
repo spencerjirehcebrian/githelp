@@ -377,14 +377,14 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 bg-black/70 backdrop-blur-sm p-4 animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 bg-black/80 backdrop-blur-sm p-4 animate-fade-in text-github-text">
       <div
-        className="w-full max-w-xl bg-github-darker border border-github-border rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[75vh]"
+        className="w-full max-w-xl bg-black border border-zinc-800 rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[75vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Search Header */}
-        <div className="p-3 border-b border-github-border flex items-center gap-3 bg-github-dark">
-          <Search className="w-4 h-4 text-github-muted shrink-0 ml-1" />
+        <div className="p-3 border-b border-zinc-900 flex items-center gap-2.5 bg-zinc-950">
+          <Search className="w-4 h-4 text-zinc-500 shrink-0 ml-1" />
           <input
             ref={inputRef}
             type="text"
@@ -392,17 +392,17 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Type a command or search actions... (Esc to exit)"
-            className="w-full bg-transparent text-sm text-white placeholder:text-github-muted focus:outline-none font-sans"
+            className="w-full bg-transparent text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none font-sans"
           />
-          <kbd className="px-1.5 py-0.5 text-[10px] font-mono text-github-muted bg-github-hover border border-github-border rounded">
+          <kbd className="px-1.5 py-0.2 text-[9px] font-mono text-zinc-500 bg-black border border-zinc-800 rounded">
             Esc
           </kbd>
         </div>
 
         {/* Command list */}
-        <div ref={listRef} className="flex-1 overflow-y-auto p-2 space-y-1">
+        <div ref={listRef} className="flex-1 overflow-y-auto p-1.5 space-y-0.5">
           {filteredCommands.length === 0 ? (
-            <div className="py-8 text-center text-xs text-github-muted">
+            <div className="py-8 text-center text-xs text-zinc-500">
               No commands found for "{query}"
             </div>
           ) : (
@@ -419,42 +419,42 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
                   }}
                   onMouseEnter={() => setActiveIndex(idx)}
                   className={cn(
-                    'w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-colors select-none group',
+                    'w-full flex items-center justify-between px-2.5 py-2 rounded-md text-left transition-colors select-none group',
                     isSelected
-                      ? 'bg-github-hover border border-github-accent/40 text-white shadow-sm'
-                      : 'text-github-text hover:bg-github-hover/40 border border-transparent'
+                      ? 'bg-zinc-900 border border-zinc-800 text-white'
+                      : 'text-zinc-300 hover:bg-zinc-900/50 border border-transparent'
                   )}
                 >
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
                     <div
                       className={cn(
-                        'w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border transition-colors',
+                        'w-6 h-6 rounded flex items-center justify-center shrink-0 border transition-colors',
                         isSelected
-                          ? 'bg-github-accent/20 border-github-accent/40 text-github-accent'
-                          : 'bg-github-dark border-github-border text-github-muted group-hover:text-github-text'
+                          ? 'bg-black border-zinc-700 text-white'
+                          : 'bg-zinc-900 border-zinc-800 text-zinc-500 group-hover:text-zinc-300'
                       )}
                     >
                       <Icon className="w-3.5 h-3.5" />
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <div className="text-xs font-semibold text-white truncate">
+                      <div className="text-xs font-medium text-zinc-200 truncate">
                         {cmd.title}
                       </div>
                       {cmd.subtitle && (
-                        <div className="text-[11px] font-mono text-github-muted truncate mt-0.5">
+                        <div className="text-[10px] font-mono text-zinc-500 truncate mt-0.2">
                           {cmd.subtitle}
                         </div>
                       )}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 shrink-0 ml-3">
-                    <span className="text-[10px] uppercase font-mono font-medium text-github-muted px-1.5 py-0.5 rounded bg-github-dark border border-github-border">
+                  <div className="flex items-center gap-2 shrink-0 ml-2">
+                    <span className="text-[9px] uppercase font-mono text-zinc-500 px-1 py-0.2 rounded bg-zinc-900 border border-zinc-800">
                       {cmd.category}
                     </span>
                     {cmd.shortcut && (
-                      <kbd className="px-1.5 py-0.5 text-[10px] font-mono text-github-muted bg-github-dark border border-github-border rounded">
+                      <kbd className="px-1.5 py-0.2 text-[9px] font-mono text-zinc-400 bg-black border border-zinc-800 rounded">
                         {cmd.shortcut}
                       </kbd>
                     )}
@@ -466,17 +466,18 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         </div>
 
         {/* Footer info */}
-        <div className="px-4 py-2 border-t border-github-border bg-github-dark/80 flex items-center justify-between text-[11px] text-github-muted">
-          <div className="flex items-center gap-2">
-            <span>Navigation:</span>
-            <kbd className="px-1 py-0.2 bg-github-hover border border-github-border rounded text-[10px] font-mono">↑</kbd>
-            <kbd className="px-1 py-0.2 bg-github-hover border border-github-border rounded text-[10px] font-mono">↓</kbd>
-            <span>Execute:</span>
-            <kbd className="px-1 py-0.2 bg-github-hover border border-github-border rounded text-[10px] font-mono">Enter</kbd>
+        <div className="px-3.5 py-2 border-t border-zinc-900 bg-zinc-950 flex items-center justify-between text-[10px] text-zinc-500">
+          <div className="flex items-center gap-1.5">
+            <span>Navigate:</span>
+            <kbd className="px-1 py-0.2 bg-black border border-zinc-800 rounded text-[9px] font-mono">↑</kbd>
+            <kbd className="px-1 py-0.2 bg-black border border-zinc-800 rounded text-[9px] font-mono">↓</kbd>
+            <span className="ml-1">Execute:</span>
+            <kbd className="px-1 py-0.2 bg-black border border-zinc-800 rounded text-[9px] font-mono">Enter</kbd>
           </div>
-          <span>GitHelp Command Palette</span>
+          <span>Command Palette</span>
         </div>
       </div>
     </div>
   );
 };
+

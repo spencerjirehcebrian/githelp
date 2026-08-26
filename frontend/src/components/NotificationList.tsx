@@ -32,11 +32,11 @@ export const NotificationList: React.FC<NotificationListProps> = ({
 }) => {
   if (isLoading && notifications.length === 0) {
     return (
-      <div className="p-6 space-y-3">
-        {[1, 2, 3, 4, 5].map((i) => (
+      <div className="p-3 space-y-2">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
           <div
             key={i}
-            className="h-20 rounded-xl bg-github-dark/40 border border-github-border/40 animate-pulse"
+            className="h-16 rounded-md bg-zinc-900/40 border border-zinc-900 animate-pulse"
           />
         ))}
       </div>
@@ -46,13 +46,13 @@ export const NotificationList: React.FC<NotificationListProps> = ({
   if (notifications.length === 0) {
     if (searchQuery) {
       return (
-        <div className="flex flex-col items-center justify-center py-24 text-center px-4">
-          <div className="w-12 h-12 rounded-full bg-github-hover border border-github-border flex items-center justify-center text-github-muted mb-3">
-            <SearchX className="w-6 h-6" />
+        <div className="flex flex-col items-center justify-center py-20 text-center px-4">
+          <div className="w-9 h-9 rounded-md bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500 mb-2.5">
+            <SearchX className="w-4 h-4" />
           </div>
-          <h3 className="text-sm font-semibold text-white mb-1">No matching notifications</h3>
-          <p className="text-xs text-github-muted max-w-sm">
-            Could not find any notifications matching "{searchQuery}".
+          <h3 className="text-xs font-medium text-zinc-200 mb-1">No matching notifications</h3>
+          <p className="text-[11px] text-zinc-500 max-w-xs leading-relaxed">
+            No items matched "{searchQuery}".
           </p>
         </div>
       );
@@ -60,13 +60,13 @@ export const NotificationList: React.FC<NotificationListProps> = ({
 
     if (selectedBucket === 'action_required') {
       return (
-        <div className="flex flex-col items-center justify-center py-24 text-center px-4 animate-fade-in">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mb-4 shadow-lg shadow-emerald-500/5">
-            <Sparkles className="w-7 h-7" />
+        <div className="flex flex-col items-center justify-center py-20 text-center px-4 animate-fade-in">
+          <div className="w-9 h-9 rounded-md bg-zinc-900 border border-zinc-800 flex items-center justify-center text-emerald-400 mb-2.5">
+            <Sparkles className="w-4 h-4" />
           </div>
-          <h3 className="text-base font-semibold text-white mb-1">Inbox Zero Achieved</h3>
-          <p className="text-xs text-github-muted max-w-md leading-relaxed">
-            You're completely caught up! There are no pending reviews, broken builds, or urgent mentions waiting on you.
+          <h3 className="text-xs font-semibold text-zinc-200 mb-1">Inbox Zero Achieved</h3>
+          <p className="text-[11px] text-zinc-500 max-w-xs leading-relaxed">
+            You're completely caught up! No pending reviews or urgent items waiting on you.
           </p>
         </div>
       );
@@ -74,33 +74,33 @@ export const NotificationList: React.FC<NotificationListProps> = ({
 
     if (selectedBucket === 'done') {
       return (
-        <div className="flex flex-col items-center justify-center py-24 text-center px-4">
-          <div className="w-12 h-12 rounded-full bg-github-hover border border-github-border flex items-center justify-center text-emerald-400 mb-3">
-            <CheckCircle className="w-6 h-6" />
+        <div className="flex flex-col items-center justify-center py-20 text-center px-4">
+          <div className="w-9 h-9 rounded-md bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500 mb-2.5">
+            <CheckCircle className="w-4 h-4 text-emerald-400" />
           </div>
-          <h3 className="text-sm font-semibold text-white mb-1">No archived notifications</h3>
-          <p className="text-xs text-github-muted max-w-sm">
-            Completed notifications marked with <kbd className="px-1 font-mono text-[10px] bg-github-dark border border-github-border rounded">e</kbd> will show up here.
+          <h3 className="text-xs font-medium text-zinc-200 mb-1">No archived notifications</h3>
+          <p className="text-[11px] text-zinc-500 max-w-xs">
+            Completed notifications marked with <kbd className="px-1 font-mono text-[9px] bg-black border border-zinc-800 rounded">e</kbd> will show up here.
           </p>
         </div>
       );
     }
 
     return (
-      <div className="flex flex-col items-center justify-center py-24 text-center px-4">
-        <div className="w-12 h-12 rounded-full bg-github-hover border border-github-border flex items-center justify-center text-github-muted mb-3">
-          <Inbox className="w-6 h-6" />
+      <div className="flex flex-col items-center justify-center py-20 text-center px-4">
+        <div className="w-9 h-9 rounded-md bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500 mb-2.5">
+          <Inbox className="w-4 h-4" />
         </div>
-        <h3 className="text-sm font-semibold text-white mb-1">No notifications in this bucket</h3>
-        <p className="text-xs text-github-muted max-w-sm">
-          All clean for now. Press <kbd className="px-1.5 py-0.5 font-mono text-[10px] bg-github-dark border border-github-border rounded text-github-accent">r</kbd> to sync.
+        <h3 className="text-xs font-medium text-zinc-200 mb-1">Bucket is empty</h3>
+        <p className="text-[11px] text-zinc-500 max-w-xs">
+          Press <kbd className="px-1 font-mono text-[9px] bg-black border border-zinc-800 rounded text-zinc-300">r</kbd> to sync with GitHub.
         </p>
       </div>
     );
   }
 
   return (
-    <div className="p-6 space-y-2.5 max-w-5xl mx-auto">
+    <div className="p-3 space-y-1.5 max-w-5xl mx-auto">
       {notifications.map((item, idx) => (
         <NotificationCard
           key={item.id}
@@ -117,3 +117,4 @@ export const NotificationList: React.FC<NotificationListProps> = ({
     </div>
   );
 };
+

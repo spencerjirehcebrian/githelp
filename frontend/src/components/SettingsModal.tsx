@@ -129,73 +129,73 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-      <div className="bg-github-darker border border-github-border rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[85vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in text-github-text">
+      <div className="bg-black border border-zinc-800 rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[85vh]">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-github-border bg-github-dark shrink-0">
-          <div className="flex items-center gap-2 text-white font-medium">
-            <Settings className="w-5 h-5 text-github-accent" />
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-zinc-900 bg-zinc-950 shrink-0">
+          <div className="flex items-center gap-2 text-white text-xs font-semibold">
+            <Settings className="w-4 h-4 text-zinc-400" />
             <span>Preferences & Settings</span>
           </div>
           <button
             onClick={onClose}
-            className="text-github-muted hover:text-github-text transition-colors p-1 rounded hover:bg-github-hover"
+            className="text-zinc-500 hover:text-zinc-300 transition-colors p-1 rounded hover:bg-zinc-900"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Body */}
-        <div className="p-6 space-y-6 overflow-y-auto">
+        <div className="p-5 space-y-5 overflow-y-auto">
           {/* Section: Authentication */}
-          <div className="space-y-3">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-github-muted flex items-center gap-2">
-              <Key className="w-4 h-4 text-github-accent" />
+          <div className="space-y-2.5">
+            <h3 className="text-[10px] font-medium uppercase tracking-wider text-zinc-500 flex items-center gap-1.5">
+              <Key className="w-3.5 h-3.5 text-zinc-400" />
               GitHub Authentication
             </h3>
 
-            <div className="bg-github-dark border border-github-border rounded-lg p-4 space-y-3">
-              <div className="flex items-center justify-between text-sm">
+            <div className="bg-zinc-950 border border-zinc-900 rounded-md p-3.5 space-y-3">
+              <div className="flex items-center justify-between text-xs">
                 <div>
-                  <span className="font-medium text-white">Status: </span>
+                  <span className="text-zinc-400">Status: </span>
                   {authStatus?.authenticated ? (
-                    <span className="text-github-green font-semibold">
+                    <span className="text-emerald-400 font-medium">
                       Connected ({authStatus.auth_mode === 'gh_cli' ? 'GitHub CLI' : 'PAT Token'})
                     </span>
                   ) : (
-                    <span className="text-github-red font-semibold">Not Connected</span>
+                    <span className="text-rose-400 font-medium">Not Connected</span>
                   )}
                 </div>
                 {authStatus?.username && (
-                  <span className="text-xs font-mono text-github-muted bg-github-darker px-2 py-1 rounded border border-github-border">
+                  <span className="text-[11px] font-mono text-zinc-400 bg-black px-1.5 py-0.5 rounded border border-zinc-800">
                     @{authStatus.username}
                   </span>
                 )}
               </div>
 
               {authStatus?.scopes && (
-                <div className="text-xs text-github-muted">
-                  <span className="font-medium text-github-text">OAuth Scopes:</span> {authStatus.scopes}
+                <div className="text-[11px] text-zinc-500">
+                  <span className="font-medium text-zinc-400">OAuth Scopes:</span> {authStatus.scopes}
                 </div>
               )}
 
               {authError && (
-                <div className="flex items-center gap-2 text-xs text-github-red bg-github-red/10 border border-github-red/30 p-2 rounded">
-                  <AlertCircle className="w-4 h-4 shrink-0" />
+                <div className="flex items-center gap-2 text-xs text-rose-300 bg-rose-950/40 border border-rose-900/40 p-2 rounded">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                   <span>{authError}</span>
                 </div>
               )}
 
               {authSuccess && (
-                <div className="flex items-center gap-2 text-xs text-github-green bg-github-green/10 border border-github-green/30 p-2 rounded">
-                  <CheckCircle2 className="w-4 h-4 shrink-0" />
+                <div className="flex items-center gap-2 text-xs text-emerald-300 bg-emerald-950/40 border border-emerald-900/40 p-2 rounded">
+                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
                   <span>{authSuccess}</span>
                 </div>
               )}
 
               {/* PAT Input & Fallback */}
-              <div className="pt-2 border-t border-github-border/60 space-y-2">
-                <label className="block text-xs font-medium text-github-text">
+              <div className="pt-2 border-t border-zinc-900 space-y-2">
+                <label className="block text-[11px] font-medium text-zinc-300">
                   Personal Access Token (PAT) Fallback
                 </label>
                 <div className="flex gap-2">
@@ -204,12 +204,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
                     value={patInput}
                     onChange={(e) => setPatInput(e.target.value)}
-                    className="flex-1 bg-github-darker border border-github-border rounded-lg px-3 py-2 text-xs font-mono text-github-text focus:outline-none focus:border-github-accent"
+                    className="flex-1 bg-black border border-zinc-800 rounded-md px-3 py-1.5 text-xs font-mono text-zinc-200 focus:outline-none focus:border-zinc-700"
                   />
                   <button
                     onClick={handleSavePAT}
                     disabled={isSaving || !patInput}
-                    className="px-3 py-2 bg-github-accent hover:bg-blue-500 text-white rounded-lg text-xs font-medium transition-colors disabled:opacity-50"
+                    className="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-white rounded-md text-xs font-medium transition-colors disabled:opacity-50"
                   >
                     Save & Validate
                   </button>
@@ -217,38 +217,36 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     <button
                       onClick={handleDisconnect}
                       disabled={isSaving}
-                      className="px-3 py-2 bg-github-hover hover:bg-github-border border border-github-border text-github-muted hover:text-white rounded-lg text-xs font-medium transition-colors"
+                      className="px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-white rounded-md text-xs font-medium transition-colors"
                     >
                       Use gh CLI
                     </button>
                   )}
                 </div>
-                <p className="text-[11px] text-github-muted">
-                  Required scopes for PAT: <code className="text-github-accent">notifications</code>,{' '}
-                  <code className="text-github-accent">repo</code>,{' '}
-                  <code className="text-github-accent">read:org</code>.
+                <p className="text-[10px] text-zinc-500">
+                  Required scopes: <code className="text-zinc-400">notifications</code>, <code className="text-zinc-400">repo</code>, <code className="text-zinc-400">read:org</code>.
                 </p>
               </div>
             </div>
           </div>
 
           {/* Section: General Settings */}
-          <div className="space-y-3">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-github-muted flex items-center gap-2">
-              <Shield className="w-4 h-4 text-emerald-400" />
+          <div className="space-y-2.5">
+            <h3 className="text-[10px] font-medium uppercase tracking-wider text-zinc-500 flex items-center gap-1.5">
+              <Shield className="w-3.5 h-3.5 text-zinc-400" />
               Sync & Notifications
             </h3>
 
-            <div className="bg-github-dark border border-github-border rounded-lg p-4 space-y-4">
+            <div className="bg-zinc-950 border border-zinc-900 rounded-md p-3.5 space-y-3">
               {/* Poll interval */}
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-sm font-medium text-white">Background Polling Interval</div>
-                  <div className="text-xs text-github-muted">
+                  <div className="text-xs font-medium text-zinc-200">Background Polling Interval</div>
+                  <div className="text-[11px] text-zinc-500">
                     How frequently GitHelp polls GitHub for new notifications
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
                   <input
                     type="number"
                     min="15"
@@ -258,54 +256,54 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     onChange={(e) =>
                       setSettings({ ...settings, poll_interval_sec: parseInt(e.target.value, 10) || 60 })
                     }
-                    className="w-20 bg-github-darker border border-github-border rounded-lg px-2.5 py-1.5 text-xs text-right text-github-text focus:outline-none focus:border-github-accent"
+                    className="w-16 bg-black border border-zinc-800 rounded-md px-2 py-1 text-xs text-right text-zinc-200 focus:outline-none focus:border-zinc-700 tabular-nums"
                   />
-                  <span className="text-xs text-github-muted">sec</span>
+                  <span className="text-xs text-zinc-500">sec</span>
                 </div>
               </div>
 
               {/* Sound toggle */}
-              <div className="flex items-center justify-between pt-3 border-t border-github-border/60">
-                <div className="flex items-center gap-2.5">
-                  <Volume2 className="w-4 h-4 text-github-accent" />
+              <div className="flex items-center justify-between pt-2.5 border-t border-zinc-900">
+                <div className="flex items-center gap-2">
+                  <Volume2 className="w-3.5 h-3.5 text-zinc-400" />
                   <div>
-                    <div className="text-sm font-medium text-white">Sound Alerts</div>
-                    <div className="text-xs text-github-muted">
-                      Play gentle audio cue when high-priority Action Required items arrive
+                    <div className="text-xs font-medium text-zinc-200">Sound Alerts</div>
+                    <div className="text-[11px] text-zinc-500">
+                      Play audio cue when high-priority Action Required items arrive
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => playNotificationSound()}
-                    className="px-2.5 py-1 text-xs bg-github-hover hover:bg-github-border border border-github-border rounded text-github-text transition-colors"
+                    className="px-2 py-0.5 text-[11px] bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded text-zinc-300 transition-colors"
                   >
-                    Test Chime
+                    Test
                   </button>
                   <input
                     type="checkbox"
                     checked={settings.enable_sound}
                     onChange={(e) => setSettings({ ...settings, enable_sound: e.target.checked })}
-                    className="w-4 h-4 accent-github-accent rounded cursor-pointer"
+                    className="w-3.5 h-3.5 accent-zinc-500 rounded cursor-pointer"
                   />
                 </div>
               </div>
 
               {/* Browser notifications */}
-              <div className="flex items-center justify-between pt-3 border-t border-github-border/60">
-                <div className="flex items-center gap-2.5">
-                  <Bell className="w-4 h-4 text-purple-400" />
+              <div className="flex items-center justify-between pt-2.5 border-t border-zinc-900">
+                <div className="flex items-center gap-2">
+                  <Bell className="w-3.5 h-3.5 text-zinc-400" />
                   <div>
-                    <div className="text-sm font-medium text-white">Desktop Notifications</div>
-                    <div className="text-xs text-github-muted">
-                      Show OS desktop notification banners for new triage items
+                    <div className="text-xs font-medium text-zinc-200">Desktop Notifications</div>
+                    <div className="text-[11px] text-zinc-500">
+                      Show desktop notification banners for new triage items
                     </div>
                   </div>
                 </div>
                 <div>
                   <button
                     onClick={handleRequestNotificationPermission}
-                    className="px-3 py-1 bg-github-hover hover:bg-github-border border border-github-border rounded text-xs text-github-text transition-colors"
+                    className="px-2.5 py-1 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded text-[11px] text-zinc-300 transition-colors"
                   >
                     {settings.enable_browser_notifications ? 'Enabled' : 'Enable'}
                   </button>
@@ -315,13 +313,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </div>
 
           {/* Section: Appearance */}
-          <div className="space-y-3">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-github-muted flex items-center gap-2">
-              <Sun className="w-4 h-4 text-amber-400" />
+          <div className="space-y-2.5">
+            <h3 className="text-[10px] font-medium uppercase tracking-wider text-zinc-500 flex items-center gap-1.5">
+              <Sun className="w-3.5 h-3.5 text-zinc-400" />
               Theme & Appearance
             </h3>
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-2">
               {[
                 { id: 'dark', label: 'Dark', icon: Moon },
                 { id: 'light', label: 'Light', icon: Sun },
@@ -334,56 +332,56 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     setSettings({ ...settings, theme: themeChoice });
                     onThemeChange(themeChoice);
                   }}
-                  className={`flex flex-col items-center gap-2 p-3 rounded-lg border text-xs font-medium transition-all ${
+                  className={`flex flex-col items-center gap-1.5 p-2.5 rounded-md border text-xs font-medium transition-colors ${
                     currentTheme === id
-                      ? 'bg-github-accent/15 border-github-accent text-github-accent'
-                      : 'bg-github-dark border-github-border hover:border-github-muted text-github-text'
+                      ? 'bg-zinc-900 border-zinc-700 text-white'
+                      : 'bg-zinc-950 border-zinc-900 hover:border-zinc-800 text-zinc-400'
                   }`}
                 >
-                  <Icon className="w-5 h-5" />
-                  <span>{label}</span>
+                  <Icon className="w-4 h-4" />
+                  <span className="text-[11px]">{label}</span>
                 </button>
               ))}
             </div>
           </div>
 
           {/* Section: Ignored Repositories */}
-          <div className="space-y-3">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-github-muted flex items-center gap-2">
-              <Shield className="w-4 h-4 text-github-red" />
+          <div className="space-y-2.5">
+            <h3 className="text-[10px] font-medium uppercase tracking-wider text-zinc-500 flex items-center gap-1.5">
+              <Shield className="w-3.5 h-3.5 text-zinc-400" />
               Ignored Repositories
             </h3>
 
-            <div className="bg-github-dark border border-github-border rounded-lg p-4 space-y-3">
+            <div className="bg-zinc-950 border border-zinc-900 rounded-md p-3.5 space-y-2.5">
               <form onSubmit={handleAddIgnoredRepo} className="flex gap-2">
                 <input
                   type="text"
                   placeholder="e.g. owner/noisy-repo"
                   value={newRepoInput}
                   onChange={(e) => setNewRepoInput(e.target.value)}
-                  className="flex-1 bg-github-darker border border-github-border rounded-lg px-3 py-1.5 text-xs text-github-text focus:outline-none focus:border-github-accent"
+                  className="flex-1 bg-black border border-zinc-800 rounded-md px-3 py-1.5 text-xs text-zinc-200 focus:outline-none focus:border-zinc-700"
                 />
                 <button
                   type="submit"
-                  className="flex items-center gap-1 px-3 py-1.5 bg-github-hover hover:bg-github-border border border-github-border text-github-text rounded-lg text-xs font-medium transition-colors"
+                  className="flex items-center gap-1 px-3 py-1.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-200 rounded-md text-xs font-medium transition-colors"
                 >
-                  <Plus className="w-3.5 h-3.5" />
+                  <Plus className="w-3 h-3" />
                   Add
                 </button>
               </form>
 
               {settings.ignored_repos.length > 0 ? (
-                <div className="flex flex-wrap gap-2 pt-2">
+                <div className="flex flex-wrap gap-1.5 pt-1">
                   {settings.ignored_repos.map((repo) => (
                     <span
                       key={repo}
-                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-github-darker border border-github-border text-xs text-github-text"
+                      className="flex items-center gap-1 px-2 py-0.5 rounded bg-black border border-zinc-800 text-[11px] text-zinc-300 font-mono"
                     >
                       <span>{repo}</span>
                       <button
                         type="button"
                         onClick={() => handleRemoveIgnoredRepo(repo)}
-                        className="text-github-muted hover:text-github-red transition-colors"
+                        className="text-zinc-500 hover:text-rose-400 transition-colors ml-1"
                       >
                         <Trash2 className="w-3 h-3" />
                       </button>
@@ -391,24 +389,24 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   ))}
                 </div>
               ) : (
-                <div className="text-xs text-github-muted italic">No repositories ignored.</div>
+                <div className="text-[11px] text-zinc-600 italic">No repositories ignored.</div>
               )}
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-github-border bg-github-dark flex justify-end gap-3 shrink-0">
+        <div className="px-5 py-3 border-t border-zinc-900 bg-zinc-950 flex justify-end gap-2.5 shrink-0">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-xs font-medium text-github-muted hover:text-github-text transition-colors"
+            className="px-3 py-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-200 transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleSaveSettings}
             disabled={isSaving}
-            className="px-5 py-2 bg-github-accent hover:bg-blue-500 text-white rounded-lg text-xs font-medium transition-colors disabled:opacity-50"
+            className="px-4 py-1.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-white rounded-md text-xs font-medium transition-colors disabled:opacity-50"
           >
             Save Preferences
           </button>
@@ -417,3 +415,4 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     </div>
   );
 };
+

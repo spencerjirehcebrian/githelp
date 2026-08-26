@@ -9,24 +9,30 @@ export default {
     extend: {
       colors: {
         github: {
-          dark: '#0d1117',
-          darker: '#010409',
-          border: '#30363d',
-          hover: '#161b22',
-          muted: '#8b949e',
-          text: '#c9d1d9',
-          accent: '#58a6ff',
-          green: '#238636',
-          red: '#da3633',
-          purple: '#8957e5',
-          amber: '#d29922',
+          dark: '#000000',
+          darker: '#09090b',
+          card: '#0c0c0e',
+          cardHover: '#141417',
+          border: '#202024',
+          borderSubtle: '#18181b',
+          hover: '#141417',
+          muted: '#71717a',
+          text: '#e4e4e7',
+          textBright: '#ffffff',
+          accent: '#3b82f6',
+          accentHover: '#60a5fa',
+          green: '#22c55e',
+          red: '#ef4444',
+          purple: '#a855f7',
+          amber: '#f59e0b',
         }
       },
       fontFamily: {
-        sans: ['-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Helvetica', 'Arial', 'sans-serif'],
-        mono: ['ui-monospace', 'SFMono-Regular', 'SF Mono', 'Menlo', 'Consolas', 'monospace'],
+        sans: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Text"', '"SF Pro Display"', '"Segoe UI"', 'Helvetica', 'Arial', 'sans-serif'],
+        mono: ['"SF Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
       }
     },
   },
   plugins: [],
 }
+

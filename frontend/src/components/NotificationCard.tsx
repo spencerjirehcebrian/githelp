@@ -79,27 +79,27 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
       if (state === 'merged') {
         return (
           <span title="Merged Pull Request">
-            <GitMerge className="w-4 h-4 text-purple-400 shrink-0" />
+            <GitMerge className="w-3.5 h-3.5 text-purple-400 shrink-0" />
           </span>
         );
       }
       if (state === 'closed') {
         return (
           <span title="Closed Pull Request">
-            <GitPullRequestClosed className="w-4 h-4 text-rose-400 shrink-0" />
+            <GitPullRequestClosed className="w-3.5 h-3.5 text-rose-400 shrink-0" />
           </span>
         );
       }
       if (state === 'draft') {
         return (
           <span title="Draft Pull Request">
-            <GitPullRequestDraft className="w-4 h-4 text-zinc-400 shrink-0" />
+            <GitPullRequestDraft className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
           </span>
         );
       }
       return (
         <span title="Open Pull Request">
-          <GitPullRequest className="w-4 h-4 text-emerald-400 shrink-0" />
+          <GitPullRequest className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
         </span>
       );
     }
@@ -108,13 +108,13 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
       if (state === 'closed') {
         return (
           <span title="Closed Issue">
-            <CheckCircle2 className="w-4 h-4 text-purple-400 shrink-0" />
+            <CheckCircle2 className="w-3.5 h-3.5 text-purple-400 shrink-0" />
           </span>
         );
       }
       return (
         <span title="Open Issue">
-          <CircleDot className="w-4 h-4 text-emerald-400 shrink-0" />
+          <CircleDot className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
         </span>
       );
     }
@@ -123,20 +123,20 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
       if (item.ci_status === 'success') {
         return (
           <span title="CI Passed">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
           </span>
         );
       }
       return (
         <span title="CI Failed">
-          <XCircle className="w-4 h-4 text-rose-400 shrink-0" />
+          <XCircle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
         </span>
       );
     }
 
     return (
       <span title={type}>
-        <CircleDot className="w-4 h-4 text-blue-400 shrink-0" />
+        <CircleDot className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
       </span>
     );
   };
@@ -145,34 +145,34 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
   const renderReasonBadge = () => {
     const r = (item.reason || '').toLowerCase();
     let text = item.reason;
-    let style = 'bg-zinc-800 text-zinc-300 border-zinc-700';
+    let style = 'bg-zinc-900 text-zinc-400 border-zinc-800';
     let icon = null;
 
     if (r === 'review_requested') {
       text = 'Review requested';
-      style = 'bg-amber-500/15 text-amber-300 border-amber-500/30';
-      icon = <Flame className="w-3 h-3 text-amber-400" />;
+      style = 'bg-amber-950/40 text-amber-300 border-amber-800/40';
+      icon = <Flame className="w-2.5 h-2.5 text-amber-400" />;
     } else if (r === 'mention' || r === 'team_mention') {
       text = r === 'team_mention' ? 'Team mention' : 'Mentioned';
-      style = 'bg-purple-500/15 text-purple-300 border-purple-500/30';
-      icon = <AtSign className="w-3 h-3 text-purple-400" />;
+      style = 'bg-purple-950/40 text-purple-300 border-purple-800/40';
+      icon = <AtSign className="w-2.5 h-2.5 text-purple-400" />;
     } else if (r === 'assigned') {
       text = 'Assigned';
-      style = 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30';
-      icon = <UserCheck className="w-3 h-3 text-emerald-400" />;
+      style = 'bg-emerald-950/40 text-emerald-300 border-emerald-800/40';
+      icon = <UserCheck className="w-2.5 h-2.5 text-emerald-400" />;
     } else if (r === 'ci_activity') {
       text = 'CI Alert';
-      style = 'bg-rose-500/15 text-rose-300 border-rose-500/30';
-      icon = <XCircle className="w-3 h-3 text-rose-400" />;
+      style = 'bg-rose-950/40 text-rose-300 border-rose-800/40';
+      icon = <XCircle className="w-2.5 h-2.5 text-rose-400" />;
     } else if (r === 'author') {
       text = 'Author';
-      style = 'bg-blue-500/15 text-blue-300 border-blue-500/30';
+      style = 'bg-blue-950/40 text-blue-300 border-blue-800/40';
     }
 
     return (
       <span
         className={cn(
-          'inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium border shrink-0',
+          'inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] font-medium border shrink-0',
           style
         )}
       >
@@ -187,24 +187,24 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
     if (!item.ci_status) return null;
     if (item.ci_status === 'success') {
       return (
-        <span className="flex items-center gap-1 text-[11px] text-emerald-400 font-mono" title="CI Checks Passed">
-          <CheckCircle2 className="w-3.5 h-3.5" />
+        <span className="flex items-center gap-1 text-[10px] text-emerald-400 font-mono" title="CI Checks Passed">
+          <CheckCircle2 className="w-3 h-3" />
           <span>Checks passed</span>
         </span>
       );
     }
     if (item.ci_status === 'failure') {
       return (
-        <span className="flex items-center gap-1 text-[11px] text-rose-400 font-mono" title="CI Checks Failed">
-          <XCircle className="w-3.5 h-3.5" />
+        <span className="flex items-center gap-1 text-[10px] text-rose-400 font-mono" title="CI Checks Failed">
+          <XCircle className="w-3 h-3" />
           <span>Checks failing</span>
         </span>
       );
     }
     if (item.ci_status === 'pending') {
       return (
-        <span className="flex items-center gap-1 text-[11px] text-amber-400 font-mono" title="CI Checks Running">
-          <Clock className="w-3.5 h-3.5" />
+        <span className="flex items-center gap-1 text-[10px] text-amber-400 font-mono" title="CI Checks Running">
+          <Clock className="w-3 h-3" />
           <span>Checks pending</span>
         </span>
       );
@@ -219,14 +219,14 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
       data-testid="notification-card"
       data-selected={isSelected ? 'true' : 'false'}
       className={cn(
-        'group relative flex items-start justify-between gap-4 p-3.5 rounded-xl border transition-all cursor-pointer select-none',
+        'group relative flex items-start justify-between gap-3 p-3 rounded-lg border transition-colors cursor-pointer select-none',
         isSelected
-          ? 'bg-github-hover/90 border-github-accent shadow-lg shadow-github-accent/5 ring-1 ring-github-accent'
-          : 'bg-github-dark/80 border-github-border/80 hover:bg-github-hover/50 hover:border-github-border'
+          ? 'bg-zinc-900/90 border-zinc-700 shadow-sm ring-1 ring-zinc-700/80'
+          : 'bg-zinc-950/70 border-zinc-900 hover:bg-zinc-900/50 hover:border-zinc-800'
       )}
     >
       {/* Left section: status dot, icon, details */}
-      <div className="flex items-start gap-3 min-w-0 flex-1">
+      <div className="flex items-start gap-2.5 min-w-0 flex-1">
         {/* Unread indicator */}
         <div className="pt-1">
           <button
@@ -235,12 +235,12 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
               onToggleUnread(item.id, item.unread);
             }}
             title={item.unread ? 'Mark as read (u)' : 'Mark as unread (u)'}
-            className="group/unread"
+            className="group/unread p-0.5"
           >
             {item.unread ? (
-              <span className="block w-2 h-2 rounded-full bg-github-accent group-hover/unread:ring-2 ring-github-accent/40" />
+              <span className="block w-1.5 h-1.5 rounded-full bg-blue-500 group-hover/unread:ring-2 ring-blue-500/30" />
             ) : (
-              <span className="block w-2 h-2 rounded-full bg-transparent group-hover/unread:bg-github-muted/40" />
+              <span className="block w-1.5 h-1.5 rounded-full bg-transparent group-hover/unread:bg-zinc-700" />
             )}
           </button>
         </div>
@@ -249,42 +249,42 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
         <div className="pt-0.5">{renderTypeIcon()}</div>
 
         {/* Core details */}
-        <div className="space-y-1.5 min-w-0 flex-1">
+        <div className="space-y-1 min-w-0 flex-1">
           {/* Top metadata line: repo, reason badge, pin */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs font-mono font-medium text-github-muted hover:text-github-text truncate">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-[11px] font-mono font-medium text-zinc-400 hover:text-zinc-200 truncate">
               {item.repository}
             </span>
             {renderReasonBadge()}
             {item.triage.pinned && (
-              <span className="flex items-center gap-1 text-[10px] text-amber-400 font-medium px-1.5 py-0.2 rounded bg-amber-500/15 border border-amber-500/30">
-                <Pin className="w-2.5 h-2.5 fill-amber-400" />
+              <span className="flex items-center gap-1 text-[9px] text-amber-300 font-medium px-1 py-0.2 rounded bg-amber-950/40 border border-amber-800/40">
+                <Pin className="w-2 h-2 fill-amber-300" />
                 Pinned
               </span>
             )}
             {item.triage.snoozed_until && (
-              <span className="flex items-center gap-1 text-[10px] text-indigo-400 font-medium px-1.5 py-0.2 rounded bg-indigo-500/15 border border-indigo-500/30">
-                <Clock className="w-2.5 h-2.5" />
+              <span className="flex items-center gap-1 text-[9px] text-indigo-300 font-medium px-1 py-0.2 rounded bg-indigo-950/40 border border-indigo-800/40">
+                <Clock className="w-2 h-2" />
                 Snoozed
               </span>
             )}
           </div>
 
           {/* Title with link */}
-          <div className="flex items-start gap-2">
+          <div className="flex items-start gap-1.5">
             <a
               href={item.html_url}
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
               className={cn(
-                'text-sm font-medium leading-snug hover:text-github-accent hover:underline transition-colors line-clamp-2',
-                item.unread ? 'text-white font-semibold' : 'text-github-text'
+                'text-xs font-medium leading-snug hover:text-blue-400 hover:underline transition-colors line-clamp-2',
+                item.unread ? 'text-white font-semibold' : 'text-zinc-300'
               )}
             >
               {item.title}
               {item.number ? (
-                <span className="text-github-muted font-mono font-normal ml-1.5">
+                <span className="text-zinc-500 font-mono font-normal ml-1 text-[11px]">
                   #{item.number}
                 </span>
               ) : null}
@@ -292,18 +292,18 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
           </div>
 
           {/* Bottom metadata: branch checkout, CI status, author, time */}
-          <div className="flex items-center gap-3 text-xs text-github-muted flex-wrap pt-0.5">
+          <div className="flex items-center gap-2.5 text-[11px] text-zinc-500 flex-wrap pt-0.5">
             {/* PR Branch command */}
             {item.branch && (
               <button
                 onClick={handleCopyCheckout}
-                className="flex items-center gap-1 px-2 py-0.5 rounded bg-github-darker hover:bg-github-border/70 border border-github-border text-[11px] font-mono text-github-text transition-colors group/branch"
+                className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-black/60 hover:bg-zinc-800 border border-zinc-800 text-[10px] font-mono text-zinc-300 transition-colors group/branch"
                 title={`Click to copy: git checkout ${item.branch}`}
               >
                 {copiedBranch ? (
-                  <Check className="w-3 h-3 text-github-green" />
+                  <Check className="w-2.5 h-2.5 text-emerald-400" />
                 ) : (
-                  <Terminal className="w-3 h-3 text-github-muted group-hover/branch:text-github-accent" />
+                  <Terminal className="w-2.5 h-2.5 text-zinc-500 group-hover/branch:text-zinc-300" />
                 )}
                 <span>{item.branch}</span>
               </button>
@@ -314,35 +314,40 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
 
             {/* Author info */}
             {item.author && (
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1">
                 {item.author_avatar && (
                   <img
                     src={item.author_avatar}
                     alt={item.author}
-                    className="w-4 h-4 rounded-full border border-github-border object-cover"
+                    className="w-3.5 h-3.5 rounded-full border border-zinc-800 object-cover"
                   />
                 )}
-                <span>@{item.author}</span>
+                <span className="text-zinc-400">@{item.author}</span>
               </div>
             )}
 
             {/* Timestamp */}
-            <span>{formatTimeAgo(item.updated_at)}</span>
+            <span className="tabular-nums text-zinc-500">{formatTimeAgo(item.updated_at)}</span>
           </div>
         </div>
       </div>
 
       {/* Right action tools (Hover or Selected) */}
-      <div className="flex items-center gap-1 shrink-0 pt-0.5 opacity-80 group-hover:opacity-100 transition-opacity">
+      <div
+        className={cn(
+          'flex items-center gap-0.5 shrink-0 pt-0.5 transition-opacity',
+          isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100'
+        )}
+      >
         <button
           onClick={(e) => {
             e.stopPropagation();
             onMarkDone(item.id);
           }}
-          className="p-1.5 rounded-lg text-github-muted hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors"
+          className="p-1 rounded text-zinc-400 hover:text-emerald-400 hover:bg-zinc-900 transition-colors"
           title="Mark as Done (e)"
         >
-          <Archive className="w-4 h-4" />
+          <Archive className="w-3.5 h-3.5" />
         </button>
 
         <button
@@ -350,10 +355,10 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
             e.stopPropagation();
             onOpenSnooze(item.id);
           }}
-          className="p-1.5 rounded-lg text-github-muted hover:text-indigo-400 hover:bg-indigo-500/10 transition-colors"
+          className="p-1 rounded text-zinc-400 hover:text-indigo-400 hover:bg-zinc-900 transition-colors"
           title="Snooze (z)"
         >
-          <Clock className="w-4 h-4" />
+          <Clock className="w-3.5 h-3.5" />
         </button>
 
         <button
@@ -362,22 +367,22 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
             onTogglePin(item.id, item.triage.pinned);
           }}
           className={cn(
-            'p-1.5 rounded-lg transition-colors',
+            'p-1 rounded transition-colors',
             item.triage.pinned
-              ? 'text-amber-400 hover:text-amber-300 hover:bg-amber-500/10'
-              : 'text-github-muted hover:text-amber-400 hover:bg-amber-500/10'
+              ? 'text-amber-400 hover:text-amber-300 hover:bg-zinc-900'
+              : 'text-zinc-400 hover:text-amber-400 hover:bg-zinc-900'
           )}
           title={item.triage.pinned ? 'Unpin (p)' : 'Pin to top (p)'}
         >
-          <Pin className={cn('w-4 h-4', item.triage.pinned && 'fill-amber-400')} />
+          <Pin className={cn('w-3.5 h-3.5', item.triage.pinned && 'fill-amber-400')} />
         </button>
 
         <button
           onClick={handleCopyLink}
-          className="p-1.5 rounded-lg text-github-muted hover:text-github-accent hover:bg-github-accent/10 transition-colors"
+          className="p-1 rounded text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors"
           title="Copy Link (c)"
         >
-          <Copy className="w-4 h-4" />
+          <Copy className="w-3.5 h-3.5" />
         </button>
 
         <a
@@ -385,12 +390,13 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
           target="_blank"
           rel="noopener noreferrer"
           onClick={(e) => e.stopPropagation()}
-          className="p-1.5 rounded-lg text-github-muted hover:text-white hover:bg-github-hover transition-colors"
+          className="p-1 rounded text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors"
           title="Open in Browser (o / Enter)"
         >
-          <ExternalLink className="w-4 h-4" />
+          <ExternalLink className="w-3.5 h-3.5" />
         </a>
       </div>
     </div>
   );
 };
+

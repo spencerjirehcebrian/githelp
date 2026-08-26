@@ -70,12 +70,12 @@ export const InspectionCockpit: React.FC<InspectionCockpitProps> = ({
         aria-label="Git and PR Inspection Cockpit"
         className="flex-1 h-full bg-github-dark flex flex-col items-center justify-center p-8 text-center select-none"
       >
-        <div className="w-12 h-12 rounded-2xl bg-github-hover border border-github-border flex items-center justify-center text-github-muted mb-4 shadow-sm">
-          <Terminal className="w-6 h-6" />
+        <div className="w-10 h-10 rounded-md bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-500 mb-3 shadow-sm">
+          <Terminal className="w-4 h-4" />
         </div>
-        <h3 className="text-sm font-semibold text-white mb-1">No Notification Selected</h3>
-        <p className="text-xs text-github-muted max-w-sm leading-relaxed">
-          Select an item from the work stream using <kbd className="px-1.5 py-0.5 bg-github-hover border border-github-border rounded text-[10px] font-mono text-github-text">j</kbd> / <kbd className="px-1.5 py-0.5 bg-github-hover border border-github-border rounded text-[10px] font-mono text-github-text">k</kbd> or click to inspect PR metadata, file diffs, and execute Git commands.
+        <h3 className="text-xs font-medium text-zinc-200 mb-1">No Notification Selected</h3>
+        <p className="text-[11px] text-zinc-500 max-w-sm leading-relaxed">
+          Select an item from the triage list with <kbd className="px-1 py-0.2 bg-zinc-900 border border-zinc-800 rounded text-[9px] font-mono text-zinc-300">j</kbd> / <kbd className="px-1 py-0.2 bg-zinc-900 border border-zinc-800 rounded text-[9px] font-mono text-zinc-300">k</kbd> to inspect PR metadata, file diffs, and Git commands.
         </p>
       </section>
     );
@@ -111,31 +111,31 @@ export const InspectionCockpit: React.FC<InspectionCockpitProps> = ({
     if (item.type === 'PullRequest') {
       if (s === 'merged') {
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-purple-500/15 text-purple-300 border border-purple-500/30">
-            <GitMerge className="w-3.5 h-3.5" />
+          <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] font-medium bg-purple-950/40 text-purple-300 border border-purple-800/40">
+            <GitMerge className="w-3 h-3" />
             Merged
           </span>
         );
       }
       if (s === 'draft') {
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-zinc-800 text-zinc-300 border border-zinc-700">
-            <GitPullRequestDraft className="w-3.5 h-3.5" />
+          <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] font-medium bg-zinc-900 text-zinc-400 border border-zinc-800">
+            <GitPullRequestDraft className="w-3 h-3" />
             Draft
           </span>
         );
       }
       if (s === 'closed') {
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-rose-500/15 text-rose-300 border border-rose-500/30">
-            <GitPullRequestClosed className="w-3.5 h-3.5" />
+          <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] font-medium bg-rose-950/40 text-rose-300 border border-rose-800/40">
+            <GitPullRequestClosed className="w-3 h-3" />
             Closed
           </span>
         );
       }
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
-          <GitPullRequest className="w-3.5 h-3.5" />
+        <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] font-medium bg-emerald-950/40 text-emerald-300 border border-emerald-800/40">
+          <GitPullRequest className="w-3 h-3" />
           Open PR
         </span>
       );
@@ -144,22 +144,22 @@ export const InspectionCockpit: React.FC<InspectionCockpitProps> = ({
     if (item.type === 'Issue') {
       if (s === 'closed') {
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-purple-500/15 text-purple-300 border border-purple-500/30">
-            <CheckCircle2 className="w-3.5 h-3.5" />
+          <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] font-medium bg-purple-950/40 text-purple-300 border border-purple-800/40">
+            <CheckCircle2 className="w-3 h-3" />
             Closed Issue
           </span>
         );
       }
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
-          <CircleDot className="w-3.5 h-3.5" />
+        <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] font-medium bg-emerald-950/40 text-emerald-300 border border-emerald-800/40">
+          <CircleDot className="w-3 h-3" />
           Open Issue
         </span>
       );
     }
 
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-blue-500/15 text-blue-300 border border-blue-500/30">
+      <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[10px] font-medium bg-blue-950/40 text-blue-300 border border-blue-800/40">
         {item.type}
       </span>
     );
@@ -169,29 +169,29 @@ export const InspectionCockpit: React.FC<InspectionCockpitProps> = ({
     const r = (item.reason || '').toLowerCase();
     if (r === 'review_requested') {
       return (
-        <span className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-400">
-          <Flame className="w-3 h-3" />
+        <span className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-400">
+          <Flame className="w-2.5 h-2.5" />
           Review Requested
         </span>
       );
     }
     if (r === 'mention' || r === 'team_mention') {
       return (
-        <span className="inline-flex items-center gap-1 text-[11px] font-medium text-purple-400">
-          <AtSign className="w-3 h-3" />
+        <span className="inline-flex items-center gap-1 text-[10px] font-medium text-purple-400">
+          <AtSign className="w-2.5 h-2.5" />
           Mentioned
         </span>
       );
     }
     if (r === 'assigned') {
       return (
-        <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-400">
-          <UserCheck className="w-3 h-3" />
+        <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-400">
+          <UserCheck className="w-2.5 h-2.5" />
           Assigned
         </span>
       );
     }
-    return <span className="text-[11px] text-github-muted">{item.reason}</span>;
+    return <span className="text-[10px] text-zinc-500">{item.reason}</span>;
   };
 
   const filesList = meta?.files || [];
@@ -201,18 +201,18 @@ export const InspectionCockpit: React.FC<InspectionCockpitProps> = ({
     <section 
       data-testid="inspection-cockpit"
       aria-label="Git and PR Inspection Cockpit"
-      className="flex-1 h-full bg-github-dark border-l border-github-border flex flex-col min-w-0 overflow-hidden"
+      className="flex-1 h-full bg-github-dark border-l border-github-border flex flex-col min-w-0 overflow-hidden text-github-text"
     >
       {/* Cockpit Header */}
-      <header className="p-4 border-b border-github-border bg-github-darker/60 flex flex-col gap-3 shrink-0">
+      <header className="p-3.5 border-b border-github-border bg-black/60 flex flex-col gap-2.5 shrink-0">
         {/* Top line: repo, number, state, reason, actions */}
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div className="flex items-center gap-2 flex-wrap min-w-0">
-            <span className="text-xs font-mono font-medium text-github-accent bg-github-accent/10 px-2 py-0.5 rounded border border-github-accent/20">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+            <span className="text-[11px] font-mono font-medium text-zinc-300 bg-zinc-900 px-1.5 py-0.5 rounded border border-zinc-800">
               {item.repository}
             </span>
             {item.number ? (
-              <span className="text-xs font-mono font-semibold text-white">
+              <span className="text-[11px] font-mono font-semibold text-white">
                 #{item.number}
               </span>
             ) : null}
@@ -221,107 +221,105 @@ export const InspectionCockpit: React.FC<InspectionCockpitProps> = ({
           </div>
 
           {/* Quick Toolbar */}
-          <div className="flex items-center gap-1 shrink-0">
+          <div className="flex items-center gap-0.5 shrink-0">
             <button
               onClick={() => onToggleUnread(item.id, item.unread)}
-              className="p-1.5 rounded-lg text-github-muted hover:text-github-accent hover:bg-github-accent/10 border border-transparent hover:border-github-accent/20 transition-all"
+              className="p-1 rounded text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors"
               title={item.unread ? 'Mark as Read (u)' : 'Mark as Unread (u)'}
             >
-              <CircleDot className={cn('w-4 h-4', item.unread && 'text-github-accent')} />
+              <CircleDot className={cn('w-3.5 h-3.5', item.unread && 'text-blue-400')} />
             </button>
             <button
               onClick={() => onMarkDone(item.id)}
-              className="p-1.5 rounded-lg text-github-muted hover:text-emerald-400 hover:bg-emerald-500/10 border border-transparent hover:border-emerald-500/20 transition-all"
+              className="p-1 rounded text-zinc-400 hover:text-emerald-400 hover:bg-zinc-900 transition-colors"
               title="Mark as Done (e)"
             >
-              <Archive className="w-4 h-4" />
+              <Archive className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={() => onOpenSnooze(item.id)}
-              className="p-1.5 rounded-lg text-github-muted hover:text-indigo-400 hover:bg-indigo-500/10 border border-transparent hover:border-indigo-500/20 transition-all"
+              className="p-1 rounded text-zinc-400 hover:text-indigo-400 hover:bg-zinc-900 transition-colors"
               title="Snooze (z)"
             >
-              <Clock className="w-4 h-4" />
+              <Clock className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={() => onTogglePin(item.id, item.triage?.pinned || false)}
               className={cn(
-                'p-1.5 rounded-lg border border-transparent transition-all',
+                'p-1 rounded transition-colors',
                 item.triage?.pinned
-                  ? 'text-amber-400 bg-amber-500/10 border-amber-500/20'
-                  : 'text-github-muted hover:text-amber-400 hover:bg-amber-500/10'
+                  ? 'text-amber-400 bg-zinc-900'
+                  : 'text-zinc-400 hover:text-amber-400 hover:bg-zinc-900'
               )}
               title={item.triage?.pinned ? 'Unpin (p)' : 'Pin to top (p)'}
             >
-              <Pin className={cn('w-4 h-4', item.triage?.pinned && 'fill-amber-400')} />
+              <Pin className={cn('w-3.5 h-3.5', item.triage?.pinned && 'fill-amber-400')} />
             </button>
             <a
               href={item.html_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="p-1.5 rounded-lg text-github-muted hover:text-white hover:bg-github-hover border border-transparent hover:border-github-border transition-all"
+              className="p-1 rounded text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors"
               title="Open in GitHub (o / Enter)"
             >
-              <ExternalLink className="w-4 h-4" />
+              <ExternalLink className="w-3.5 h-3.5" />
             </a>
           </div>
         </div>
 
         {/* Title */}
-        <h2 className="text-base font-semibold text-white leading-snug tracking-tight">
+        <h2 className="text-sm font-semibold text-white leading-snug tracking-tight">
           {item.title}
         </h2>
 
         {/* Author metadata & branch info */}
-        <div className="flex items-center justify-between gap-4 flex-wrap text-xs text-github-muted pt-0.5 border-t border-github-border/40">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between gap-3 flex-wrap text-[11px] text-zinc-500 pt-1 border-t border-zinc-900">
+          <div className="flex items-center gap-1.5">
             {item.author_avatar ? (
               <img
                 src={item.author_avatar}
                 alt={item.author}
-                className="w-5 h-5 rounded-full border border-github-border object-cover"
+                className="w-4 h-4 rounded-full border border-zinc-800 object-cover"
               />
             ) : (
-              <div className="w-5 h-5 rounded-full bg-github-hover flex items-center justify-center font-mono text-[10px] text-github-text">
+              <div className="w-4 h-4 rounded-full bg-zinc-900 flex items-center justify-center font-mono text-[9px] text-zinc-400">
                 {item.author ? item.author.charAt(0).toUpperCase() : '?'}
               </div>
             )}
-            <span className="text-github-text font-medium">@{item.author}</span>
+            <span className="text-zinc-300 font-medium">@{item.author}</span>
             <span>updated {formatTimeAgo(item.updated_at)}</span>
           </div>
 
           {/* Quick branch pill */}
           {item.branch && (
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={() => handleCopy('header-branch', gitCmds.gitCheckout, `git checkout ${item.branch}`)}
-                className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-github-hover hover:bg-github-border border border-github-border font-mono text-[11px] text-github-text transition-colors"
-                title="Click to copy checkout command"
-              >
-                {copiedKey === 'header-branch' ? (
-                  <Check className="w-3 h-3 text-emerald-400" />
-                ) : (
-                  <Terminal className="w-3 h-3 text-github-accent" />
-                )}
-                <span>{item.branch}</span>
-              </button>
-            </div>
+            <button
+              onClick={() => handleCopy('header-branch', gitCmds.gitCheckout, `git checkout ${item.branch}`)}
+              className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 font-mono text-[10px] text-zinc-300 transition-colors"
+              title="Click to copy checkout command"
+            >
+              {copiedKey === 'header-branch' ? (
+                <Check className="w-2.5 h-2.5 text-emerald-400" />
+              ) : (
+                <Terminal className="w-2.5 h-2.5 text-zinc-400" />
+              )}
+              <span>{item.branch}</span>
+            </button>
           )}
         </div>
 
         {/* Git Quick-Action Command Bar */}
-        <div className="bg-github-darker p-2 rounded-lg border border-github-border flex items-center gap-2 flex-wrap">
-          <span className="text-[11px] font-mono font-semibold uppercase text-github-muted shrink-0 px-1">
-            Git Actions:
+        <div className="bg-black/50 p-1.5 rounded-md border border-zinc-900 flex items-center gap-1.5 flex-wrap">
+          <span className="text-[10px] font-mono text-zinc-500 shrink-0 px-1">
+            Git:
           </span>
 
           {item.branch && (
             <button
               onClick={() => handleCopy('git-checkout', gitCmds.gitCheckout, gitCmds.gitCheckout)}
-              className="flex items-center gap-1 px-2.5 py-1 rounded bg-github-hover hover:bg-github-border border border-github-border text-xs font-mono text-white transition-colors"
+              className="flex items-center gap-1 px-2 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-[11px] font-mono text-zinc-200 transition-colors"
               title="Copy: git checkout <branch>"
             >
-              {copiedKey === 'git-checkout' ? <Check className="w-3 h-3 text-emerald-400" /> : <Terminal className="w-3 h-3 text-github-accent" />}
+              {copiedKey === 'git-checkout' ? <Check className="w-2.5 h-2.5 text-emerald-400" /> : <Terminal className="w-2.5 h-2.5 text-zinc-400" />}
               <span>Checkout</span>
             </button>
           )}
@@ -329,10 +327,10 @@ export const InspectionCockpit: React.FC<InspectionCockpitProps> = ({
           {item.number ? (
             <button
               onClick={() => handleCopy('gh-checkout', gitCmds.ghPrCheckout, gitCmds.ghPrCheckout)}
-              className="flex items-center gap-1 px-2.5 py-1 rounded bg-github-hover hover:bg-github-border border border-github-border text-xs font-mono text-white transition-colors"
+              className="flex items-center gap-1 px-2 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-[11px] font-mono text-zinc-200 transition-colors"
               title="Copy: gh pr checkout <num>"
             >
-              {copiedKey === 'gh-checkout' ? <Check className="w-3 h-3 text-emerald-400" /> : <Terminal className="w-3 h-3 text-indigo-400" />}
+              {copiedKey === 'gh-checkout' ? <Check className="w-2.5 h-2.5 text-emerald-400" /> : <Terminal className="w-2.5 h-2.5 text-zinc-400" />}
               <span>gh pr checkout</span>
             </button>
           ) : null}
@@ -340,43 +338,43 @@ export const InspectionCockpit: React.FC<InspectionCockpitProps> = ({
           {item.number ? (
             <button
               onClick={() => handleCopy('gh-diff', gitCmds.ghPrDiff, gitCmds.ghPrDiff)}
-              className="flex items-center gap-1 px-2.5 py-1 rounded bg-github-hover hover:bg-github-border border border-github-border text-xs font-mono text-white transition-colors"
+              className="flex items-center gap-1 px-2 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-[11px] font-mono text-zinc-200 transition-colors"
               title="Copy: gh pr diff <num>"
             >
-              {copiedKey === 'gh-diff' ? <Check className="w-3 h-3 text-emerald-400" /> : <FileDiffIcon className="w-3 h-3 text-amber-400" />}
+              {copiedKey === 'gh-diff' ? <Check className="w-2.5 h-2.5 text-emerald-400" /> : <FileDiffIcon className="w-2.5 h-2.5 text-zinc-400" />}
               <span>gh pr diff</span>
             </button>
           ) : null}
 
           <button
             onClick={() => handleCopy('cursor-link', gitCmds.openCursor, `Cursor open link: ${gitCmds.openCursor}`)}
-            className="flex items-center gap-1 px-2.5 py-1 rounded bg-github-hover hover:bg-github-border border border-github-border text-xs font-mono text-white transition-colors"
+            className="flex items-center gap-1 px-2 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-[11px] font-mono text-zinc-200 transition-colors"
             title="Copy Cursor IDE URI"
           >
-            {copiedKey === 'cursor-link' ? <Check className="w-3 h-3 text-emerald-400" /> : <Code2 className="w-3 h-3 text-emerald-400" />}
+            {copiedKey === 'cursor-link' ? <Check className="w-2.5 h-2.5 text-emerald-400" /> : <Code2 className="w-2.5 h-2.5 text-zinc-400" />}
             <span>Cursor</span>
           </button>
 
           <button
             onClick={() => handleCopy('vscode-link', gitCmds.openVSCode, `VS Code open link: ${gitCmds.openVSCode}`)}
-            className="flex items-center gap-1 px-2.5 py-1 rounded bg-github-hover hover:bg-github-border border border-github-border text-xs font-mono text-white transition-colors"
+            className="flex items-center gap-1 px-2 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-[11px] font-mono text-zinc-200 transition-colors"
             title="Copy VS Code URI"
           >
-            {copiedKey === 'vscode-link' ? <Check className="w-3 h-3 text-emerald-400" /> : <FileCode2 className="w-3 h-3 text-blue-400" />}
+            {copiedKey === 'vscode-link' ? <Check className="w-2.5 h-2.5 text-emerald-400" /> : <FileCode2 className="w-2.5 h-2.5 text-zinc-400" />}
             <span>VS Code</span>
           </button>
         </div>
       </header>
 
       {/* Cockpit Navigation Tabs */}
-      <nav aria-label="Cockpit Tabs" className="px-4 bg-github-darker/40 border-b border-github-border flex items-center gap-1 shrink-0 overflow-x-auto">
+      <nav aria-label="Cockpit Tabs" className="px-3 bg-black border-b border-github-border flex items-center gap-1 shrink-0 overflow-x-auto">
         <button
           onClick={() => setActiveTab('overview')}
           className={cn(
-            'px-3 py-2 text-xs font-medium border-b-2 transition-all flex items-center gap-1.5',
+            'px-2.5 py-1.5 text-xs font-medium border-b transition-colors flex items-center gap-1.5',
             activeTab === 'overview'
-              ? 'border-github-accent text-white font-semibold'
-              : 'border-transparent text-github-muted hover:text-github-text'
+              ? 'border-zinc-200 text-white font-semibold'
+              : 'border-transparent text-zinc-500 hover:text-zinc-300'
           )}
         >
           <Code2 className="w-3.5 h-3.5" />
@@ -387,15 +385,15 @@ export const InspectionCockpit: React.FC<InspectionCockpitProps> = ({
           <button
             onClick={() => setActiveTab('files')}
             className={cn(
-              'px-3 py-2 text-xs font-medium border-b-2 transition-all flex items-center gap-1.5',
+              'px-2.5 py-1.5 text-xs font-medium border-b transition-colors flex items-center gap-1.5',
               activeTab === 'files'
-                ? 'border-github-accent text-white font-semibold'
-                : 'border-transparent text-github-muted hover:text-github-text'
+                ? 'border-zinc-200 text-white font-semibold'
+                : 'border-transparent text-zinc-500 hover:text-zinc-300'
             )}
           >
             <FileDiffIcon className="w-3.5 h-3.5" />
             <span>Files Changed</span>
-            <span className="px-1.5 py-0.2 bg-github-hover text-[10px] font-mono rounded-full text-github-text">
+            <span className="px-1 py-0.2 bg-zinc-900 text-[9px] font-mono rounded text-zinc-400 border border-zinc-800">
               {filesList.length}
             </span>
           </button>
@@ -404,10 +402,10 @@ export const InspectionCockpit: React.FC<InspectionCockpitProps> = ({
         <button
           onClick={() => setActiveTab('git_actions')}
           className={cn(
-            'px-3 py-2 text-xs font-medium border-b-2 transition-all flex items-center gap-1.5',
+            'px-2.5 py-1.5 text-xs font-medium border-b transition-colors flex items-center gap-1.5',
             activeTab === 'git_actions'
-              ? 'border-github-accent text-white font-semibold'
-              : 'border-transparent text-github-muted hover:text-github-text'
+              ? 'border-zinc-200 text-white font-semibold'
+              : 'border-transparent text-zinc-500 hover:text-zinc-300'
           )}
         >
           <Terminal className="w-3.5 h-3.5" />
@@ -418,15 +416,15 @@ export const InspectionCockpit: React.FC<InspectionCockpitProps> = ({
           <button
             onClick={() => setActiveTab('ci_checks')}
             className={cn(
-              'px-3 py-2 text-xs font-medium border-b-2 transition-all flex items-center gap-1.5',
+              'px-2.5 py-1.5 text-xs font-medium border-b transition-colors flex items-center gap-1.5',
               activeTab === 'ci_checks'
-                ? 'border-github-accent text-white font-semibold'
-                : 'border-transparent text-github-muted hover:text-github-text'
+                ? 'border-zinc-200 text-white font-semibold'
+                : 'border-transparent text-zinc-500 hover:text-zinc-300'
             )}
           >
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
             <span>CI Checks</span>
-            <span className="px-1.5 py-0.2 bg-github-hover text-[10px] font-mono rounded-full text-github-text">
+            <span className="px-1 py-0.2 bg-zinc-900 text-[9px] font-mono rounded text-zinc-400 border border-zinc-800">
               {ciDetails.length}
             </span>
           </button>
@@ -435,10 +433,10 @@ export const InspectionCockpit: React.FC<InspectionCockpitProps> = ({
         <button
           onClick={() => setActiveTab('notes')}
           className={cn(
-            'px-3 py-2 text-xs font-medium border-b-2 transition-all flex items-center gap-1.5',
+            'px-2.5 py-1.5 text-xs font-medium border-b transition-colors flex items-center gap-1.5',
             activeTab === 'notes'
-              ? 'border-github-accent text-white font-semibold'
-              : 'border-transparent text-github-muted hover:text-github-text'
+              ? 'border-zinc-200 text-white font-semibold'
+              : 'border-transparent text-zinc-500 hover:text-zinc-300'
           )}
         >
           <Save className="w-3.5 h-3.5" />
@@ -450,17 +448,17 @@ export const InspectionCockpit: React.FC<InspectionCockpitProps> = ({
       </nav>
 
       {/* Cockpit Content Body */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-3.5 space-y-3.5">
         {/* TAB 1: OVERVIEW */}
         {activeTab === 'overview' && (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {/* Diff stats banner */}
             {(meta?.additions !== undefined || meta?.deletions !== undefined || meta?.changed_files !== undefined) && (
-              <div className="flex items-center gap-4 p-3 bg-github-darker rounded-xl border border-github-border text-xs font-mono">
+              <div className="flex items-center gap-3 p-2.5 bg-zinc-950 rounded-md border border-zinc-900 text-[11px] font-mono">
                 {meta.changed_files !== undefined && (
                   <div>
-                    <span className="text-github-muted">Files: </span>
-                    <span className="font-semibold text-white">{meta.changed_files}</span>
+                    <span className="text-zinc-500">Files: </span>
+                    <span className="font-semibold text-zinc-200">{meta.changed_files}</span>
                   </div>
                 )}
                 {meta.additions !== undefined && (
@@ -474,7 +472,7 @@ export const InspectionCockpit: React.FC<InspectionCockpitProps> = ({
                   </div>
                 )}
                 {meta.comments_count !== undefined && (
-                  <div className="text-github-muted ml-auto">
+                  <div className="text-zinc-500 ml-auto">
                     {meta.comments_count} {meta.comments_count === 1 ? 'comment' : 'comments'}
                   </div>
                 )}
@@ -484,15 +482,15 @@ export const InspectionCockpit: React.FC<InspectionCockpitProps> = ({
             {/* Labels */}
             {meta?.labels && meta.labels.length > 0 && (
               <div className="flex items-center gap-1.5 flex-wrap">
-                <Tag className="w-3.5 h-3.5 text-github-muted" />
+                <Tag className="w-3 h-3 text-zinc-500" />
                 {meta.labels.map((lbl) => (
                   <span
                     key={lbl.name}
-                    className="px-2 py-0.5 text-[11px] font-medium rounded-full border border-github-border"
+                    className="px-1.5 py-0.2 text-[10px] font-medium rounded border border-zinc-800"
                     style={{
-                      backgroundColor: `#${lbl.color}22`,
+                      backgroundColor: `#${lbl.color}15`,
                       color: `#${lbl.color}`,
-                      borderColor: `#${lbl.color}44`,
+                      borderColor: `#${lbl.color}30`,
                     }}
                   >
                     {lbl.name}
@@ -503,13 +501,13 @@ export const InspectionCockpit: React.FC<InspectionCockpitProps> = ({
 
             {/* Reviewers & Assignees */}
             {(meta?.reviewers?.length || meta?.assignees?.length) ? (
-              <div className="flex items-center gap-4 p-3 bg-github-darker rounded-lg border border-github-border text-xs">
-                <Users className="w-4 h-4 text-github-muted shrink-0" />
+              <div className="flex items-center gap-3 p-2.5 bg-zinc-950 rounded-md border border-zinc-900 text-xs">
+                <Users className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
                 {meta.reviewers && meta.reviewers.length > 0 && (
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-github-muted">Reviewers:</span>
+                    <span className="text-zinc-500 text-[11px]">Reviewers:</span>
                     {meta.reviewers.map((r) => (
-                      <span key={r.login} className="text-github-text font-medium bg-github-hover px-1.5 py-0.5 rounded border border-github-border">
+                      <span key={r.login} className="text-zinc-300 font-mono text-[11px] bg-zinc-900 px-1.5 py-0.5 rounded border border-zinc-800">
                         @{r.login}
                       </span>
                     ))}
@@ -517,9 +515,9 @@ export const InspectionCockpit: React.FC<InspectionCockpitProps> = ({
                 )}
                 {meta.assignees && meta.assignees.length > 0 && (
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-github-muted">Assignees:</span>
+                    <span className="text-zinc-500 text-[11px]">Assignees:</span>
                     {meta.assignees.map((a) => (
-                      <span key={a.login} className="text-github-text font-medium bg-github-hover px-1.5 py-0.5 rounded border border-github-border">
+                      <span key={a.login} className="text-zinc-300 font-mono text-[11px] bg-zinc-900 px-1.5 py-0.5 rounded border border-zinc-800">
                         @{a.login}
                       </span>
                     ))}
@@ -529,16 +527,16 @@ export const InspectionCockpit: React.FC<InspectionCockpitProps> = ({
             ) : null}
 
             {/* Description Body */}
-            <div className="space-y-2">
-              <div className="text-[11px] font-semibold uppercase tracking-wider text-github-muted">
+            <div className="space-y-1.5">
+              <div className="text-[10px] font-medium uppercase tracking-wider text-zinc-500">
                 Description
               </div>
               {meta?.body ? (
-                <div className="p-4 bg-github-darker rounded-xl border border-github-border text-xs text-github-text leading-relaxed whitespace-pre-wrap font-sans space-y-2">
+                <div className="p-3 bg-zinc-950 rounded-md border border-zinc-900 text-xs text-zinc-300 leading-relaxed whitespace-pre-wrap font-sans">
                   {meta.body}
                 </div>
               ) : (
-                <div className="p-4 bg-github-darker/60 rounded-xl border border-github-border/60 text-xs text-github-muted italic">
+                <div className="p-3 bg-zinc-950/60 rounded-md border border-zinc-900/60 text-xs text-zinc-600 italic">
                   No description provided for this item.
                 </div>
               )}
@@ -548,52 +546,52 @@ export const InspectionCockpit: React.FC<InspectionCockpitProps> = ({
 
         {/* TAB 2: FILES & DIFF */}
         {activeTab === 'files' && (
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-white">
+              <span className="text-xs font-medium text-zinc-300">
                 {filesList.length} Changed {filesList.length === 1 ? 'File' : 'Files'}
               </span>
               <button
                 onClick={() => handleCopy('tab-gh-diff', gitCmds.ghPrDiff, gitCmds.ghPrDiff)}
-                className="text-[11px] text-github-accent hover:underline font-mono flex items-center gap-1"
+                className="text-[11px] text-zinc-400 hover:text-white font-mono flex items-center gap-1"
               >
                 <Terminal className="w-3 h-3" />
                 Copy gh pr diff
               </button>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               {filesList.map((file) => {
                 const isExpanded = expandedFiles[file.filename];
                 return (
                   <div
                     key={file.filename}
-                    className="border border-github-border rounded-xl bg-github-darker overflow-hidden"
+                    className="border border-zinc-900 rounded-md bg-zinc-950 overflow-hidden"
                   >
                     <div
                       onClick={() => toggleFileExpand(file.filename)}
-                      className="p-3 flex items-center justify-between gap-3 cursor-pointer hover:bg-github-hover/60 transition-colors select-none"
+                      className="p-2.5 flex items-center justify-between gap-2 cursor-pointer hover:bg-zinc-900/60 transition-colors select-none"
                     >
-                      <div className="flex items-center gap-2 font-mono text-xs text-white truncate min-w-0">
+                      <div className="flex items-center gap-2 font-mono text-xs text-zinc-200 truncate min-w-0">
                         {isExpanded ? (
-                          <ChevronDown className="w-3.5 h-3.5 text-github-muted shrink-0" />
+                          <ChevronDown className="w-3 h-3 text-zinc-500 shrink-0" />
                         ) : (
-                          <ChevronRight className="w-3.5 h-3.5 text-github-muted shrink-0" />
+                          <ChevronRight className="w-3 h-3 text-zinc-500 shrink-0" />
                         )}
-                        <FileCode2 className="w-3.5 h-3.5 text-github-accent shrink-0" />
+                        <FileCode2 className="w-3 h-3 text-zinc-400 shrink-0" />
                         <span className="truncate">{file.filename}</span>
                       </div>
 
-                      <div className="flex items-center gap-2 shrink-0 text-[11px] font-mono">
+                      <div className="flex items-center gap-2 shrink-0 text-[10px] font-mono">
                         {file.status && (
                           <span
                             className={cn(
-                              'px-1.5 py-0.2 rounded uppercase text-[9px] font-semibold border',
+                              'px-1 py-0.2 rounded uppercase text-[9px] font-semibold border',
                               file.status === 'added'
-                                ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                                ? 'bg-emerald-950/40 text-emerald-400 border-emerald-800/40'
                                 : file.status === 'deleted'
-                                ? 'bg-rose-500/15 text-rose-400 border-rose-500/30'
-                                : 'bg-amber-500/15 text-amber-400 border-amber-500/30'
+                                ? 'bg-rose-950/40 text-rose-400 border-rose-800/40'
+                                : 'bg-amber-950/40 text-amber-400 border-amber-800/40'
                             )}
                           >
                             {file.status}
@@ -606,19 +604,19 @@ export const InspectionCockpit: React.FC<InspectionCockpitProps> = ({
 
                     {/* Diff snippet */}
                     {isExpanded && file.patch && (
-                      <div className="p-3 border-t border-github-border bg-github-dark text-[11px] font-mono overflow-x-auto leading-relaxed">
+                      <div className="p-2.5 border-t border-zinc-900 bg-black text-[11px] font-mono overflow-x-auto leading-relaxed">
                         {file.patch.split('\n').map((line, idx) => (
                           <div
                             key={idx}
                             className={cn(
-                              'px-2 py-0.5 whitespace-pre',
+                              'px-1.5 py-0.2 whitespace-pre',
                               line.startsWith('+')
-                                ? 'bg-emerald-500/10 text-emerald-300'
+                                ? 'bg-emerald-950/30 text-emerald-300'
                                 : line.startsWith('-')
-                                ? 'bg-rose-500/10 text-rose-300'
+                                ? 'bg-rose-950/30 text-rose-300'
                                 : line.startsWith('@@')
-                                ? 'text-github-muted bg-github-hover/40'
-                                : 'text-github-text'
+                                ? 'text-zinc-500 bg-zinc-900/40'
+                                : 'text-zinc-400'
                             )}
                           >
                             {line}
@@ -635,43 +633,43 @@ export const InspectionCockpit: React.FC<InspectionCockpitProps> = ({
 
         {/* TAB 3: GIT ACTIONS & RECIPES */}
         {activeTab === 'git_actions' && (
-          <div className="space-y-3">
-            <div className="text-xs text-github-muted">
-              Pre-configured Git commands specifically formatted for this branch and PR:
+          <div className="space-y-2.5">
+            <div className="text-[11px] text-zinc-500">
+              Pre-configured Git commands formatted for this PR:
             </div>
 
-            <div className="space-y-2.5">
+            <div className="space-y-2">
               {/* Recipe 1: Checkout branch */}
-              <div className="p-3 rounded-xl bg-github-darker border border-github-border space-y-2">
+              <div className="p-2.5 rounded-md bg-zinc-950 border border-zinc-900 space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-white">1. Checkout & Switch to Branch</span>
+                  <span className="text-xs font-medium text-zinc-200">1. Checkout & Switch to Branch</span>
                   <button
                     onClick={() => handleCopy('recipe-co', gitCmds.gitCheckout, gitCmds.gitCheckout)}
-                    className="flex items-center gap-1 px-2 py-0.5 rounded bg-github-hover hover:bg-github-border text-xs font-mono text-github-accent transition-colors"
+                    className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 text-[10px] font-mono text-zinc-300 transition-colors"
                   >
-                    {copiedKey === 'recipe-co' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                    {copiedKey === 'recipe-co' ? <Check className="w-2.5 h-2.5 text-emerald-400" /> : <Copy className="w-2.5 h-2.5" />}
                     <span>Copy</span>
                   </button>
                 </div>
-                <pre className="p-2 rounded bg-github-dark border border-github-border/80 text-xs font-mono text-github-text overflow-x-auto">
+                <pre className="p-2 rounded bg-black border border-zinc-900 text-[11px] font-mono text-zinc-300 overflow-x-auto">
                   {gitCmds.gitCheckout}
                 </pre>
               </div>
 
               {/* Recipe 2: GitHub CLI Checkout */}
               {item.number ? (
-                <div className="p-3 rounded-xl bg-github-darker border border-github-border space-y-2">
+                <div className="p-2.5 rounded-md bg-zinc-950 border border-zinc-900 space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-white">2. GitHub CLI One-Step Checkout</span>
+                    <span className="text-xs font-medium text-zinc-200">2. GitHub CLI One-Step Checkout</span>
                     <button
                       onClick={() => handleCopy('recipe-gh-co', gitCmds.ghPrCheckout, gitCmds.ghPrCheckout)}
-                      className="flex items-center gap-1 px-2 py-0.5 rounded bg-github-hover hover:bg-github-border text-xs font-mono text-github-accent transition-colors"
+                      className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 text-[10px] font-mono text-zinc-300 transition-colors"
                     >
-                      {copiedKey === 'recipe-gh-co' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                      {copiedKey === 'recipe-gh-co' ? <Check className="w-2.5 h-2.5 text-emerald-400" /> : <Copy className="w-2.5 h-2.5" />}
                       <span>Copy</span>
                     </button>
                   </div>
-                  <pre className="p-2 rounded bg-github-dark border border-github-border/80 text-xs font-mono text-github-text overflow-x-auto">
+                  <pre className="p-2 rounded bg-black border border-zinc-900 text-[11px] font-mono text-zinc-300 overflow-x-auto">
                     {gitCmds.ghPrCheckout}
                   </pre>
                 </div>
@@ -679,18 +677,18 @@ export const InspectionCockpit: React.FC<InspectionCockpitProps> = ({
 
               {/* Recipe 3: Quick Approve */}
               {item.number && gitCmds.ghPrApprove ? (
-                <div className="p-3 rounded-xl bg-github-darker border border-github-border space-y-2">
+                <div className="p-2.5 rounded-md bg-zinc-950 border border-zinc-900 space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-white">3. Fast Approve via gh CLI</span>
+                    <span className="text-xs font-medium text-zinc-200">3. Fast Approve via gh CLI</span>
                     <button
                       onClick={() => handleCopy('recipe-approve', gitCmds.ghPrApprove, gitCmds.ghPrApprove)}
-                      className="flex items-center gap-1 px-2 py-0.5 rounded bg-github-hover hover:bg-github-border text-xs font-mono text-emerald-400 transition-colors"
+                      className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 text-[10px] font-mono text-zinc-300 transition-colors"
                     >
-                      {copiedKey === 'recipe-approve' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                      {copiedKey === 'recipe-approve' ? <Check className="w-2.5 h-2.5 text-emerald-400" /> : <Copy className="w-2.5 h-2.5" />}
                       <span>Copy</span>
                     </button>
                   </div>
-                  <pre className="p-2 rounded bg-github-dark border border-github-border/80 text-xs font-mono text-github-text overflow-x-auto">
+                  <pre className="p-2 rounded bg-black border border-zinc-900 text-[11px] font-mono text-zinc-300 overflow-x-auto">
                     {gitCmds.ghPrApprove}
                   </pre>
                 </div>
@@ -698,18 +696,18 @@ export const InspectionCockpit: React.FC<InspectionCockpitProps> = ({
 
               {/* Recipe 4: Quick Squash & Merge */}
               {item.number && gitCmds.ghPrMerge ? (
-                <div className="p-3 rounded-xl bg-github-darker border border-github-border space-y-2">
+                <div className="p-2.5 rounded-md bg-zinc-950 border border-zinc-900 space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-white">4. Squash & Merge PR</span>
+                    <span className="text-xs font-medium text-zinc-200">4. Squash & Merge PR</span>
                     <button
                       onClick={() => handleCopy('recipe-merge', gitCmds.ghPrMerge, gitCmds.ghPrMerge)}
-                      className="flex items-center gap-1 px-2 py-0.5 rounded bg-github-hover hover:bg-github-border text-xs font-mono text-purple-400 transition-colors"
+                      className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 text-[10px] font-mono text-zinc-300 transition-colors"
                     >
-                      {copiedKey === 'recipe-merge' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                      {copiedKey === 'recipe-merge' ? <Check className="w-2.5 h-2.5 text-emerald-400" /> : <Copy className="w-2.5 h-2.5" />}
                       <span>Copy</span>
                     </button>
                   </div>
-                  <pre className="p-2 rounded bg-github-dark border border-github-border/80 text-xs font-mono text-github-text overflow-x-auto">
+                  <pre className="p-2 rounded bg-black border border-zinc-900 text-[11px] font-mono text-zinc-300 overflow-x-auto">
                     {gitCmds.ghPrMerge}
                   </pre>
                 </div>
@@ -717,18 +715,18 @@ export const InspectionCockpit: React.FC<InspectionCockpitProps> = ({
 
               {/* Recipe 5: Apply Patch */}
               {item.number && gitCmds.gitApplyPatch ? (
-                <div className="p-3 rounded-xl bg-github-darker border border-github-border space-y-2">
+                <div className="p-2.5 rounded-md bg-zinc-950 border border-zinc-900 space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-white">5. Apply PR Patch Locally</span>
+                    <span className="text-xs font-medium text-zinc-200">5. Apply PR Patch Locally</span>
                     <button
                       onClick={() => handleCopy('recipe-patch', gitCmds.gitApplyPatch, gitCmds.gitApplyPatch)}
-                      className="flex items-center gap-1 px-2 py-0.5 rounded bg-github-hover hover:bg-github-border text-xs font-mono text-amber-400 transition-colors"
+                      className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 text-[10px] font-mono text-zinc-300 transition-colors"
                     >
-                      {copiedKey === 'recipe-patch' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                      {copiedKey === 'recipe-patch' ? <Check className="w-2.5 h-2.5 text-emerald-400" /> : <Copy className="w-2.5 h-2.5" />}
                       <span>Copy</span>
                     </button>
                   </div>
-                  <pre className="p-2 rounded bg-github-dark border border-github-border/80 text-xs font-mono text-github-text overflow-x-auto">
+                  <pre className="p-2 rounded bg-black border border-zinc-900 text-[11px] font-mono text-zinc-300 overflow-x-auto">
                     {gitCmds.gitApplyPatch}
                   </pre>
                 </div>
@@ -739,42 +737,42 @@ export const InspectionCockpit: React.FC<InspectionCockpitProps> = ({
 
         {/* TAB 4: CI DIAGNOSTICS */}
         {activeTab === 'ci_checks' && (
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-white">
+              <span className="text-xs font-medium text-zinc-300">
                 CI Check Runs
               </span>
               <button
                 onClick={() => handleCopy('ci-rerun', `gh run rerun`, 'gh run rerun')}
-                className="text-[11px] text-github-accent hover:underline font-mono flex items-center gap-1"
+                className="text-[11px] text-zinc-400 hover:text-white font-mono flex items-center gap-1"
               >
                 <Terminal className="w-3 h-3" />
                 gh run rerun
               </button>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               {ciDetails.map((ci, idx) => (
                 <div
                   key={idx}
-                  className="p-3 rounded-xl bg-github-darker border border-github-border flex items-start justify-between gap-3"
+                  className="p-2.5 rounded-md bg-zinc-950 border border-zinc-900 flex items-start justify-between gap-3"
                 >
-                  <div className="flex items-start gap-2.5 min-w-0">
+                  <div className="flex items-start gap-2 min-w-0">
                     <div className="pt-0.5">
                       {ci.status === 'success' ? (
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                       ) : ci.status === 'failure' || ci.status === 'error' ? (
-                        <XCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                        <XCircle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
                       ) : (
-                        <Clock className="w-4 h-4 text-amber-400 shrink-0" />
+                        <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                       )}
                     </div>
                     <div className="min-w-0">
-                      <div className="text-xs font-semibold text-white">
+                      <div className="text-xs font-medium text-zinc-200">
                         {ci.name}
                       </div>
                       {ci.description && (
-                        <div className="text-[11px] text-github-muted leading-relaxed mt-0.5">
+                        <div className="text-[11px] text-zinc-500 leading-relaxed mt-0.5">
                           {ci.description}
                         </div>
                       )}
@@ -783,12 +781,12 @@ export const InspectionCockpit: React.FC<InspectionCockpitProps> = ({
 
                   <span
                     className={cn(
-                      'px-2 py-0.5 rounded text-[10px] font-mono uppercase font-semibold shrink-0 border',
+                      'px-1.5 py-0.2 rounded text-[9px] font-mono uppercase font-semibold shrink-0 border',
                       ci.status === 'success'
-                        ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                        ? 'bg-emerald-950/40 text-emerald-400 border-emerald-800/40'
                         : ci.status === 'failure'
-                        ? 'bg-rose-500/15 text-rose-400 border-rose-500/30'
-                        : 'bg-amber-500/15 text-amber-400 border-amber-500/30'
+                        ? 'bg-rose-950/40 text-rose-400 border-rose-800/40'
+                        : 'bg-amber-950/40 text-amber-400 border-amber-800/40'
                     )}
                   >
                     {ci.status}
@@ -801,17 +799,17 @@ export const InspectionCockpit: React.FC<InspectionCockpitProps> = ({
 
         {/* TAB 5: LOCAL NOTES */}
         {activeTab === 'notes' && (
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-white">
+              <span className="text-xs font-medium text-zinc-300">
                 Developer Notes & Scratchpad
               </span>
               <button
                 onClick={handleSaveNotes}
                 disabled={isSavingNotes}
-                className="flex items-center gap-1.5 px-3 py-1 bg-github-accent hover:bg-github-accent/80 text-white text-xs font-semibold rounded-lg transition-all disabled:opacity-50"
+                className="flex items-center gap-1 px-2.5 py-1 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-white text-xs font-medium rounded-md transition-colors disabled:opacity-50"
               >
-                <Save className="w-3.5 h-3.5" />
+                <Save className="w-3 h-3" />
                 <span>{isSavingNotes ? 'Saving...' : 'Save Notes'}</span>
               </button>
             </div>
@@ -821,7 +819,7 @@ export const InspectionCockpit: React.FC<InspectionCockpitProps> = ({
               onChange={(e) => setLocalNotes(e.target.value)}
               placeholder="Write your private review notes, TODOs, or checklist for this PR..."
               rows={8}
-              className="w-full bg-github-darker border border-github-border rounded-xl p-3 text-xs text-white placeholder:text-github-muted focus:outline-none focus:border-github-accent focus:ring-1 focus:ring-github-accent font-sans leading-relaxed transition-all"
+              className="w-full bg-zinc-950 border border-zinc-900 rounded-md p-3 text-xs text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-zinc-700 font-sans leading-relaxed transition-colors"
             />
           </div>
         )}
@@ -829,3 +827,4 @@ export const InspectionCockpit: React.FC<InspectionCockpitProps> = ({
     </section>
   );
 };
+

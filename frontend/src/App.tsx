@@ -129,11 +129,11 @@ export default function App() {
 
         {/* Error Banner */}
         {error && (
-          <div className="bg-github-red/15 border-b border-github-red/30 px-6 py-2 text-xs text-github-red flex items-center justify-between">
-            <span>{error}</span>
+          <div className="bg-rose-950/40 border-b border-rose-900/40 px-5 py-2 text-xs text-rose-300 flex items-center justify-between">
+            <span className="font-mono">{error}</span>
             <button
               onClick={() => refresh()}
-              className="underline font-medium hover:text-white"
+              className="text-xs font-semibold text-rose-200 hover:text-white underline underline-offset-2"
             >
               Retry
             </button>

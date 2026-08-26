@@ -53,37 +53,37 @@ export const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose 
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-      <div className="bg-github-darker border border-github-border rounded-xl shadow-2xl w-full max-w-xl overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in text-github-text">
+      <div className="bg-black border border-zinc-800 rounded-xl shadow-2xl w-full max-w-lg overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-github-border bg-github-dark">
-          <div className="flex items-center gap-2 text-white font-medium">
-            <Keyboard className="w-5 h-5 text-github-accent" />
-            <h2 className="text-sm font-semibold text-white">Keyboard Shortcuts</h2>
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-zinc-900 bg-zinc-950">
+          <div className="flex items-center gap-2 text-white text-xs font-semibold">
+            <Keyboard className="w-4 h-4 text-zinc-400" />
+            <h2>Keyboard Shortcuts</h2>
           </div>
           <button
             onClick={onClose}
-            className="text-github-muted hover:text-github-text transition-colors p-1 rounded hover:bg-github-hover"
+            className="text-zinc-500 hover:text-zinc-300 transition-colors p-1 rounded hover:bg-zinc-900"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
+        <div className="p-5 space-y-4 max-h-[75vh] overflow-y-auto">
           {shortcutGroups.map((group, i) => (
-            <div key={i} className="space-y-2.5">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-github-muted">
+            <div key={i} className="space-y-1.5">
+              <h3 className="text-[10px] font-medium uppercase tracking-wider text-zinc-500">
                 {group.title}
               </h3>
-              <div className="grid grid-cols-1 gap-2">
+              <div className="grid grid-cols-1 gap-1">
                 {group.items.map((item, j) => (
                   <div
                     key={j}
-                    className="flex items-center justify-between py-1.5 px-3 rounded-lg bg-github-dark/50 border border-github-border/40 hover:border-github-border text-sm"
+                    className="flex items-center justify-between py-1.5 px-2.5 rounded-md bg-zinc-950 border border-zinc-900 text-xs"
                   >
-                    <span className="text-github-text">{item.desc}</span>
-                    <kbd className="px-2.5 py-1 text-xs font-mono font-semibold bg-github-hover border border-github-border rounded text-github-accent shadow-sm">
+                    <span className="text-zinc-300">{item.desc}</span>
+                    <kbd className="px-1.5 py-0.2 text-[10px] font-mono font-medium bg-black border border-zinc-800 rounded text-zinc-400">
                       {item.key}
                     </kbd>
                   </div>
@@ -94,10 +94,10 @@ export const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose 
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-3 border-t border-github-border bg-github-dark flex justify-end">
+        <div className="px-5 py-3 border-t border-zinc-900 bg-zinc-950 flex justify-end">
           <button
             onClick={onClose}
-            className="px-4 py-1.5 bg-github-hover hover:bg-github-border border border-github-border text-xs font-medium text-white rounded-lg transition-colors"
+            className="px-3.5 py-1.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-xs font-medium text-white rounded-md transition-colors"
           >
             Close
           </button>
@@ -106,3 +106,4 @@ export const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose 
     </div>
   );
 };
+
