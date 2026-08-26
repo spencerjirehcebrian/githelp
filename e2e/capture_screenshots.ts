@@ -68,7 +68,15 @@ async function main() {
     await wait(600);
     await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'dashboard.png') });
 
-    // 1b. Pipeline Board screenshot
+    // 1b. Keyboard navigation active card
+    console.log('Capturing keyboard-navigation.png...');
+    await page.keyboard.press('j');
+    await wait(400);
+    await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'keyboard-navigation.png') });
+    await page.keyboard.press('k');
+    await wait(200);
+
+    // 2. Pipeline Board screenshot
     console.log('Capturing pipeline-board.png...');
     await page.keyboard.press('v');
     await page.waitForSelector('[data-testid="pipeline-board"]');
@@ -77,7 +85,7 @@ async function main() {
     await page.keyboard.press('v');
     await wait(300);
 
-    // 2. Files Changed & Diff view in Cockpit
+    // 3. Files Changed & Diff view in Cockpit
     console.log('Capturing diff-inspector.png...');
     await page.locator('[data-testid="inspection-cockpit"]').getByRole('button', { name: /Files Changed/i }).click();
     await wait(400);
@@ -85,7 +93,7 @@ async function main() {
     await page.locator('[data-testid="inspection-cockpit"]').getByRole('button', { name: /Overview/i }).click();
     await wait(200);
 
-    // 3. Command Palette screenshot
+    // 4. Command Palette screenshot
     console.log('Capturing command-palette.png...');
     await page.getByRole('button', { name: /Command Palette/i }).click();
     await page.waitForSelector('text=Task Actions');
@@ -94,7 +102,7 @@ async function main() {
     await page.keyboard.press('Escape');
     await wait(300);
 
-    // 4. Snooze modal
+    // 5. Snooze modal
     console.log('Capturing snooze-modal.png...');
     await page.keyboard.press('z');
     await page.waitForSelector('text=Snooze Notification');
@@ -103,7 +111,7 @@ async function main() {
     await page.keyboard.press('Escape');
     await wait(300);
 
-    // 5. Shortcuts cheat sheet
+    // 6. Shortcuts cheat sheet
     console.log('Capturing shortcuts-modal.png...');
     await page.keyboard.press('?');
     await page.waitForSelector('text=Keyboard Shortcuts');
@@ -112,7 +120,7 @@ async function main() {
     await page.keyboard.press('Escape');
     await wait(300);
 
-    // 6. Settings modal
+    // 7. Settings modal
     console.log('Capturing settings-modal.png...');
     await page.click('button[title*="Settings"]');
     await page.waitForSelector('text=Preferences & Settings');

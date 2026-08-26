@@ -23,13 +23,17 @@ GitHelp bridges remote GitHub activity with your local terminal and IDE. It tran
 - **Global Command Palette (`Cmd+K` / `Ctrl+K`)**: Fast spotlight launcher for search, task completion, focus pinning, and navigation.
 - **Zero-Config Auth**: Automatically uses existing `gh` CLI credentials (or configured PAT).
 
-| Pipeline Board | Diff Inspector |
+| Pipeline Board (`v`) | Diff Inspector |
 | :---: | :---: |
 | ![Pipeline Board](docs/screenshots/pipeline-board.png) | ![Diff Inspector](docs/screenshots/diff-inspector.png) |
 
-| Command Palette | Snooze Modal |
+| Command Palette (`Cmd+K`) | Keyboard Navigation (`j`/`k`) |
 | :---: | :---: |
-| ![Command Palette](docs/screenshots/command-palette.png) | ![Snooze Modal](docs/screenshots/snooze-modal.png) |
+| ![Command Palette](docs/screenshots/command-palette.png) | ![Keyboard Navigation](docs/screenshots/keyboard-navigation.png) |
+
+| Shortcuts Reference (`?`) | Snooze Presets (`z`) |
+| :---: | :---: |
+| ![Keyboard Shortcuts](docs/screenshots/shortcuts-modal.png) | ![Snooze Modal](docs/screenshots/snooze-modal.png) |
 
 ---
 
