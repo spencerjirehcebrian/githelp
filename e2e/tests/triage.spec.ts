@@ -78,7 +78,7 @@ test.describe('GitHelp Triage & Workstation E2E Workflows', () => {
     // Click shortcuts button in top bar
     await page.click('button[title*="Keyboard shortcuts"]');
     await expect(page.getByRole('heading', { name: 'Keyboard Shortcuts' })).toBeVisible();
-    await expect(page.getByText('Select next notification')).toBeVisible();
+    await expect(page.getByText('Navigate Tasks / Cards')).toBeVisible();
 
     // Press 'Escape'
     await page.keyboard.press('Escape');
@@ -134,8 +134,7 @@ test.describe('GitHelp Triage & Workstation E2E Workflows', () => {
     await page.getByRole('button', { name: /Mark All Done/i }).click();
 
     // Check Inbox Zero state
-    await expect(page.getByText('Inbox Zero Achieved')).toBeVisible();
-    await expect(page.getByText('You\'re completely caught up!')).toBeVisible();
+    await expect(page.getByText('All Tasks Completed!')).toBeVisible();
   });
 
   test('8. inspects tabs in Cockpit: Files Changed, Git Recipes, and Notes', async ({ page }) => {
@@ -168,27 +167,45 @@ test.describe('GitHelp Triage & Workstation E2E Workflows', () => {
     await expect(paletteInput).toBeVisible();
 
     // Search command
-    await paletteInput.fill('Assistant');
-    await expect(page.getByText('Open Git Assistant & Workflow Solver')).toBeVisible();
+    await paletteInput.fill('Complete');
+    await expect(page.getByText('Complete Task')).toBeVisible();
 
     // Press Escape to close
     await page.keyboard.press('Escape');
     await expect(paletteInput).not.toBeVisible();
   });
 
-  test('10. switches to Git Assistant & Workflow Solver view', async ({ page }) => {
-    // Click Git Assistant in sidebar
-    await page.getByRole('button', { name: /Git Assistant/i }).click();
-    await expect(page.getByText('Git Assistant & Workflow Solver')).toBeVisible();
-    await expect(page.getByText('Undo last commit (keep changes staged/modified)')).toBeVisible();
+  test('10. pins task to Today\'s Focus with t key and toggles CI visibility', async ({ page }) => {
+    const firstCard = page.locator('[data-testid="notification-card"]').filter({ hasText: 'Add biometric login support' });
+    await expect(firstCard).toBeVisible();
 
-    // Search for rebase recipes
-    const search = page.getByPlaceholder(/Search problem/i);
-    await search.fill('rebase');
-    await expect(page.getByText('Rebase current branch on top of latest main')).toBeVisible();
+    // Press 't' to toggle Today's Focus
+    await page.keyboard.press('t');
+    await expect(firstCard.getByText("Today's Focus")).toBeVisible();
 
-    // Switch back to Triage Workstation
-    await page.getByRole('button', { name: /Triage Workstation/i }).click();
-    await expect(page.locator('[data-testid="inspection-cockpit"]')).toBeVisible();
+    // Toggle CI badges via top bar button
+    const ciBtn = page.getByRole('button', { name: /CI/i }).filter({ hasText: /CI (Off|On)/i });
+    if (await ciBtn.isVisible()) {
+      await ciBtn.click();
+      await expect(page.getByText(/CI badges (visible|hidden)/i)).toBeVisible();
+    }
+  });
+
+  test('11. toggles between Stream and Pipeline Board views with v key', async ({ page }) => {
+    // Check initial stream view
+    await expect(page.locator('[data-testid="notification-card"]').first()).toBeVisible();
+
+    // Toggle to Pipeline Board via 'v' key
+    await page.keyboard.press('v');
+    const board = page.locator('[data-testid="pipeline-board"]');
+    await expect(board).toBeVisible();
+    await expect(board.getByRole('heading', { name: 'Needs Your Review' })).toBeVisible();
+    await expect(board.getByRole('heading', { name: 'CI Failing' })).toBeVisible();
+    await expect(board.getByRole('heading', { name: 'Ready to Merge' })).toBeVisible();
+    await expect(board.getByRole('heading', { name: 'Waiting on Others' })).toBeVisible();
+
+    // Toggle back to Stream view via 'v' key
+    await page.keyboard.press('v');
+    await expect(page.locator('[data-testid="pipeline-board"]')).not.toBeVisible();
   });
 });

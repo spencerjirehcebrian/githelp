@@ -5,7 +5,6 @@ import {
   ExternalLink,
   Archive,
   Clock,
-  Pin,
   RotateCw,
   Sun,
   Moon,
@@ -16,10 +15,11 @@ import {
   UserCheck,
   AtSign,
   Code2,
+  Star,
+  CheckSquare,
 } from 'lucide-react';
 import type { EnrichedNotification, BucketType } from '../types';
 import { cn, copyToClipboard, generateGitCommands } from '../lib/utils';
-import { GIT_RECIPES } from '../lib/gitRecipes';
 
 interface CommandPaletteProps {
   isOpen: boolean;
@@ -33,7 +33,6 @@ interface CommandPaletteProps {
   onSync: () => void;
   onOpenSettings: () => void;
   onOpenShortcuts: () => void;
-  onOpenGitAssistant: () => void;
   onToggleTheme: () => void;
   currentTheme: 'dark' | 'light' | 'system';
   onToast: (msg: string) => void;
@@ -41,7 +40,7 @@ interface CommandPaletteProps {
 
 interface PaletteCommand {
   id: string;
-  category: 'Item Actions' | 'Git Quick Recipes' | 'Navigation' | 'System';
+  category: 'Task Actions' | 'Navigation' | 'System';
   title: string;
   subtitle?: string;
   shortcut?: string;
@@ -61,7 +60,6 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   onSync,
   onOpenSettings,
   onOpenShortcuts,
-  onOpenGitAssistant,
   onToggleTheme,
   currentTheme,
   onToast,
@@ -82,14 +80,38 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   const commands = useMemo<PaletteCommand[]>(() => {
     const list: PaletteCommand[] = [];
 
-    // 1. Current Item Actions
+    // 1. Current Task Actions
     if (selectedItem) {
       const gitCmds = generateGitCommands(selectedItem);
+      const isPinned = selectedItem.triage?.pinned || false;
+      const isDone = selectedItem.triage?.status === 'done';
+
+      list.push({
+        id: 'item-complete',
+        category: 'Task Actions',
+        title: isDone ? 'Mark task as incomplete' : 'Complete Task',
+        shortcut: 'Space / e',
+        icon: CheckSquare,
+        perform: () => {
+          onMarkDone(selectedItem.id);
+        },
+      });
+
+      list.push({
+        id: 'item-focus-pin',
+        category: 'Task Actions',
+        title: isPinned ? "Remove from Today's Focus" : "Pin to Today's Focus",
+        shortcut: 't',
+        icon: Star,
+        perform: () => {
+          onTogglePin(selectedItem.id, isPinned);
+        },
+      });
 
       if (selectedItem.branch) {
         list.push({
           id: 'item-checkout',
-          category: 'Item Actions',
+          category: 'Task Actions',
           title: `Checkout branch: ${selectedItem.branch}`,
           subtitle: gitCmds.gitCheckout,
           shortcut: 'c',
@@ -104,7 +126,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       if (selectedItem.number) {
         list.push({
           id: 'item-gh-checkout',
-          category: 'Item Actions',
+          category: 'Task Actions',
           title: `Checkout PR with gh CLI: #${selectedItem.number}`,
           subtitle: gitCmds.ghPrCheckout,
           icon: Terminal,
@@ -116,7 +138,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 
         list.push({
           id: 'item-gh-diff',
-          category: 'Item Actions',
+          category: 'Task Actions',
           title: `Copy gh pr diff command for #${selectedItem.number}`,
           subtitle: gitCmds.ghPrDiff,
           shortcut: 'd',
@@ -130,8 +152,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 
       list.push({
         id: 'item-browser',
-        category: 'Item Actions',
-        title: `Open "${selectedItem.title}" in browser`,
+        category: 'Task Actions',
+        title: `Open "${selectedItem.title}" in GitHub`,
         subtitle: selectedItem.html_url,
         shortcut: 'Enter',
         icon: ExternalLink,
@@ -142,7 +164,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 
       list.push({
         id: 'item-cursor',
-        category: 'Item Actions',
+        category: 'Task Actions',
         title: 'Open repository in Cursor IDE',
         subtitle: gitCmds.openCursor,
         icon: Code2,
@@ -153,70 +175,22 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       });
 
       list.push({
-        id: 'item-archive',
-        category: 'Item Actions',
-        title: 'Mark as Done (Archive)',
-        shortcut: 'e',
-        icon: Archive,
-        perform: () => {
-          onMarkDone(selectedItem.id);
-        },
-      });
-
-      list.push({
         id: 'item-snooze',
-        category: 'Item Actions',
-        title: 'Snooze notification...',
+        category: 'Task Actions',
+        title: 'Snooze task...',
         shortcut: 'z',
         icon: Clock,
         perform: () => {
           onOpenSnooze(selectedItem.id);
         },
       });
-
-      list.push({
-        id: 'item-pin',
-        category: 'Item Actions',
-        title: selectedItem.triage?.pinned ? 'Unpin notification' : 'Pin notification to top',
-        shortcut: 'p',
-        icon: Pin,
-        perform: () => {
-          onTogglePin(selectedItem.id, selectedItem.triage?.pinned || false);
-        },
-      });
     }
 
-    // 2. Git Quick Recipes
-    GIT_RECIPES.slice(0, 6).forEach((recipe) => {
-      list.push({
-        id: `recipe-${recipe.id}`,
-        category: 'Git Quick Recipes',
-        title: recipe.title,
-        subtitle: recipe.command,
-        icon: Terminal,
-        perform: async () => {
-          await copyToClipboard(recipe.command);
-          onToast(`Copied: ${recipe.command}`);
-        },
-      });
-    });
-
-    // 3. Navigation
-    list.push({
-      id: 'nav-assistant',
-      category: 'Navigation',
-      title: 'Open Git Assistant & Workflow Solver',
-      shortcut: 'g',
-      icon: Terminal,
-      perform: () => {
-        onOpenGitAssistant();
-      },
-    });
-
+    // 2. Navigation
     list.push({
       id: 'nav-action-req',
       category: 'Navigation',
-      title: 'Go to Action Required bucket',
+      title: 'Go to Action Required queue',
       icon: Flame,
       perform: () => {
         onSelectBucket('action_required');
@@ -227,7 +201,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     list.push({
       id: 'nav-waiting',
       category: 'Navigation',
-      title: 'Go to Waiting on Others bucket',
+      title: 'Go to Waiting on Others queue',
       icon: Clock,
       perform: () => {
         onSelectBucket('waiting_on_others');
@@ -238,7 +212,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     list.push({
       id: 'nav-mentions',
       category: 'Navigation',
-      title: 'Go to Mentions bucket',
+      title: 'Go to Mentions queue',
       icon: AtSign,
       perform: () => {
         onSelectBucket('mentions');
@@ -249,7 +223,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     list.push({
       id: 'nav-assigned',
       category: 'Navigation',
-      title: 'Go to Assigned bucket',
+      title: 'Go to Assigned tasks queue',
       icon: UserCheck,
       perform: () => {
         onSelectBucket('assigned');
@@ -260,7 +234,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     list.push({
       id: 'nav-snoozed',
       category: 'Navigation',
-      title: 'Go to Snoozed bucket',
+      title: 'Go to Snoozed tasks',
       icon: Clock,
       perform: () => {
         onSelectBucket('snoozed');
@@ -271,7 +245,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     list.push({
       id: 'nav-done',
       category: 'Navigation',
-      title: 'Go to Done / Archive',
+      title: 'Go to Completed Tasks',
       icon: Archive,
       perform: () => {
         onSelectBucket('done');
@@ -279,11 +253,11 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       },
     });
 
-    // 4. System
+    // 3. System
     list.push({
       id: 'sys-sync',
       category: 'System',
-      title: 'Sync notifications from GitHub',
+      title: 'Sync tasks from GitHub',
       shortcut: 'r',
       icon: RotateCw,
       perform: () => {
@@ -332,7 +306,6 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     onTogglePin,
     onSelectBucket,
     onSelectRepo,
-    onOpenGitAssistant,
     onSync,
     onToggleTheme,
     onOpenSettings,
@@ -480,4 +453,3 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     </div>
   );
 };
-

@@ -1,5 +1,15 @@
 import { describe, it, expect } from 'vitest';
-import { cn, formatTimeAgo, copyToClipboard, parsePRMetadata, generateGitCommands } from './utils';
+import {
+  cn,
+  formatTimeAgo,
+  copyToClipboard,
+  parsePRMetadata,
+  generateGitCommands,
+  categorizeIntoPipeline,
+  computeVisibilityMetrics,
+  categorizeIntoTaskSections,
+  computeTaskBurndownMetrics,
+} from './utils';
 
 describe('lib/utils', () => {
   it('cn should merge class names and resolve tailwind collisions', () => {
@@ -43,5 +53,66 @@ describe('lib/utils', () => {
     expect(cmds.gitCheckout).toBe('git checkout feature/auth');
     expect(cmds.ghPrCheckout).toBe('gh pr checkout 42');
     expect(cmds.ghPrDiff).toBe('gh pr diff 42');
+  });
+
+  it('categorizeIntoTaskSections should correctly sort into task sections', () => {
+    const items: any[] = [
+      { id: '1', reason: 'review_requested', type: 'PullRequest', triage: { bucket: 'action_required', pinned: false, status: 'inbox' } },
+      { id: '2', reason: 'author', type: 'PullRequest', triage: { bucket: 'participating', pinned: true, status: 'inbox' } },
+      { id: '3', type: 'Issue', reason: 'assigned', triage: { bucket: 'assigned', pinned: false, status: 'inbox' } },
+      { id: '4', reason: 'author', type: 'PullRequest', triage: { bucket: 'participating', pinned: false, status: 'inbox' } },
+      { id: '5', reason: 'comment', type: 'Issue', triage: { bucket: 'done', pinned: false, status: 'done' } },
+    ];
+
+    const sections = categorizeIntoTaskSections(items);
+    expect(sections.today.map((i) => i.id)).toEqual(['2']);
+    expect(sections.reviews.map((i) => i.id)).toEqual(['1']);
+    expect(sections.authored.map((i) => i.id)).toEqual(['4']);
+    expect(sections.issues.map((i) => i.id)).toEqual(['3']);
+    expect(sections.completed.map((i) => i.id)).toEqual(['5']);
+  });
+
+  it('computeTaskBurndownMetrics should count today totals, reviews, and completed items', () => {
+    const items: any[] = [
+      { id: '1', reason: 'review_requested', type: 'PullRequest', triage: { bucket: 'action_required', pinned: true, status: 'inbox' } },
+      { id: '2', reason: 'author', type: 'PullRequest', triage: { bucket: 'participating', pinned: true, status: 'done' } },
+      { id: '3', type: 'Issue', reason: 'assigned', triage: { bucket: 'assigned', pinned: false, status: 'inbox' } },
+    ];
+
+    const metrics = computeTaskBurndownMetrics(items);
+    expect(metrics.todayTotal).toBe(2);
+    expect(metrics.todayCompleted).toBe(1);
+    expect(metrics.reviewsCount).toBe(1);
+    expect(metrics.issuesCount).toBe(1);
+    expect(metrics.completedCount).toBe(1);
+  });
+
+  it('categorizeIntoPipeline should sort items into correct columns', () => {
+    const items: any[] = [
+      { id: '1', reason: 'review_requested', triage: { bucket: 'action_required' }, ci_status: 'pending' },
+      { id: '2', reason: 'ci_activity', ci_status: 'failure', triage: { bucket: 'action_required' } },
+      { id: '3', type: 'PullRequest', state: 'open', ci_status: 'success', triage: { bucket: 'participating' } },
+      { id: '4', reason: 'mention', triage: { bucket: 'mentions' }, ci_status: 'pending' },
+    ];
+
+    const pipeline = categorizeIntoPipeline(items);
+    expect(pipeline.ci_failing.map((i) => i.id)).toEqual(['2']);
+    expect(pipeline.review_required.map((i) => i.id)).toEqual(['1']);
+    expect(pipeline.ready_to_merge.map((i) => i.id)).toEqual(['3']);
+    expect(pipeline.waiting.map((i) => i.id)).toEqual(['4']);
+  });
+
+  it('computeVisibilityMetrics should calculate blockers, CI failures, and ready counts', () => {
+    const items: any[] = [
+      { id: '1', reason: 'review_requested', triage: { bucket: 'action_required' }, ci_status: 'pending', updated_at: new Date().toISOString() },
+      { id: '2', reason: 'mention', ci_status: 'failure', triage: { bucket: 'mentions' }, updated_at: new Date(Date.now() - 4 * 86400000).toISOString() },
+      { id: '3', type: 'PullRequest', state: 'open', ci_status: 'success', triage: { bucket: 'participating' }, updated_at: new Date().toISOString() },
+    ];
+
+    const metrics = computeVisibilityMetrics(items);
+    expect(metrics.blockersCount).toBe(1);
+    expect(metrics.ciFailingCount).toBe(1);
+    expect(metrics.readyToMergeCount).toBe(1);
+    expect(metrics.staleCount).toBe(1);
   });
 });

@@ -60,13 +60,22 @@ async function main() {
 
     const page = await context.newPage();
 
-    // 1. Dashboard screenshot (3-Pane Workstation)
+    // 1. Dashboard screenshot (Task Workstation)
     console.log('Capturing dashboard.png...');
     await page.goto(BASE_URL);
     await page.waitForLoadState('networkidle');
     await page.waitForSelector('[data-testid="inspection-cockpit"]');
     await wait(600);
     await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'dashboard.png') });
+
+    // 1b. Pipeline Board screenshot
+    console.log('Capturing pipeline-board.png...');
+    await page.keyboard.press('v');
+    await page.waitForSelector('[data-testid="pipeline-board"]');
+    await wait(600);
+    await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'pipeline-board.png') });
+    await page.keyboard.press('v');
+    await wait(300);
 
     // 2. Files Changed & Diff view in Cockpit
     console.log('Capturing diff-inspector.png...');
@@ -79,22 +88,13 @@ async function main() {
     // 3. Command Palette screenshot
     console.log('Capturing command-palette.png...');
     await page.getByRole('button', { name: /Command Palette/i }).click();
-    await page.waitForSelector('text=Git Quick Recipes');
+    await page.waitForSelector('text=Task Actions');
     await wait(400);
     await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'command-palette.png') });
     await page.keyboard.press('Escape');
     await wait(300);
 
-    // 4. Git Assistant View screenshot
-    console.log('Capturing git-assistant.png...');
-    await page.getByRole('button', { name: /Git Assistant/i }).click();
-    await page.waitForSelector('text=Git Assistant & Workflow Solver');
-    await wait(400);
-    await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'git-assistant.png') });
-    await page.getByRole('button', { name: /Triage Workstation/i }).click();
-    await wait(300);
-
-    // 5. Snooze modal
+    // 4. Snooze modal
     console.log('Capturing snooze-modal.png...');
     await page.keyboard.press('z');
     await page.waitForSelector('text=Snooze Notification');
@@ -103,7 +103,7 @@ async function main() {
     await page.keyboard.press('Escape');
     await wait(300);
 
-    // 6. Shortcuts cheat sheet
+    // 5. Shortcuts cheat sheet
     console.log('Capturing shortcuts-modal.png...');
     await page.keyboard.press('?');
     await page.waitForSelector('text=Keyboard Shortcuts');
@@ -111,6 +111,14 @@ async function main() {
     await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'shortcuts-modal.png') });
     await page.keyboard.press('Escape');
     await wait(300);
+
+    // 6. Settings modal
+    console.log('Capturing settings-modal.png...');
+    await page.click('button[title*="Settings"]');
+    await page.waitForSelector('text=Preferences & Settings');
+    await wait(400);
+    await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'settings-modal.png') });
+    await page.click('text=Cancel');
 
     await browser.close();
     console.log('All screenshots captured successfully in docs/screenshots/');

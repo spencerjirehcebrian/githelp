@@ -1,5 +1,9 @@
 import { useEffect, useCallback } from 'react';
-import type { EnrichedNotification } from '../types';
+import type {
+  EnrichedNotification,
+  DashboardLayoutMode,
+  PipelineColumnId,
+} from '../types';
 import { copyToClipboard } from '../lib/utils';
 
 interface UseKeyboardNavigationProps {
@@ -13,11 +17,21 @@ interface UseKeyboardNavigationProps {
   onSync: () => void;
   onOpenShortcuts: () => void;
   onOpenCommandPalette?: () => void;
-  onOpenGitAssistant?: () => void;
+  onToggleLayoutMode?: () => void;
+  layoutMode?: DashboardLayoutMode;
+  activeColumnId?: PipelineColumnId;
+  onSelectColumn?: (col: PipelineColumnId) => void;
   onFocusSearch: () => void;
   onToast: (msg: string) => void;
   isModalOpen: boolean;
 }
+
+const PIPELINE_COLUMNS: PipelineColumnId[] = [
+  'review_required',
+  'ci_failing',
+  'ready_to_merge',
+  'waiting',
+];
 
 export function useKeyboardNavigation({
   notifications,
@@ -30,7 +44,10 @@ export function useKeyboardNavigation({
   onSync,
   onOpenShortcuts,
   onOpenCommandPalette,
-  onOpenGitAssistant,
+  onToggleLayoutMode,
+  layoutMode = 'stream',
+  activeColumnId = 'review_required',
+  onSelectColumn,
   onFocusSearch,
   onToast,
   isModalOpen,
@@ -82,6 +99,42 @@ export function useKeyboardNavigation({
           break;
         }
 
+        // Column Navigation in Board Mode
+        case 'h':
+        case 'ArrowLeft': {
+          if (layoutMode === 'board' && onSelectColumn) {
+            e.preventDefault();
+            const currIdx = PIPELINE_COLUMNS.indexOf(activeColumnId);
+            const nextIdx = Math.max(currIdx - 1, 0);
+            onSelectColumn(PIPELINE_COLUMNS[nextIdx]);
+          }
+          break;
+        }
+        case 'l':
+        case 'ArrowRight': {
+          if (layoutMode === 'board' && onSelectColumn) {
+            e.preventDefault();
+            const currIdx = PIPELINE_COLUMNS.indexOf(activeColumnId);
+            const nextIdx = Math.min(currIdx + 1, PIPELINE_COLUMNS.length - 1);
+            onSelectColumn(PIPELINE_COLUMNS[nextIdx]);
+          }
+          break;
+        }
+
+        // Toggle Task Sections vs Board View
+        case 'v': {
+          if (onToggleLayoutMode) {
+            e.preventDefault();
+            onToggleLayoutMode();
+            onToast(
+              layoutMode === 'board'
+                ? 'Switched to Task Sections view'
+                : 'Switched to Pipeline Board view'
+            );
+          }
+          break;
+        }
+
         // Open in browser
         case 'Enter':
         case 'o': {
@@ -92,12 +145,25 @@ export function useKeyboardNavigation({
           break;
         }
 
-        // Mark Done
+        // Complete Task (Space or e)
+        case ' ':
         case 'e': {
           if (selectedItem) {
             e.preventDefault();
             onMarkDone(selectedItem.id);
-            onToast('Marked as done');
+            onToast(selectedItem.triage?.status === 'done' ? 'Reopened task' : 'Completed task');
+          }
+          break;
+        }
+
+        // Toggle Today's Focus (t) or Pin (p)
+        case 't':
+        case 'p': {
+          if (selectedItem) {
+            e.preventDefault();
+            const wasPinned = selectedItem.triage?.pinned || false;
+            onTogglePin(selectedItem.id, wasPinned);
+            onToast(wasPinned ? "Removed from Today's Focus" : "Pinned to Today's Focus");
           }
           break;
         }
@@ -107,16 +173,6 @@ export function useKeyboardNavigation({
           if (selectedItem) {
             e.preventDefault();
             onOpenSnooze(selectedItem.id);
-          }
-          break;
-        }
-
-        // Pin / Unpin
-        case 'p': {
-          if (selectedItem) {
-            e.preventDefault();
-            onTogglePin(selectedItem.id, selectedItem.triage.pinned);
-            onToast(selectedItem.triage.pinned ? 'Unpinned' : 'Pinned to top');
           }
           break;
         }
@@ -147,15 +203,6 @@ export function useKeyboardNavigation({
           break;
         }
 
-        // Git Assistant Toggle
-        case 'g': {
-          if (onOpenGitAssistant) {
-            e.preventDefault();
-            onOpenGitAssistant();
-          }
-          break;
-        }
-
         // Search focus
         case '/': {
           e.preventDefault();
@@ -167,7 +214,7 @@ export function useKeyboardNavigation({
         case 'r': {
           e.preventDefault();
           onSync();
-          onToast('Syncing GitHub notifications...');
+          onToast('Syncing GitHub tasks...');
           break;
         }
 
@@ -191,7 +238,10 @@ export function useKeyboardNavigation({
       onSync,
       onOpenShortcuts,
       onOpenCommandPalette,
-      onOpenGitAssistant,
+      onToggleLayoutMode,
+      layoutMode,
+      activeColumnId,
+      onSelectColumn,
       onFocusSearch,
       onToast,
       isModalOpen,

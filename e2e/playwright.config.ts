@@ -27,7 +27,7 @@ export default defineConfig({
   webServer: {
     command: `PORT=${PORT} DB_PATH=${DB_PATH} "${binaryPath}"`,
     url: `http://127.0.0.1:${PORT}/api/status`,
-    reuseExistingServer: false,
+    reuseExistingServer: true,
     timeout: 15000,
     cwd: path.resolve(__dirname, '..'),
   },

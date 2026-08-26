@@ -108,7 +108,7 @@ describe('hooks/useKeyboardNavigation', () => {
     expect(setSelectedIndex).toHaveBeenCalled();
   });
 
-  it('handles e (mark done)', () => {
+  it('handles e and Space (mark complete)', () => {
     renderHook(() =>
       useKeyboardNavigation({
         notifications: mockNotifications,
@@ -128,6 +128,32 @@ describe('hooks/useKeyboardNavigation', () => {
 
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'e' }));
     expect(onMarkDone).toHaveBeenCalledWith('item-1');
+
+    onMarkDone.mockClear();
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: ' ' }));
+    expect(onMarkDone).toHaveBeenCalledWith('item-1');
+  });
+
+  it('handles t (toggle Today focus pin)', () => {
+    renderHook(() =>
+      useKeyboardNavigation({
+        notifications: mockNotifications,
+        selectedIndex: 0,
+        setSelectedIndex,
+        onMarkDone,
+        onOpenSnooze,
+        onTogglePin,
+        onToggleUnread,
+        onSync,
+        onOpenShortcuts,
+        onFocusSearch,
+        onToast,
+        isModalOpen: false,
+      })
+    );
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 't' }));
+    expect(onTogglePin).toHaveBeenCalledWith('item-1', false);
   });
 
   it('handles z (snooze)', () => {
@@ -198,8 +224,8 @@ describe('hooks/useKeyboardNavigation', () => {
     expect(onOpenCommandPalette).toHaveBeenCalledTimes(1);
   });
 
-  it('triggers onOpenGitAssistant on g key', () => {
-    const onOpenGitAssistant = vi.fn();
+  it('triggers onToggleLayoutMode on v key', () => {
+    const onToggleLayoutMode = vi.fn();
     renderHook(() =>
       useKeyboardNavigation({
         notifications: mockNotifications,
@@ -211,14 +237,42 @@ describe('hooks/useKeyboardNavigation', () => {
         onToggleUnread,
         onSync,
         onOpenShortcuts,
-        onOpenGitAssistant,
+        onToggleLayoutMode,
+        layoutMode: 'stream',
         onFocusSearch,
         onToast,
         isModalOpen: false,
       })
     );
 
-    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'g' }));
-    expect(onOpenGitAssistant).toHaveBeenCalledTimes(1);
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'v' }));
+    expect(onToggleLayoutMode).toHaveBeenCalledTimes(1);
+  });
+
+  it('handles h and l for column navigation in board mode', () => {
+    const onSelectColumn = vi.fn();
+    renderHook(() =>
+      useKeyboardNavigation({
+        notifications: mockNotifications,
+        selectedIndex: 0,
+        setSelectedIndex,
+        onMarkDone,
+        onOpenSnooze,
+        onTogglePin,
+        onToggleUnread,
+        onSync,
+        onOpenShortcuts,
+        layoutMode: 'board',
+        activeColumnId: 'review_required',
+        onSelectColumn,
+        onFocusSearch,
+        onToast,
+        isModalOpen: false,
+      })
+    );
+
+    // Press 'l' (next column)
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'l' }));
+    expect(onSelectColumn).toHaveBeenCalledWith('ci_failing');
   });
 });

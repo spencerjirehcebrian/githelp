@@ -9,7 +9,54 @@ export type BucketType =
 
 export type NotificationStatus = 'inbox' | 'done' | 'snoozed';
 
-export type AppViewMode = 'triage' | 'git_assistant' | 'command_builder';
+export type AppViewMode = 'tasks' | 'triage';
+
+export type DashboardLayoutMode = 'stream' | 'board';
+
+export type TaskSectionId =
+  | 'today'
+  | 'reviews'
+  | 'authored'
+  | 'issues'
+  | 'completed';
+
+export interface TaskSection {
+  id: TaskSectionId;
+  title: string;
+  description: string;
+  badgeBg: string;
+  badgeText: string;
+  items: EnrichedNotification[];
+}
+
+export interface TaskBurndownMetrics {
+  todayTotal: number;
+  todayCompleted: number;
+  reviewsCount: number;
+  authoredCount: number;
+  issuesCount: number;
+  completedCount: number;
+}
+
+export type PipelineColumnId =
+  | 'review_required'
+  | 'ci_failing'
+  | 'ready_to_merge'
+  | 'waiting';
+
+export interface VisibilityMetrics {
+  blockersCount: number;
+  ciFailingCount: number;
+  readyToMergeCount: number;
+  staleCount: number;
+}
+
+export interface PipelineColumn {
+  id: PipelineColumnId;
+  title: string;
+  description: string;
+  items: EnrichedNotification[];
+}
 
 export interface FileDiff {
   filename: string;
@@ -51,21 +98,11 @@ export interface PRMetadata {
   ci_details?: CIDetail[];
 }
 
-export interface GitRecipe {
-  id: string;
-  title: string;
-  category: 'commits' | 'branches' | 'stash' | 'conflicts' | 'sync';
-  description: string;
-  command: string;
-  explanation: string;
-  tags: string[];
-}
-
 export interface CommandItem {
   id: string;
   title: string;
   subtitle?: string;
-  category: 'Actions' | 'Git Recipes' | 'Navigation' | 'System';
+  category: 'Actions' | 'Navigation' | 'System';
   shortcut?: string;
   iconName: string;
   perform: () => void;

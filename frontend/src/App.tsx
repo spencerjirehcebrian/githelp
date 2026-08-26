@@ -1,15 +1,19 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { useNotifications } from './hooks/useNotifications';
 import { useTheme } from './hooks/useTheme';
 import { useSSE } from './hooks/useSSE';
 import { useKeyboardNavigation } from './hooks/useKeyboardNavigation';
-import type { AppViewMode } from './types';
+import type {
+  DashboardLayoutMode,
+  PipelineColumnId,
+} from './types';
+import { computeVisibilityMetrics, computeTaskBurndownMetrics } from './lib/utils';
 
 import { Sidebar } from './components/Sidebar';
 import { TopBar } from './components/TopBar';
-import { NotificationList } from './components/NotificationList';
+import { TaskSectionList } from './components/TaskSectionList';
+import { PipelineBoard } from './components/PipelineBoard';
 import { InspectionCockpit } from './components/InspectionCockpit';
-import { GitAssistantView } from './components/GitAssistantView';
 import { CommandPalette } from './components/CommandPalette';
 import { AuthBanner } from './components/AuthBanner';
 import { SnoozeModal } from './components/SnoozeModal';
@@ -46,8 +50,13 @@ export default function App() {
 
   const { theme, setTheme } = useTheme();
 
-  // App View Mode (Triage Workstation vs Git Assistant)
-  const [currentView, setCurrentView] = useState<AppViewMode>('triage');
+  // Dashboard Layout Mode (Task Sections vs Pipeline Board)
+  const [layoutMode, setLayoutMode] = useState<DashboardLayoutMode>('stream');
+  const [activeColumnId, setActiveColumnId] =
+    useState<PipelineColumnId>('review_required');
+
+  // CI Badges Global Visibility (Hidden by default)
+  const [showCI, setShowCI] = useState<boolean>(false);
 
   // Modals & Overlays state
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState<boolean>(false);
@@ -57,6 +66,17 @@ export default function App() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Compute live visibility and task burndown metrics
+  const visibilityMetrics = useMemo(
+    () => computeVisibilityMetrics(notifications),
+    [notifications]
+  );
+
+  const burndownMetrics = useMemo(
+    () => computeTaskBurndownMetrics(notifications),
+    [notifications]
+  );
 
   // SSE real-time updates
   useSSE({
@@ -68,7 +88,7 @@ export default function App() {
     },
     onSnoozeExpired: () => {
       refresh();
-      setToastMessage('Snoozed notifications reactivated');
+      setToastMessage('Snoozed tasks reactivated');
     },
   });
 
@@ -78,6 +98,18 @@ export default function App() {
   );
 
   const selectedItem = notifications[selectedIndex] || null;
+
+  const handleToggleLayoutMode = () => {
+    setLayoutMode((prev) => (prev === 'board' ? 'stream' : 'board'));
+  };
+
+  const handleToggleCI = () => {
+    setShowCI((prev) => {
+      const next = !prev;
+      setToastMessage(next ? 'CI badges visible' : 'CI badges hidden');
+      return next;
+    });
+  };
 
   useKeyboardNavigation({
     notifications,
@@ -90,10 +122,11 @@ export default function App() {
     onSync: triggerSync,
     onOpenShortcuts: () => setIsShortcutsOpen(true),
     onOpenCommandPalette: () => setIsCommandPaletteOpen(true),
-    onOpenGitAssistant: () =>
-      setCurrentView((prev) => (prev === 'git_assistant' ? 'triage' : 'git_assistant')),
+    onToggleLayoutMode: handleToggleLayoutMode,
+    layoutMode,
+    activeColumnId,
+    onSelectColumn: setActiveColumnId,
     onFocusSearch: () => {
-      if (currentView !== 'triage') setCurrentView('triage');
       searchInputRef.current?.focus();
       searchInputRef.current?.select();
     },
@@ -115,8 +148,6 @@ export default function App() {
         selectedRepo={selectedRepo}
         onSelectRepo={setSelectedRepo}
         onOpenSettings={() => setIsSettingsOpen(true)}
-        currentView={currentView}
-        onSelectView={setCurrentView}
       />
 
       {/* Main Workstation Container */}
@@ -157,51 +188,79 @@ export default function App() {
           onToggleTheme={handleToggleTheme}
           itemCount={notifications.length}
           searchInputRef={searchInputRef}
-          currentView={currentView}
+          layoutMode={layoutMode}
+          onToggleLayoutMode={handleToggleLayoutMode}
+          visibilityMetrics={visibilityMetrics}
+          burndownMetrics={burndownMetrics}
+          showCI={showCI}
+          onToggleCI={handleToggleCI}
         />
 
-        {/* View Switcher: Triage Workstation vs Git Assistant */}
-        {currentView === 'git_assistant' ? (
-          <div className="flex-1 overflow-hidden">
-            <GitAssistantView
-              onToast={(msg) => setToastMessage(msg)}
-              onClose={() => setCurrentView('triage')}
-            />
-          </div>
-        ) : (
-          /* 3-Pane Triage & Inspection Workstation */
-          <div className="flex-1 flex min-w-0 overflow-hidden bg-github-dark">
-            {/* Middle Column: Work Stream List */}
-            <div className="w-full lg:w-[440px] xl:w-[480px] shrink-0 border-r border-github-border flex flex-col min-w-0 h-full overflow-y-auto bg-github-dark">
-              <NotificationList
+        {/* Developer Task Workstation: Task Sections vs Pipeline Board */}
+        <div className="flex-1 flex min-w-0 overflow-hidden bg-github-dark">
+          {layoutMode === 'board' ? (
+            /* Pipeline Board Mode */
+            <div className="flex-1 flex min-w-0 overflow-hidden">
+              <PipelineBoard
                 notifications={notifications}
-                selectedBucket={selectedBucket}
-                selectedIndex={selectedIndex}
-                onSelectIndex={setSelectedIndex}
+                selectedItemId={selectedItem?.id || null}
+                onSelectItem={(item) => {
+                  const idx = notifications.findIndex((n) => n.id === item.id);
+                  if (idx !== -1) setSelectedIndex(idx);
+                }}
+                activeColumnId={activeColumnId}
+                onSelectColumn={setActiveColumnId}
+                onMarkDone={markItemDone}
+                onOpenSnooze={(id) => setSnoozeModalId(id)}
+                onTogglePin={togglePin}
+                onToggleUnread={toggleUnread}
+                onToast={(msg) => setToastMessage(msg)}
                 isLoading={isLoading}
                 searchQuery={searchQuery}
+                showCI={showCI}
+              />
+            </div>
+          ) : (
+            /* Middle Column: Collapsible Task Section List */
+            <div className="w-full lg:w-[460px] xl:w-[500px] shrink-0 border-r border-github-border flex flex-col min-w-0 h-full overflow-hidden bg-github-dark">
+              <TaskSectionList
+                notifications={notifications}
+                selectedItemId={selectedItem?.id || null}
+                onSelectItem={(item) => {
+                  const idx = notifications.findIndex((n) => n.id === item.id);
+                  if (idx !== -1) setSelectedIndex(idx);
+                }}
                 onMarkDone={markItemDone}
                 onOpenSnooze={(id) => setSnoozeModalId(id)}
                 onTogglePin={togglePin}
                 onToggleUnread={toggleUnread}
                 onToast={(msg) => setToastMessage(msg)}
+                isLoading={isLoading}
+                searchQuery={searchQuery}
+                showCI={showCI}
               />
             </div>
+          )}
 
-            {/* Right Column: Git & PR Inspection Cockpit */}
-            <div className="hidden lg:flex flex-1 min-w-0 h-full overflow-hidden">
-              <InspectionCockpit
-                item={selectedItem}
-                onMarkDone={markItemDone}
-                onOpenSnooze={(id) => setSnoozeModalId(id)}
-                onTogglePin={togglePin}
-                onToggleUnread={toggleUnread}
-                onUpdateNotes={updateNotes}
-                onToast={(msg) => setToastMessage(msg)}
-              />
-            </div>
+          {/* Right Column: Git & PR Inspection Cockpit */}
+          <div
+            className={
+              layoutMode === 'board'
+                ? 'hidden lg:flex w-[380px] xl:w-[440px] 2xl:w-[480px] h-full overflow-hidden shrink-0'
+                : 'hidden lg:flex flex-1 min-w-0 h-full overflow-hidden'
+            }
+          >
+            <InspectionCockpit
+              item={selectedItem}
+              onMarkDone={markItemDone}
+              onOpenSnooze={(id) => setSnoozeModalId(id)}
+              onTogglePin={togglePin}
+              onToggleUnread={toggleUnread}
+              onUpdateNotes={updateNotes}
+              onToast={(msg) => setToastMessage(msg)}
+            />
           </div>
-        )}
+        </div>
       </main>
 
       {/* Global Command Palette */}
@@ -217,7 +276,6 @@ export default function App() {
         onSync={triggerSync}
         onOpenSettings={() => setIsSettingsOpen(true)}
         onOpenShortcuts={() => setIsShortcutsOpen(true)}
-        onOpenGitAssistant={() => setCurrentView('git_assistant')}
         onToggleTheme={handleToggleTheme}
         currentTheme={theme}
         onToast={(msg) => setToastMessage(msg)}

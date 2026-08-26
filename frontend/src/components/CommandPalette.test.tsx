@@ -45,7 +45,6 @@ describe('components/CommandPalette', () => {
         onSync={vi.fn()}
         onOpenSettings={vi.fn()}
         onOpenShortcuts={vi.fn()}
-        onOpenGitAssistant={vi.fn()}
         onToggleTheme={vi.fn()}
         currentTheme="dark"
         onToast={vi.fn()}
@@ -69,7 +68,6 @@ describe('components/CommandPalette', () => {
         onSync={vi.fn()}
         onOpenSettings={vi.fn()}
         onOpenShortcuts={vi.fn()}
-        onOpenGitAssistant={vi.fn()}
         onToggleTheme={vi.fn()}
         currentTheme="dark"
         onToast={vi.fn()}
@@ -78,12 +76,12 @@ describe('components/CommandPalette', () => {
 
     expect(screen.getByPlaceholderText(/Type a command or search actions/i)).toBeInTheDocument();
     expect(screen.getByText('Checkout branch: feat/test')).toBeInTheDocument();
-    expect(screen.getByText('Open Git Assistant & Workflow Solver')).toBeInTheDocument();
+    expect(screen.getByText('Complete Task')).toBeInTheDocument();
 
     const searchInput = screen.getByPlaceholderText(/Type a command or search actions/i);
-    fireEvent.change(searchInput, { target: { value: 'Assistant' } });
+    fireEvent.change(searchInput, { target: { value: 'Today' } });
 
-    expect(screen.getByText('Open Git Assistant & Workflow Solver')).toBeInTheDocument();
+    expect(screen.getByText("Pin to Today's Focus")).toBeInTheDocument();
     expect(screen.queryByText('Checkout branch: feat/test')).not.toBeInTheDocument();
   });
 });

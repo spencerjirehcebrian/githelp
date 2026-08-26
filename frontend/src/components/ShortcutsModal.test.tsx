@@ -8,8 +8,9 @@ describe('components/ShortcutsModal', () => {
     render(<ShortcutsModal isOpen={true} onClose={onClose} />);
 
     expect(screen.getByText('Keyboard Shortcuts')).toBeInTheDocument();
-    expect(screen.getByText('Select next notification')).toBeInTheDocument();
-    expect(screen.getByText('Mark as Done (Archive)')).toBeInTheDocument();
+    expect(screen.getByText('Toggle Task Sections / Board View')).toBeInTheDocument();
+    expect(screen.getByText('Navigate Tasks / Cards')).toBeInTheDocument();
+    expect(screen.getByText('Complete Task (Mark Done)')).toBeInTheDocument();
 
     fireEvent.click(screen.getByText('Close'));
     expect(onClose).toHaveBeenCalled();

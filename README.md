@@ -1,32 +1,35 @@
 # GitHelp
 
-Local-first, keyboard-driven Git & PR developer workstation and workflow launcher.
+Local-first, keyboard-driven Git & PR Developer Task Workstation and workflow execution center.
 
-![GitHelp Dashboard](docs/screenshots/dashboard.png)
+![GitHelp Task Workstation](docs/screenshots/dashboard.png)
 
-GitHelp bridges remote GitHub notifications with your local terminal and IDE. It transforms passive notification triage into an active **3-pane Git & PR workstation** equipped with an interactive **PR inspection cockpit**, one-click **Git & GitHub CLI action runners**, an emergency **Git workflow solver**, and a spotlight **Command Palette (`Cmd+K`)**.
+GitHelp bridges remote GitHub activity with your local terminal and IDE. It transforms passive notification triage into an active **Developer Task Command Center** organized into actionable sections: **Today's Focus**, **PRs Needing Your Review**, **Your Authored PRs**, and **Assigned Issues**, equipped with an interactive **PR inspection cockpit**, one-click **Git checkout runners**, and a spotlight **Command Palette (`Cmd+K`)**.
 
 ---
 
 ## Features & Workstation Layout
 
-- **3-Pane Workstation Architecture**:
-  - **Left Rail (Navigation & Repos)**: Quick-switch between Triage Workstation and Git Assistant, filter by repository, and inspect connected accounts.
-  - **Middle Column (Work Stream)**: High-density, scan-optimized feed with CI status badges, branch tags, and vim-style `j`/`k` navigation.
-  - **Right Cockpit (Git & PR Inspection)**: Deep PR overview, file changes with line diffs (`+284 -42`), CI diagnostics, and private review notes.
-- **One-Click Git Actions**: Immediately checkout branches (`git checkout <branch>` / `gh pr checkout <num>`), copy PR diffs, open repositories in Cursor/VS Code, or approve PRs.
-- **Global Command Palette (`Cmd+K` / `Ctrl+K`)**: Fast spotlight launcher for search, triage actions, Git recipes, and navigation.
-- **Built-in Git Assistant (`g`)**: Comprehensive emergency and scenario solver for common Git dilemmas (undo commits, branch cleanup, merge conflicts, interactive rebasing).
-- **Linear-Style Triage**: Automatically categorizes items into **Action Required**, **Waiting on Others**, **Mentions**, **Assigned**, **Participating**, **Snoozed**, and **Done**.
+- **Developer Task Execution Architecture**:
+  - **Today's Focus Queue (`t`)**: Pin 2–4 priority tasks you plan to tackle today with a real-time burndown progress pill (`Today: 2/4 Done`).
+  - **Collapsible Task Sections**: Grouped into *Today's Focus*, *PRs Needing Your Review*, *Your Authored PRs*, *Assigned Issues & Tasks*, and *Completed Today*.
+  - **1-Click Checkbox Completion (`Space` / `e`)**: Complete tasks immediately with tactile checkmark feedback and automatic archiving.
+- **Dual View Modes (`v`)**:
+  - **Task Sections View**: High-density, scan-optimized task queue with inline diff metrics (`+284 -42`), branch tags, and vim-style `j`/`k` navigation.
+  - **Pipeline Board View**: 4-column visual kanban (*Needs Your Review*, *CI Failing*, *Ready to Merge*, *Waiting on Others*) with full 2D keyboard navigation (`h`/`l`/arrows for columns, `j`/`k` for items).
+- **Clean CI by Default**: Passing CI badges are hidden by default to eliminate noise, with a global toggle button in the top bar to reveal status badges on demand.
+- **Deep Inspection Cockpit**: Deep PR overview, file changes with line diffs, CI diagnostics, and private review notes, accessible in both Task and Board modes.
+- **One-Click Git Actions**: Immediately checkout branches (`git checkout <branch>` / `gh pr checkout <num>`), copy PR diffs, or open repositories in Cursor/VS Code.
+- **Global Command Palette (`Cmd+K` / `Ctrl+K`)**: Fast spotlight launcher for search, task completion, focus pinning, and navigation.
 - **Zero-Config Auth**: Automatically uses existing `gh` CLI credentials (or configured PAT).
 
-| Diff Inspector | Command Palette |
+| Pipeline Board | Diff Inspector |
 | :---: | :---: |
-| ![Diff Inspector](docs/screenshots/diff-inspector.png) | ![Command Palette](docs/screenshots/command-palette.png) |
+| ![Pipeline Board](docs/screenshots/pipeline-board.png) | ![Diff Inspector](docs/screenshots/diff-inspector.png) |
 
-| Git Assistant & Solver | Snooze Triage |
+| Command Palette | Snooze Modal |
 | :---: | :---: |
-| ![Git Assistant](docs/screenshots/git-assistant.png) | ![Snooze Modal](docs/screenshots/snooze-modal.png) |
+| ![Command Palette](docs/screenshots/command-palette.png) | ![Snooze Modal](docs/screenshots/snooze-modal.png) |
 
 ---
 
@@ -51,17 +54,19 @@ make dev
 
 | Key | Action |
 | :--- | :--- |
+| `Space` / `e` | Complete Task (Mark Done) |
+| `t` | Pin / Toggle item in Today's Focus |
 | `Cmd+K` / `Ctrl+K` | Open Command Palette |
-| `g` | Toggle Git Assistant & Workflow Solver |
-| `j` / `k` | Navigate items down / up in work stream |
+| `v` | Toggle Task Sections / Pipeline Board View |
+| `h` / `l` / `←` / `→` | Switch Pipeline Board Columns (in Board mode) |
+| `j` / `k` / `↓` / `↑` | Navigate items in task list or column |
 | `o` / `Enter` | Open in browser / GitHub |
-| `e` | Mark as Done (Archive) |
 | `z` | Snooze (`1`: 1h, `2`: 3h, `3`: tomorrow, `4`: next Monday) |
 | `c` | Copy `git checkout <branch>` or URL |
 | `u` | Toggle Read / Unread |
-| `p` | Pin / Unpin item to top |
+| `p` | Pin / Unpin item |
 | `/` | Focus search bar |
-| `r` | Sync notifications with GitHub |
+| `r` | Sync tasks with GitHub |
 | `?` | Keyboard shortcuts reference cheat sheet |
 | `Esc` | Close modal / command palette / clear search |
 

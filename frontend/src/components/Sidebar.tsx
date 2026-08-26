@@ -9,12 +9,11 @@ import {
   Moon,
   FolderGit2,
   Settings as SettingsIcon,
-  Inbox,
-  Terminal,
   FilterX,
   Layers,
+  CheckSquare,
 } from 'lucide-react';
-import type { BucketType, StatusResponse, AppViewMode } from '../types';
+import type { BucketType, StatusResponse } from '../types';
 import { cn } from '../lib/utils';
 
 interface SidebarProps {
@@ -24,8 +23,6 @@ interface SidebarProps {
   selectedRepo: string;
   onSelectRepo: (repo: string) => void;
   onOpenSettings: () => void;
-  currentView?: AppViewMode;
-  onSelectView?: (view: AppViewMode) => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -35,8 +32,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   selectedRepo,
   onSelectRepo,
   onOpenSettings,
-  currentView = 'triage',
-  onSelectView,
 }) => {
   const bucketCounts = status?.bucket_counts || {};
   const repoCounts = status?.repo_counts || {};
@@ -83,7 +78,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     },
     {
       id: 'done',
-      label: 'Done / Archive',
+      label: 'Completed Tasks',
       icon: CheckCircle2,
       color: 'text-emerald-500',
     },
@@ -102,51 +97,36 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className="flex items-center gap-2">
             <span className="font-semibold text-xs tracking-tight text-white">GitHelp</span>
             <span className="text-[9px] uppercase font-mono px-1 py-0.2 bg-zinc-900 text-zinc-400 border border-zinc-800 rounded">
-              v2.0
+              Tasks
             </span>
           </div>
         </div>
       </div>
 
-      {/* Primary Workstation Modes */}
-      <div className="p-2 border-b border-github-border space-y-0.5">
+      {/* Primary Work Queue Header */}
+      <div className="p-2 border-b border-github-border">
         <button
-          onClick={() => onSelectView && onSelectView('triage')}
-          aria-label="Triage Workstation"
+          onClick={() => {
+            onSelectBucket('action_required');
+            onSelectRepo('');
+          }}
+          aria-label="Developer Task List"
           className={cn(
             'w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs transition-colors',
-            currentView === 'triage'
+            selectedBucket === 'action_required' && !selectedRepo
               ? 'bg-zinc-900 text-white font-medium border border-zinc-800'
               : 'text-zinc-400 hover:bg-zinc-900/60 hover:text-zinc-200'
           )}
         >
           <div className="flex items-center gap-2">
-            <Inbox className="w-3.5 h-3.5 text-zinc-300" />
-            <span>Triage Workstation</span>
+            <CheckSquare className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Developer Task Queue</span>
           </div>
           {bucketCounts['inbox_total'] ? (
             <span className="px-1.5 py-0.2 text-[10px] font-mono rounded bg-black border border-zinc-800 text-zinc-400 tabular-nums">
               {bucketCounts['inbox_total']}
             </span>
           ) : null}
-        </button>
-
-        <button
-          onClick={() => onSelectView && onSelectView('git_assistant')}
-          className={cn(
-            'w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs transition-colors',
-            currentView === 'git_assistant'
-              ? 'bg-zinc-900 text-white font-medium border border-zinc-800'
-              : 'text-zinc-400 hover:bg-zinc-900/60 hover:text-zinc-200'
-          )}
-        >
-          <div className="flex items-center gap-2">
-            <Terminal className="w-3.5 h-3.5 text-zinc-300" />
-            <span>Git Assistant</span>
-          </div>
-          <kbd className="px-1.5 py-0.2 text-[9px] font-mono text-zinc-500 bg-black border border-zinc-800 rounded">
-            g
-          </kbd>
         </button>
       </div>
 
@@ -155,18 +135,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Primary Buckets */}
         <div className="space-y-0.5">
           <div className="px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-zinc-500">
-            Triage Buckets
+            Work Queues
           </div>
           {primaryBuckets.map((bucket) => {
             const Icon = bucket.icon;
             const count = bucketCounts[bucket.id] || 0;
-            const isSelected = currentView === 'triage' && selectedBucket === bucket.id;
+            const isSelected = selectedBucket === bucket.id && !selectedRepo;
 
             return (
               <button
                 key={bucket.id}
                 onClick={() => {
-                  if (onSelectView) onSelectView('triage');
                   onSelectBucket(bucket.id);
                   onSelectRepo('');
                 }}
@@ -208,13 +187,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {secondaryBuckets.map((bucket) => {
             const Icon = bucket.icon;
             const count = bucketCounts[bucket.id] || 0;
-            const isSelected = currentView === 'triage' && selectedBucket === bucket.id;
+            const isSelected = selectedBucket === bucket.id && !selectedRepo;
 
             return (
               <button
                 key={bucket.id}
                 onClick={() => {
-                  if (onSelectView) onSelectView('triage');
                   onSelectBucket(bucket.id);
                   onSelectRepo('');
                 }}
@@ -269,10 +247,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 return (
                   <button
                     key={repo}
-                    onClick={() => {
-                      if (onSelectView) onSelectView('triage');
-                      onSelectRepo(isSelected ? '' : repo);
-                    }}
+                    onClick={() => onSelectRepo(isSelected ? '' : repo)}
                     className={cn(
                       'w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs transition-colors text-left truncate group',
                       isSelected
@@ -342,4 +317,3 @@ export const Sidebar: React.FC<SidebarProps> = ({
     </aside>
   );
 };
-

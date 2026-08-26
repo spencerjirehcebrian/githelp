@@ -22,31 +22,32 @@ export const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose 
 
   const shortcutGroups = [
     {
-      title: 'Workstation & Command Palette',
+      title: 'Task Execution & Actions',
+      items: [
+        { key: 'Space / e', desc: 'Complete Task (Mark Done)' },
+        { key: 't', desc: "Pin / Toggle Today's Focus" },
+        { key: 'c', desc: 'Copy git checkout / branch' },
+        { key: 'z', desc: 'Snooze task' },
+        { key: 'u', desc: 'Toggle read / unread' },
+        { key: 'p', desc: 'Pin to top' },
+      ],
+    },
+    {
+      title: 'Workstation & Navigation',
       items: [
         { key: '⌘K / Ctrl+K', desc: 'Open Command Palette' },
-        { key: 'g', desc: 'Toggle Git Assistant & Workflow Solver' },
-        { key: 'j / ↓', desc: 'Select next notification' },
-        { key: 'k / ↑', desc: 'Select previous notification' },
-        { key: 'o / Enter', desc: 'Open in browser' },
+        { key: 'v', desc: 'Toggle Task Sections / Board View' },
+        { key: 'h / l / ← / →', desc: 'Switch Board Columns (in Board mode)' },
+        { key: 'j / k / ↓ / ↑', desc: 'Navigate Tasks / Cards' },
+        { key: 'o / Enter', desc: 'Open in GitHub' },
         { key: '/', desc: 'Focus search bar' },
         { key: 'Esc', desc: 'Close modal / Clear focus' },
       ],
     },
     {
-      title: 'Triage & Git Actions',
-      items: [
-        { key: 'e', desc: 'Mark as Done (Archive)' },
-        { key: 'z', desc: 'Snooze notification' },
-        { key: 'c', desc: 'Copy git checkout / link' },
-        { key: 'u', desc: 'Toggle read / unread' },
-        { key: 'p', desc: 'Pin / Unpin to top' },
-      ],
-    },
-    {
       title: 'General',
       items: [
-        { key: 'r', desc: 'Sync with GitHub' },
+        { key: 'r', desc: 'Sync tasks with GitHub' },
         { key: '?', desc: 'Show keyboard shortcuts' },
       ],
     },
@@ -106,4 +107,3 @@ export const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose 
     </div>
   );
 };
-

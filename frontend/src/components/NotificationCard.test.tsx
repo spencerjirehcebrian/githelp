@@ -42,6 +42,7 @@ describe('components/NotificationCard', () => {
         onTogglePin={vi.fn()}
         onToggleUnread={vi.fn()}
         onToast={vi.fn()}
+        showCI={true}
       />
     );
 
@@ -53,7 +54,7 @@ describe('components/NotificationCard', () => {
     expect(screen.getByText('Checks passed')).toBeInTheDocument();
   });
 
-  it('triggers onMarkDone when archive button is clicked', () => {
+  it('triggers onMarkDone when checkbox or complete button is clicked', () => {
     const onMarkDone = vi.fn();
     render(
       <NotificationCard
@@ -68,7 +69,7 @@ describe('components/NotificationCard', () => {
       />
     );
 
-    const doneBtn = screen.getByTitle('Mark as Done (e)');
+    const doneBtn = screen.getByTitle('Complete task (Space / e)');
     fireEvent.click(doneBtn);
     expect(onMarkDone).toHaveBeenCalledWith('notif-1');
   });

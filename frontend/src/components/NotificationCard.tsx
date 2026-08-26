@@ -8,7 +8,6 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
-  Pin,
   ExternalLink,
   Archive,
   Copy,
@@ -17,9 +16,12 @@ import {
   AtSign,
   UserCheck,
   Terminal,
+  Square,
+  CheckSquare,
+  Star,
 } from 'lucide-react';
 import type { EnrichedNotification } from '../types';
-import { cn, formatTimeAgo, copyToClipboard } from '../lib/utils';
+import { cn, formatTimeAgo, copyToClipboard, parsePRMetadata } from '../lib/utils';
 
 interface NotificationCardProps {
   item: EnrichedNotification;
@@ -30,6 +32,7 @@ interface NotificationCardProps {
   onTogglePin: (id: string, currentPinned: boolean) => void;
   onToggleUnread: (id: string, currentUnread: boolean) => void;
   onToast: (msg: string) => void;
+  showCI?: boolean;
 }
 
 export const NotificationCard: React.FC<NotificationCardProps> = ({
@@ -41,12 +44,16 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
   onTogglePin,
   onToggleUnread,
   onToast,
+  showCI = false,
 }) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const [copiedBranch, setCopiedBranch] = React.useState(false);
+  const meta = parsePRMetadata(item.raw_data);
+  const isDone = item.triage?.status === 'done';
+  const isPinned = item.triage?.pinned === true;
 
   useEffect(() => {
-    if (isSelected && cardRef.current) {
+    if (isSelected && cardRef.current?.scrollIntoView) {
       cardRef.current.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     }
   }, [isSelected]);
@@ -68,6 +75,31 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
       await copyToClipboard(item.html_url);
       onToast('Copied URL');
     }
+  };
+
+  // Urgency left accent stripe
+  const getUrgencyBorder = () => {
+    if (isDone) return 'border-l-[3px] border-l-zinc-800 opacity-60';
+    if (isPinned) return 'border-l-[3px] border-l-amber-500';
+
+    const isCiFailed =
+      item.ci_status === 'failure' ||
+      item.ci_status === 'error' ||
+      item.reason === 'ci_activity';
+    const isReviewReq =
+      item.reason === 'review_requested' || item.triage?.bucket === 'action_required';
+    const state = (item.state || 'open').toLowerCase();
+    const isMerged = item.type === 'PullRequest' && state === 'merged';
+    const isReady =
+      item.type === 'PullRequest' && state === 'open' && item.ci_status === 'success';
+
+    if (isCiFailed) return 'border-l-[3px] border-l-rose-500';
+    if (isReviewReq) return 'border-l-[3px] border-l-amber-500';
+    if (isReady) return 'border-l-[3px] border-l-emerald-500';
+    if (isMerged) return 'border-l-[3px] border-l-purple-500';
+    if (item.reason === 'mention' || item.reason === 'team_mention')
+      return 'border-l-[3px] border-l-indigo-500';
+    return 'border-l-[3px] border-l-zinc-800';
   };
 
   // Render Type & State Icon
@@ -115,21 +147,6 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
       return (
         <span title="Open Issue">
           <CircleDot className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-        </span>
-      );
-    }
-
-    if (type === 'CheckSuite') {
-      if (item.ci_status === 'success') {
-        return (
-          <span title="CI Passed">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-          </span>
-        );
-      }
-      return (
-        <span title="CI Failed">
-          <XCircle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
         </span>
       );
     }
@@ -182,17 +199,10 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
     );
   };
 
-  // Render CI Badge
+  // Render CI Badge (Only if showCI is true or failure)
   const renderCIBadge = () => {
     if (!item.ci_status) return null;
-    if (item.ci_status === 'success') {
-      return (
-        <span className="flex items-center gap-1 text-[10px] text-emerald-400 font-mono" title="CI Checks Passed">
-          <CheckCircle2 className="w-3 h-3" />
-          <span>Checks passed</span>
-        </span>
-      );
-    }
+
     if (item.ci_status === 'failure') {
       return (
         <span className="flex items-center gap-1 text-[10px] text-rose-400 font-mono" title="CI Checks Failed">
@@ -201,6 +211,18 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
         </span>
       );
     }
+
+    if (!showCI) return null;
+
+    if (item.ci_status === 'success') {
+      return (
+        <span className="flex items-center gap-1 text-[10px] text-emerald-400 font-mono" title="CI Checks Passed">
+          <CheckCircle2 className="w-3 h-3" />
+          <span>Checks passed</span>
+        </span>
+      );
+    }
+
     if (item.ci_status === 'pending') {
       return (
         <span className="flex items-center gap-1 text-[10px] text-amber-400 font-mono" title="CI Checks Running">
@@ -209,6 +231,7 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
         </span>
       );
     }
+
     return null;
   };
 
@@ -219,16 +242,33 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
       data-testid="notification-card"
       data-selected={isSelected ? 'true' : 'false'}
       className={cn(
-        'group relative flex items-start justify-between gap-3 p-3 rounded-lg border transition-colors cursor-pointer select-none',
+        'group relative flex items-start justify-between gap-3 p-3 rounded-lg border transition-all duration-150 cursor-pointer select-none',
+        getUrgencyBorder(),
         isSelected
-          ? 'bg-zinc-900/90 border-zinc-700 shadow-sm ring-1 ring-zinc-700/80'
+          ? 'bg-zinc-900/90 border-zinc-700 shadow-sm ring-1 ring-zinc-500/80'
           : 'bg-zinc-950/70 border-zinc-900 hover:bg-zinc-900/50 hover:border-zinc-800'
       )}
     >
-      {/* Left section: status dot, icon, details */}
+      {/* Left section: checkbox, type icon, details */}
       <div className="flex items-start gap-2.5 min-w-0 flex-1">
+        {/* Interactive Task Checkbox */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onMarkDone(item.id);
+          }}
+          title={isDone ? 'Mark task incomplete' : 'Complete task (Space / e)'}
+          className="pt-0.5 text-zinc-500 hover:text-emerald-400 transition-colors focus:outline-none shrink-0"
+        >
+          {isDone ? (
+            <CheckSquare className="w-4 h-4 text-emerald-400" />
+          ) : (
+            <Square className="w-4 h-4 text-zinc-600 hover:text-emerald-400" />
+          )}
+        </button>
+
         {/* Unread indicator */}
-        <div className="pt-1">
+        <div className="pt-1.5">
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -256,10 +296,10 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
               {item.repository}
             </span>
             {renderReasonBadge()}
-            {item.triage.pinned && (
+            {isPinned && (
               <span className="flex items-center gap-1 text-[9px] text-amber-300 font-medium px-1 py-0.2 rounded bg-amber-950/40 border border-amber-800/40">
-                <Pin className="w-2 h-2 fill-amber-300" />
-                Pinned
+                <Star className="w-2.5 h-2.5 fill-amber-300 text-amber-300" />
+                Today's Focus
               </span>
             )}
             {item.triage.snoozed_until && (
@@ -279,7 +319,7 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
               onClick={(e) => e.stopPropagation()}
               className={cn(
                 'text-xs font-medium leading-snug hover:text-blue-400 hover:underline transition-colors line-clamp-2',
-                item.unread ? 'text-white font-semibold' : 'text-zinc-300'
+                isDone ? 'line-through text-zinc-500' : item.unread ? 'text-white font-semibold' : 'text-zinc-300'
               )}
             >
               {item.title}
@@ -291,7 +331,7 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
             </a>
           </div>
 
-          {/* Bottom metadata: branch checkout, CI status, author, time */}
+          {/* Bottom metadata: branch checkout, CI status, diff pill, author, time */}
           <div className="flex items-center gap-2.5 text-[11px] text-zinc-500 flex-wrap pt-0.5">
             {/* PR Branch command */}
             {item.branch && (
@@ -311,6 +351,18 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
 
             {/* CI Status */}
             {renderCIBadge()}
+
+            {/* Diff stats pill */}
+            {(meta?.additions !== undefined || meta?.deletions !== undefined) && (
+              <span className="flex items-center gap-1 text-[10px] font-mono px-1 py-0.2 rounded bg-black/40 border border-zinc-800/80 shrink-0">
+                {meta.additions !== undefined && meta.additions > 0 && (
+                  <span className="text-emerald-400 font-semibold">+{meta.additions}</span>
+                )}
+                {meta.deletions !== undefined && meta.deletions > 0 && (
+                  <span className="text-rose-400 font-semibold">-{meta.deletions}</span>
+                )}
+              </span>
+            )}
 
             {/* Author info */}
             {item.author && (
@@ -342,10 +394,26 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
         <button
           onClick={(e) => {
             e.stopPropagation();
+            onTogglePin(item.id, isPinned);
+          }}
+          className={cn(
+            'p-1 rounded transition-colors',
+            isPinned
+              ? 'text-amber-400 hover:text-amber-300 hover:bg-zinc-900'
+              : 'text-zinc-400 hover:text-amber-400 hover:bg-zinc-900'
+          )}
+          title={isPinned ? "Remove from Today's Focus (t)" : "Add to Today's Focus (t)"}
+        >
+          <Star className={cn('w-3.5 h-3.5', isPinned && 'fill-amber-400')} />
+        </button>
+
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
             onMarkDone(item.id);
           }}
           className="p-1 rounded text-zinc-400 hover:text-emerald-400 hover:bg-zinc-900 transition-colors"
-          title="Mark as Done (e)"
+          title="Complete Task (Space / e)"
         >
           <Archive className="w-3.5 h-3.5" />
         </button>
@@ -359,22 +427,6 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
           title="Snooze (z)"
         >
           <Clock className="w-3.5 h-3.5" />
-        </button>
-
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onTogglePin(item.id, item.triage.pinned);
-          }}
-          className={cn(
-            'p-1 rounded transition-colors',
-            item.triage.pinned
-              ? 'text-amber-400 hover:text-amber-300 hover:bg-zinc-900'
-              : 'text-zinc-400 hover:text-amber-400 hover:bg-zinc-900'
-          )}
-          title={item.triage.pinned ? 'Unpin (p)' : 'Pin to top (p)'}
-        >
-          <Pin className={cn('w-3.5 h-3.5', item.triage.pinned && 'fill-amber-400')} />
         </button>
 
         <button
@@ -399,4 +451,3 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
     </div>
   );
 };
-
