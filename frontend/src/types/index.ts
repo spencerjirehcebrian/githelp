@@ -9,6 +9,68 @@ export type BucketType =
 
 export type NotificationStatus = 'inbox' | 'done' | 'snoozed';
 
+export type AppViewMode = 'triage' | 'git_assistant' | 'command_builder';
+
+export interface FileDiff {
+  filename: string;
+  status: 'added' | 'modified' | 'deleted' | 'renamed' | string;
+  additions: number;
+  deletions: number;
+  patch?: string;
+}
+
+export interface CIDetail {
+  name: string;
+  status: 'success' | 'failure' | 'pending' | 'error' | string;
+  description?: string;
+  url?: string;
+}
+
+export interface LabelInfo {
+  name: string;
+  color: string;
+}
+
+export interface UserInfo {
+  login: string;
+  avatar_url?: string;
+}
+
+export interface PRMetadata {
+  body?: string;
+  additions?: number;
+  deletions?: number;
+  changed_files?: number;
+  comments_count?: number;
+  labels?: LabelInfo[];
+  assignees?: UserInfo[];
+  reviewers?: UserInfo[];
+  head_branch?: string;
+  base_branch?: string;
+  files?: FileDiff[];
+  ci_details?: CIDetail[];
+}
+
+export interface GitRecipe {
+  id: string;
+  title: string;
+  category: 'commits' | 'branches' | 'stash' | 'conflicts' | 'sync';
+  description: string;
+  command: string;
+  explanation: string;
+  tags: string[];
+}
+
+export interface CommandItem {
+  id: string;
+  title: string;
+  subtitle?: string;
+  category: 'Actions' | 'Git Recipes' | 'Navigation' | 'System';
+  shortcut?: string;
+  iconName: string;
+  perform: () => void;
+}
+
 export interface TriageState {
   notification_id: string;
   bucket: BucketType;
@@ -62,6 +124,7 @@ export interface AppSettings {
   enable_sound: boolean;
   ignored_repos: string[];
   theme: 'dark' | 'light' | 'system';
+  preferred_editor?: 'cursor' | 'vscode' | 'zed' | 'terminal';
 }
 
 export interface StatusResponse {

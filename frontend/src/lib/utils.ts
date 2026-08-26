@@ -39,3 +39,40 @@ export async function copyToClipboard(text: string): Promise<boolean> {
     return false;
   }
 }
+
+export function parsePRMetadata(rawData?: string): import('../types').PRMetadata | null {
+  if (!rawData || !rawData.trim()) return null;
+  try {
+    const parsed = JSON.parse(rawData);
+    if (typeof parsed === 'object' && parsed !== null) {
+      return parsed;
+    }
+  } catch {
+    // If not JSON, return body text directly if non-empty
+    if (rawData.length > 5) {
+      return { body: rawData };
+    }
+  }
+  return null;
+}
+
+export function generateGitCommands(item: import('../types').EnrichedNotification) {
+  const branch = item.branch || (item.number ? `pr-${item.number}` : 'main');
+  const num = item.number || 0;
+  const repo = item.repository || '';
+
+  return {
+    gitCheckout: `git checkout ${branch}`,
+    gitCheckoutNew: `git checkout -b ${branch} origin/${branch}`,
+    ghPrCheckout: num ? `gh pr checkout ${num}` : `git checkout ${branch}`,
+    ghPrDiff: num ? `gh pr diff ${num}` : `git diff origin/main...${branch}`,
+    ghPrView: num ? `gh pr view ${num}` : `gh issue view ${num}`,
+    ghPrApprove: num ? `gh pr review ${num} --approve -b "LGTM!"` : '',
+    ghPrMerge: num ? `gh pr merge ${num} --squash --delete-branch` : '',
+    gitCherryPick: `git cherry-pick <commit-sha>`,
+    gitApplyPatch: num ? `gh pr diff ${num} | git apply -v` : '',
+    openCursor: `cursor://file/${repo}`,
+    openVSCode: `vscode://file/${repo}`,
+  };
+}
+

@@ -1,4 +1,4 @@
-import { chromium } from 'playwright';
+import { chromium } from '@playwright/test';
 import { spawn, execSync } from 'child_process';
 import path from 'path';
 import fs from 'fs';
@@ -53,28 +53,48 @@ async function main() {
     console.log('Server is ready. Launching Playwright browser...');
     const browser = await chromium.launch({ headless: true });
     const context = await browser.newContext({
-      viewport: { width: 1280, height: 800 },
+      viewport: { width: 1440, height: 900 },
       deviceScaleFactor: 2, // High-DPI Retina crispness
       colorScheme: 'dark',
     });
 
     const page = await context.newPage();
 
-    // 1. Dashboard screenshot
+    // 1. Dashboard screenshot (3-Pane Workstation)
     console.log('Capturing dashboard.png...');
     await page.goto(BASE_URL);
     await page.waitForLoadState('networkidle');
-    await page.waitForSelector('text=Action Required');
-    await wait(500);
+    await page.waitForSelector('[data-testid="inspection-cockpit"]');
+    await wait(600);
     await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'dashboard.png') });
 
-    // 2. Keyboard navigation active card
-    console.log('Capturing keyboard-navigation.png...');
-    await page.keyboard.press('j');
+    // 2. Files Changed & Diff view in Cockpit
+    console.log('Capturing diff-inspector.png...');
+    await page.locator('[data-testid="inspection-cockpit"]').getByRole('button', { name: /Files Changed/i }).click();
     await wait(400);
-    await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'keyboard-navigation.png') });
+    await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'diff-inspector.png') });
+    await page.locator('[data-testid="inspection-cockpit"]').getByRole('button', { name: /Overview/i }).click();
+    await wait(200);
 
-    // 3. Snooze modal
+    // 3. Command Palette screenshot
+    console.log('Capturing command-palette.png...');
+    await page.getByRole('button', { name: /Command Palette/i }).click();
+    await page.waitForSelector('text=Git Quick Recipes');
+    await wait(400);
+    await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'command-palette.png') });
+    await page.keyboard.press('Escape');
+    await wait(300);
+
+    // 4. Git Assistant View screenshot
+    console.log('Capturing git-assistant.png...');
+    await page.getByRole('button', { name: /Git Assistant/i }).click();
+    await page.waitForSelector('text=Git Assistant & Workflow Solver');
+    await wait(400);
+    await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'git-assistant.png') });
+    await page.getByRole('button', { name: /Triage Workstation/i }).click();
+    await wait(300);
+
+    // 5. Snooze modal
     console.log('Capturing snooze-modal.png...');
     await page.keyboard.press('z');
     await page.waitForSelector('text=Snooze Notification');
@@ -83,21 +103,12 @@ async function main() {
     await page.keyboard.press('Escape');
     await wait(300);
 
-    // 4. Shortcuts cheat sheet
+    // 6. Shortcuts cheat sheet
     console.log('Capturing shortcuts-modal.png...');
     await page.keyboard.press('?');
     await page.waitForSelector('text=Keyboard Shortcuts');
     await wait(400);
     await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'shortcuts-modal.png') });
-    await page.keyboard.press('Escape');
-    await wait(300);
-
-    // 5. Settings modal
-    console.log('Capturing settings-modal.png...');
-    await page.click('button[title*="Settings"]');
-    await page.waitForSelector('text=Preferences & Settings');
-    await wait(400);
-    await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'settings-modal.png') });
     await page.keyboard.press('Escape');
     await wait(300);
 

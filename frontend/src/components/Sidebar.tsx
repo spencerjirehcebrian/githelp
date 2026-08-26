@@ -10,9 +10,10 @@ import {
   FolderGit2,
   Settings as SettingsIcon,
   Inbox,
+  Terminal,
   FilterX,
 } from 'lucide-react';
-import type { BucketType, StatusResponse } from '../types';
+import type { BucketType, StatusResponse, AppViewMode } from '../types';
 import { cn } from '../lib/utils';
 
 interface SidebarProps {
@@ -22,6 +23,8 @@ interface SidebarProps {
   selectedRepo: string;
   onSelectRepo: (repo: string) => void;
   onOpenSettings: () => void;
+  currentView?: AppViewMode;
+  onSelectView?: (view: AppViewMode) => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -31,6 +34,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   selectedRepo,
   onSelectRepo,
   onOpenSettings,
+  currentView = 'triage',
+  onSelectView,
 }) => {
   const bucketCounts = status?.bucket_counts || {};
   const repoCounts = status?.repo_counts || {};
@@ -97,12 +102,53 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <div className="font-semibold text-sm tracking-tight text-white flex items-center gap-1.5">
               <span>GitHelp</span>
               <span className="text-[10px] uppercase font-mono px-1.5 py-0.2 bg-github-accent/20 text-github-accent border border-github-accent/30 rounded">
-                v1.0
+                v2.0
               </span>
             </div>
-            <div className="text-[11px] text-github-muted">GitHub Triage Hub</div>
+            <div className="text-[11px] text-github-muted">Git & PR Workstation</div>
           </div>
         </div>
+      </div>
+
+      {/* Primary Workstation Modes */}
+      <div className="p-3 border-b border-github-border/60 space-y-1">
+        <button
+          onClick={() => onSelectView && onSelectView('triage')}
+          className={cn(
+            'w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all group',
+            currentView === 'triage'
+              ? 'bg-github-accent/15 text-github-accent border border-github-accent/30 shadow-sm font-semibold'
+              : 'text-github-text hover:bg-github-hover/50 hover:text-white'
+          )}
+        >
+          <div className="flex items-center gap-2">
+            <Inbox className="w-4 h-4 text-github-accent" />
+            <span>Triage Workstation</span>
+          </div>
+          {bucketCounts['inbox_total'] ? (
+            <span className="px-1.5 py-0.2 text-[10px] font-mono rounded bg-github-dark border border-github-border text-github-muted">
+              {bucketCounts['inbox_total']}
+            </span>
+          ) : null}
+        </button>
+
+        <button
+          onClick={() => onSelectView && onSelectView('git_assistant')}
+          className={cn(
+            'w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all group',
+            currentView === 'git_assistant'
+              ? 'bg-github-accent/15 text-github-accent border border-github-accent/30 shadow-sm font-semibold'
+              : 'text-github-text hover:bg-github-hover/50 hover:text-white'
+          )}
+        >
+          <div className="flex items-center gap-2">
+            <Terminal className="w-4 h-4 text-emerald-400" />
+            <span>Git Assistant</span>
+          </div>
+          <kbd className="px-1 py-0.2 text-[9px] font-mono text-github-muted bg-github-dark border border-github-border rounded">
+            g
+          </kbd>
+        </button>
       </div>
 
       {/* Navigation Sections */}
@@ -115,19 +161,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {primaryBuckets.map((bucket) => {
             const Icon = bucket.icon;
             const count = bucketCounts[bucket.id] || 0;
-            const isSelected = selectedBucket === bucket.id;
+            const isSelected = currentView === 'triage' && selectedBucket === bucket.id;
 
             return (
               <button
                 key={bucket.id}
                 onClick={() => {
+                  if (onSelectView) onSelectView('triage');
                   onSelectBucket(bucket.id);
                   onSelectRepo('');
                 }}
                 className={cn(
                   'w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all group',
                   isSelected
-                    ? 'bg-github-hover text-white border border-github-border/80 shadow-sm'
+                    ? 'bg-github-hover text-white border border-github-border/80 shadow-sm font-semibold'
                     : 'text-github-text hover:bg-github-hover/50 hover:text-white'
                 )}
               >
@@ -162,19 +209,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {secondaryBuckets.map((bucket) => {
             const Icon = bucket.icon;
             const count = bucketCounts[bucket.id] || 0;
-            const isSelected = selectedBucket === bucket.id;
+            const isSelected = currentView === 'triage' && selectedBucket === bucket.id;
 
             return (
               <button
                 key={bucket.id}
                 onClick={() => {
+                  if (onSelectView) onSelectView('triage');
                   onSelectBucket(bucket.id);
                   onSelectRepo('');
                 }}
                 className={cn(
                   'w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all group',
                   isSelected
-                    ? 'bg-github-hover text-white border border-github-border/80 shadow-sm'
+                    ? 'bg-github-hover text-white border border-github-border/80 shadow-sm font-semibold'
                     : 'text-github-text hover:bg-github-hover/50 hover:text-white'
                 )}
               >
@@ -222,7 +270,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 return (
                   <button
                     key={repo}
-                    onClick={() => onSelectRepo(isSelected ? '' : repo)}
+                    onClick={() => {
+                      if (onSelectView) onSelectView('triage');
+                      onSelectRepo(isSelected ? '' : repo);
+                    }}
                     className={cn(
                       'w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-all text-left truncate group',
                       isSelected

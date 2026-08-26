@@ -173,4 +173,52 @@ describe('hooks/useKeyboardNavigation', () => {
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'e' }));
     expect(onMarkDone).not.toHaveBeenCalled();
   });
+
+  it('triggers onOpenCommandPalette on Cmd+K / Ctrl+K', () => {
+    const onOpenCommandPalette = vi.fn();
+    renderHook(() =>
+      useKeyboardNavigation({
+        notifications: mockNotifications,
+        selectedIndex: 0,
+        setSelectedIndex,
+        onMarkDone,
+        onOpenSnooze,
+        onTogglePin,
+        onToggleUnread,
+        onSync,
+        onOpenShortcuts,
+        onOpenCommandPalette,
+        onFocusSearch,
+        onToast,
+        isModalOpen: false,
+      })
+    );
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }));
+    expect(onOpenCommandPalette).toHaveBeenCalledTimes(1);
+  });
+
+  it('triggers onOpenGitAssistant on g key', () => {
+    const onOpenGitAssistant = vi.fn();
+    renderHook(() =>
+      useKeyboardNavigation({
+        notifications: mockNotifications,
+        selectedIndex: 0,
+        setSelectedIndex,
+        onMarkDone,
+        onOpenSnooze,
+        onTogglePin,
+        onToggleUnread,
+        onSync,
+        onOpenShortcuts,
+        onOpenGitAssistant,
+        onFocusSearch,
+        onToast,
+        isModalOpen: false,
+      })
+    );
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'g' }));
+    expect(onOpenGitAssistant).toHaveBeenCalledTimes(1);
+  });
 });

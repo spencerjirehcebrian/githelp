@@ -22,8 +22,10 @@ export const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose 
 
   const shortcutGroups = [
     {
-      title: 'Navigation & Launcher',
+      title: 'Workstation & Command Palette',
       items: [
+        { key: '⌘K / Ctrl+K', desc: 'Open Command Palette' },
+        { key: 'g', desc: 'Toggle Git Assistant & Workflow Solver' },
         { key: 'j / ↓', desc: 'Select next notification' },
         { key: 'k / ↑', desc: 'Select previous notification' },
         { key: 'o / Enter', desc: 'Open in browser' },
@@ -32,7 +34,7 @@ export const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose 
       ],
     },
     {
-      title: 'Triage Actions',
+      title: 'Triage & Git Actions',
       items: [
         { key: 'e', desc: 'Mark as Done (Archive)' },
         { key: 'z', desc: 'Snooze notification' },

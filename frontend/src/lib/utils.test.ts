@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { cn, formatTimeAgo, copyToClipboard } from './utils';
+import { cn, formatTimeAgo, copyToClipboard, parsePRMetadata, generateGitCommands } from './utils';
 
 describe('lib/utils', () => {
   it('cn should merge class names and resolve tailwind collisions', () => {
@@ -23,5 +23,25 @@ describe('lib/utils', () => {
   it('copyToClipboard should write to clipboard and return true', async () => {
     const res = await copyToClipboard('git checkout main');
     expect(res).toBe(true);
+  });
+
+  it('parsePRMetadata should parse json or fallback to body', () => {
+    const jsonStr = JSON.stringify({ body: 'test body', additions: 10 });
+    expect(parsePRMetadata(jsonStr)).toEqual({ body: 'test body', additions: 10 });
+    expect(parsePRMetadata(undefined)).toBeNull();
+    expect(parsePRMetadata('')).toBeNull();
+    expect(parsePRMetadata('simple text description')).toEqual({ body: 'simple text description' });
+  });
+
+  it('generateGitCommands should produce valid Git and gh CLI commands', () => {
+    const item: any = {
+      branch: 'feature/auth',
+      number: 42,
+      repository: 'owner/repo',
+    };
+    const cmds = generateGitCommands(item);
+    expect(cmds.gitCheckout).toBe('git checkout feature/auth');
+    expect(cmds.ghPrCheckout).toBe('gh pr checkout 42');
+    expect(cmds.ghPrDiff).toBe('gh pr diff 42');
   });
 });

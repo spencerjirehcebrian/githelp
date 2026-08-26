@@ -12,6 +12,8 @@ interface UseKeyboardNavigationProps {
   onToggleUnread: (id: string, unread: boolean) => void;
   onSync: () => void;
   onOpenShortcuts: () => void;
+  onOpenCommandPalette?: () => void;
+  onOpenGitAssistant?: () => void;
   onFocusSearch: () => void;
   onToast: (msg: string) => void;
   isModalOpen: boolean;
@@ -27,6 +29,8 @@ export function useKeyboardNavigation({
   onToggleUnread,
   onSync,
   onOpenShortcuts,
+  onOpenCommandPalette,
+  onOpenGitAssistant,
   onFocusSearch,
   onToast,
   isModalOpen,
@@ -35,7 +39,16 @@ export function useKeyboardNavigation({
 
   const handleKeyDown = useCallback(
     async (e: KeyboardEvent) => {
-      // Don't handle shortcuts if typing in an input/textarea or if modal is open
+      // Global Cmd+K / Ctrl+K Command Palette trigger (works even from inputs)
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        if (onOpenCommandPalette) {
+          onOpenCommandPalette();
+        }
+        return;
+      }
+
+      // Don't handle navigation shortcuts if typing in an input/textarea or if modal is open
       const target = e.target as HTMLElement;
       const isInput =
         target.tagName === 'INPUT' ||
@@ -43,9 +56,6 @@ export function useKeyboardNavigation({
         target.isContentEditable;
 
       if (isModalOpen) {
-        if (e.key === 'Escape') {
-          // Handled by modal
-        }
         return;
       }
 
@@ -137,6 +147,15 @@ export function useKeyboardNavigation({
           break;
         }
 
+        // Git Assistant Toggle
+        case 'g': {
+          if (onOpenGitAssistant) {
+            e.preventDefault();
+            onOpenGitAssistant();
+          }
+          break;
+        }
+
         // Search focus
         case '/': {
           e.preventDefault();
@@ -171,6 +190,8 @@ export function useKeyboardNavigation({
       onToggleUnread,
       onSync,
       onOpenShortcuts,
+      onOpenCommandPalette,
+      onOpenGitAssistant,
       onFocusSearch,
       onToast,
       isModalOpen,

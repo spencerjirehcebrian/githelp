@@ -3,10 +3,14 @@ import { useNotifications } from './hooks/useNotifications';
 import { useTheme } from './hooks/useTheme';
 import { useSSE } from './hooks/useSSE';
 import { useKeyboardNavigation } from './hooks/useKeyboardNavigation';
+import type { AppViewMode } from './types';
 
 import { Sidebar } from './components/Sidebar';
 import { TopBar } from './components/TopBar';
 import { NotificationList } from './components/NotificationList';
+import { InspectionCockpit } from './components/InspectionCockpit';
+import { GitAssistantView } from './components/GitAssistantView';
+import { CommandPalette } from './components/CommandPalette';
 import { AuthBanner } from './components/AuthBanner';
 import { SnoozeModal } from './components/SnoozeModal';
 import { ShortcutsModal } from './components/ShortcutsModal';
@@ -35,13 +39,18 @@ export default function App() {
     snoozeItem,
     togglePin,
     toggleUnread,
+    updateNotes,
     markAllDone,
     refresh,
   } = useNotifications();
 
   const { theme, setTheme } = useTheme();
 
+  // App View Mode (Triage Workstation vs Git Assistant)
+  const [currentView, setCurrentView] = useState<AppViewMode>('triage');
+
   // Modals & Overlays state
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState<boolean>(false);
   const [snoozeModalId, setSnoozeModalId] = useState<string | null>(null);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState<boolean>(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
@@ -64,7 +73,11 @@ export default function App() {
   });
 
   // Global Keyboard Navigation
-  const isModalOpen = Boolean(snoozeModalId || isShortcutsOpen || isSettingsOpen);
+  const isModalOpen = Boolean(
+    isCommandPaletteOpen || snoozeModalId || isShortcutsOpen || isSettingsOpen
+  );
+
+  const selectedItem = notifications[selectedIndex] || null;
 
   useKeyboardNavigation({
     notifications,
@@ -76,7 +89,11 @@ export default function App() {
     onToggleUnread: toggleUnread,
     onSync: triggerSync,
     onOpenShortcuts: () => setIsShortcutsOpen(true),
+    onOpenCommandPalette: () => setIsCommandPaletteOpen(true),
+    onOpenGitAssistant: () =>
+      setCurrentView((prev) => (prev === 'git_assistant' ? 'triage' : 'git_assistant')),
     onFocusSearch: () => {
+      if (currentView !== 'triage') setCurrentView('triage');
       searchInputRef.current?.focus();
       searchInputRef.current?.select();
     },
@@ -90,7 +107,7 @@ export default function App() {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-github-dark font-sans text-github-text">
-      {/* Sidebar */}
+      {/* Sidebar Navigation */}
       <Sidebar
         status={status}
         selectedBucket={selectedBucket}
@@ -98,9 +115,11 @@ export default function App() {
         selectedRepo={selectedRepo}
         onSelectRepo={setSelectedRepo}
         onOpenSettings={() => setIsSettingsOpen(true)}
+        currentView={currentView}
+        onSelectView={setCurrentView}
       />
 
-      {/* Main Content Area */}
+      {/* Main Workstation Container */}
       <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         {/* Auth Warning Banner if offline */}
         <AuthBanner
@@ -121,7 +140,7 @@ export default function App() {
           </div>
         )}
 
-        {/* Top Filter Bar */}
+        {/* Top Filter & Command Bar */}
         <TopBar
           selectedBucket={selectedBucket}
           selectedRepo={selectedRepo}
@@ -133,29 +152,76 @@ export default function App() {
           onSync={triggerSync}
           onMarkAllDone={markAllDone}
           onOpenShortcuts={() => setIsShortcutsOpen(true)}
+          onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
           currentTheme={theme}
           onToggleTheme={handleToggleTheme}
           itemCount={notifications.length}
           searchInputRef={searchInputRef}
+          currentView={currentView}
         />
 
-        {/* Notification Stream */}
-        <div className="flex-1 overflow-y-auto bg-github-dark">
-          <NotificationList
-            notifications={notifications}
-            selectedBucket={selectedBucket}
-            selectedIndex={selectedIndex}
-            onSelectIndex={setSelectedIndex}
-            isLoading={isLoading}
-            searchQuery={searchQuery}
-            onMarkDone={markItemDone}
-            onOpenSnooze={(id) => setSnoozeModalId(id)}
-            onTogglePin={togglePin}
-            onToggleUnread={toggleUnread}
-            onToast={(msg) => setToastMessage(msg)}
-          />
-        </div>
+        {/* View Switcher: Triage Workstation vs Git Assistant */}
+        {currentView === 'git_assistant' ? (
+          <div className="flex-1 overflow-hidden">
+            <GitAssistantView
+              onToast={(msg) => setToastMessage(msg)}
+              onClose={() => setCurrentView('triage')}
+            />
+          </div>
+        ) : (
+          /* 3-Pane Triage & Inspection Workstation */
+          <div className="flex-1 flex min-w-0 overflow-hidden bg-github-dark">
+            {/* Middle Column: Work Stream List */}
+            <div className="w-full lg:w-[440px] xl:w-[480px] shrink-0 border-r border-github-border flex flex-col min-w-0 h-full overflow-y-auto bg-github-dark">
+              <NotificationList
+                notifications={notifications}
+                selectedBucket={selectedBucket}
+                selectedIndex={selectedIndex}
+                onSelectIndex={setSelectedIndex}
+                isLoading={isLoading}
+                searchQuery={searchQuery}
+                onMarkDone={markItemDone}
+                onOpenSnooze={(id) => setSnoozeModalId(id)}
+                onTogglePin={togglePin}
+                onToggleUnread={toggleUnread}
+                onToast={(msg) => setToastMessage(msg)}
+              />
+            </div>
+
+            {/* Right Column: Git & PR Inspection Cockpit */}
+            <div className="hidden lg:flex flex-1 min-w-0 h-full overflow-hidden">
+              <InspectionCockpit
+                item={selectedItem}
+                onMarkDone={markItemDone}
+                onOpenSnooze={(id) => setSnoozeModalId(id)}
+                onTogglePin={togglePin}
+                onToggleUnread={toggleUnread}
+                onUpdateNotes={updateNotes}
+                onToast={(msg) => setToastMessage(msg)}
+              />
+            </div>
+          </div>
+        )}
       </main>
+
+      {/* Global Command Palette */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        selectedItem={selectedItem}
+        onSelectBucket={setSelectedBucket}
+        onSelectRepo={setSelectedRepo}
+        onMarkDone={markItemDone}
+        onOpenSnooze={(id) => setSnoozeModalId(id)}
+        onTogglePin={togglePin}
+        onSync={triggerSync}
+        onOpenSettings={() => setIsSettingsOpen(true)}
+        onOpenShortcuts={() => setIsShortcutsOpen(true)}
+        onOpenGitAssistant={() => setCurrentView('git_assistant')}
+        onToggleTheme={handleToggleTheme}
+        currentTheme={theme}
+        onToast={(msg) => setToastMessage(msg)}
+      />
 
       {/* Modals & Overlays */}
       <SnoozeModal

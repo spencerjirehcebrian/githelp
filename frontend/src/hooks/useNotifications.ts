@@ -57,7 +57,7 @@ export function useNotifications() {
         : data;
 
       setNotifications(filtered);
-      setSelectedIndex(0);
+      setSelectedIndex((prev) => (prev >= filtered.length ? Math.max(0, filtered.length - 1) : prev));
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to fetch notifications');
     } finally {
@@ -134,6 +134,17 @@ export function useNotifications() {
     }
   };
 
+  const updateNotes = async (id: string, notes: string) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, triage: { ...n.triage, notes } } : n))
+    );
+    try {
+      await api.updateNotificationState(id, { notes });
+    } catch (err) {
+      console.error('Failed to update notes:', err);
+    }
+  };
+
   const markAllDone = async () => {
     const ids = notifications.map((n) => n.id);
     if (ids.length === 0) return;
@@ -168,6 +179,7 @@ export function useNotifications() {
     snoozeItem,
     togglePin,
     toggleUnread,
+    updateNotes,
     markAllDone,
     refresh: () => {
       fetchStatus();

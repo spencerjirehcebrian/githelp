@@ -1,22 +1,32 @@
 # GitHelp
 
-Local-first, keyboard-driven GitHub notification triage and launch hub.
+Local-first, keyboard-driven Git & PR developer workstation and workflow launcher.
 
 ![GitHelp Dashboard](docs/screenshots/dashboard.png)
 
-GitHelp categorizes GitHub notifications into actionable buckets (**Action Required**, **Waiting on Others**, **Mentions**, **Assigned**, **Participating**, **Snoozed**, **Done**) and ships as a single self-contained binary with embedded SQLite and a React frontend.
+GitHelp bridges remote GitHub notifications with your local terminal and IDE. It transforms passive notification triage into an active **3-pane Git & PR workstation** equipped with an interactive **PR inspection cockpit**, one-click **Git & GitHub CLI action runners**, an emergency **Git workflow solver**, and a spotlight **Command Palette (`Cmd+K`)**.
 
 ---
 
-## Features & Interface
+## Features & Workstation Layout
 
-- **Linear-Style Triage**: Automatically partitions review requests, mentions, failing CI checks, and authored PRs.
-- **Keyboard-First Launcher**: Fast single-key actions (`j`/`k` navigation, `e` archive, `z` snooze, `c` branch checkout, `/` search).
+- **3-Pane Workstation Architecture**:
+  - **Left Rail (Navigation & Repos)**: Quick-switch between Triage Workstation and Git Assistant, filter by repository, and inspect connected accounts.
+  - **Middle Column (Work Stream)**: High-density, scan-optimized feed with CI status badges, branch tags, and vim-style `j`/`k` navigation.
+  - **Right Cockpit (Git & PR Inspection)**: Deep PR overview, file changes with line diffs (`+284 -42`), CI diagnostics, and private review notes.
+- **One-Click Git Actions**: Immediately checkout branches (`git checkout <branch>` / `gh pr checkout <num>`), copy PR diffs, open repositories in Cursor/VS Code, or approve PRs.
+- **Global Command Palette (`Cmd+K` / `Ctrl+K`)**: Fast spotlight launcher for search, triage actions, Git recipes, and navigation.
+- **Built-in Git Assistant (`g`)**: Comprehensive emergency and scenario solver for common Git dilemmas (undo commits, branch cleanup, merge conflicts, interactive rebasing).
+- **Linear-Style Triage**: Automatically categorizes items into **Action Required**, **Waiting on Others**, **Mentions**, **Assigned**, **Participating**, **Snoozed**, and **Done**.
 - **Zero-Config Auth**: Automatically uses existing `gh` CLI credentials (or configured PAT).
 
-| Snooze Triage | Keyboard Shortcuts |
+| Diff Inspector | Command Palette |
 | :---: | :---: |
-| ![Snooze Modal](docs/screenshots/snooze-modal.png) | ![Shortcuts Modal](docs/screenshots/shortcuts-modal.png) |
+| ![Diff Inspector](docs/screenshots/diff-inspector.png) | ![Command Palette](docs/screenshots/command-palette.png) |
+
+| Git Assistant & Solver | Snooze Triage |
+| :---: | :---: |
+| ![Git Assistant](docs/screenshots/git-assistant.png) | ![Snooze Modal](docs/screenshots/snooze-modal.png) |
 
 ---
 
@@ -41,17 +51,19 @@ make dev
 
 | Key | Action |
 | :--- | :--- |
-| `j` / `k` | Navigate items down / up |
-| `o` / `Enter` | Open in browser |
+| `Cmd+K` / `Ctrl+K` | Open Command Palette |
+| `g` | Toggle Git Assistant & Workflow Solver |
+| `j` / `k` | Navigate items down / up in work stream |
+| `o` / `Enter` | Open in browser / GitHub |
 | `e` | Mark as Done (Archive) |
 | `z` | Snooze (`1`: 1h, `2`: 3h, `3`: tomorrow, `4`: next Monday) |
 | `c` | Copy `git checkout <branch>` or URL |
 | `u` | Toggle Read / Unread |
-| `p` | Pin / Unpin item |
+| `p` | Pin / Unpin item to top |
 | `/` | Focus search bar |
 | `r` | Sync notifications with GitHub |
-| `?` | Keyboard shortcuts reference |
-| `Esc` | Close modal / clear search |
+| `?` | Keyboard shortcuts reference cheat sheet |
+| `Esc` | Close modal / command palette / clear search |
 
 ---
 
@@ -61,7 +73,7 @@ make dev
 ```bash
 make run            # Build and launch standalone binary
 make build          # Build standalone binary (./bin/githelp)
-make test           # Run backend, frontend, and Playwright E2E tests
+make test           # Run backend, frontend (Vitest), and Playwright E2E tests
 make lint           # Go vet & TypeScript check
 ```
 

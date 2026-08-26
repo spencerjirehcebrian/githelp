@@ -61,13 +61,18 @@ type RawNotification struct {
 }
 
 type PullRequestDetail struct {
-	Number  int    `json:"number"`
-	State   string `json:"state"`
-	Draft   bool   `json:"draft"`
-	Merged  bool   `json:"merged"`
-	HTMLURL string `json:"html_url"`
-	Title   string `json:"title"`
-	User    struct {
+	Number       int    `json:"number"`
+	State        string `json:"state"`
+	Draft        bool   `json:"draft"`
+	Merged       bool   `json:"merged"`
+	HTMLURL      string `json:"html_url"`
+	Title        string `json:"title"`
+	Body         string `json:"body"`
+	Additions    int    `json:"additions"`
+	Deletions    int    `json:"deletions"`
+	ChangedFiles int    `json:"changed_files"`
+	Comments     int    `json:"comments"`
+	User         struct {
 		Login     string `json:"login"`
 		AvatarURL string `json:"avatar_url"`
 	} `json:"user"`
@@ -75,17 +80,27 @@ type PullRequestDetail struct {
 		Ref string `json:"ref"`
 		SHA string `json:"sha"`
 	} `json:"head"`
+	Labels []struct {
+		Name  string `json:"name"`
+		Color string `json:"color"`
+	} `json:"labels"`
 }
 
 type IssueDetail struct {
-	Number  int    `json:"number"`
-	State   string `json:"state"`
-	HTMLURL string `json:"html_url"`
-	Title   string `json:"title"`
-	User    struct {
+	Number   int    `json:"number"`
+	State    string `json:"state"`
+	HTMLURL  string `json:"html_url"`
+	Title    string `json:"title"`
+	Body     string `json:"body"`
+	Comments int    `json:"comments"`
+	User     struct {
 		Login     string `json:"login"`
 		AvatarURL string `json:"avatar_url"`
 	} `json:"user"`
+	Labels []struct {
+		Name  string `json:"name"`
+		Color string `json:"color"`
+	} `json:"labels"`
 }
 
 type CombinedStatus struct {
@@ -219,6 +234,17 @@ func (c *Client) EnrichItem(ctx context.Context, token string, raw *RawNotificat
 					n.CIStatus = ciStatus
 				}
 			}
+
+			metaJSON, _ := json.Marshal(map[string]interface{}{
+				"body":           pr.Body,
+				"additions":      pr.Additions,
+				"deletions":      pr.Deletions,
+				"changed_files":  pr.ChangedFiles,
+				"comments_count": pr.Comments,
+				"labels":         pr.Labels,
+				"head_branch":    pr.Head.Ref,
+			})
+			n.RawData = string(metaJSON)
 		}
 	} else if raw.Subject.Type == "Issue" {
 		var issue IssueDetail
@@ -230,6 +256,13 @@ func (c *Client) EnrichItem(ctx context.Context, token string, raw *RawNotificat
 				n.AuthorAvatar = issue.User.AvatarURL
 			}
 			n.State = issue.State
+
+			metaJSON, _ := json.Marshal(map[string]interface{}{
+				"body":           issue.Body,
+				"comments_count": issue.Comments,
+				"labels":         issue.Labels,
+			})
+			n.RawData = string(metaJSON)
 		}
 	} else {
 		// Fallback for commit/release
