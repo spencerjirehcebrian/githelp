@@ -55,7 +55,7 @@ DELETE FROM triage;
 
 INSERT INTO notifications (id, github_id, repository, title, type, reason, url, html_url, state, ci_status, author, branch, number, unread, github_updated_at, raw_data)
 VALUES
-  ('e2e-1', '1', 'theteamatx/x-benjamin-repo', 'Add biometric login support', 'PullRequest', 'review_requested', 'https://api.github.com', 'https://github.com/theteamatx/x-benjamin-repo/pull/101', 'open', 'success', 'alice', 'feature/biometrics', 101, 1, strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), '{
+  ('e2e-1', '1', 'spencerjireh/githelp', 'Add biometric login support', 'PullRequest', 'review_requested', 'https://api.github.com', 'https://github.com/spencerjireh/githelp/pull/101', 'open', 'success', 'alice', 'feature/biometrics', 101, 1, strftime('%Y-%m-%dT%H:%M:%SZ', 'now'), '{
     "body": "Adds WebAuthn and Passkey biometric authentication support for web and mobile.\n\nKey Changes:\n- Integrated biometric challenge registration\n- Added fallback to regular credentials\n- Unit test coverage at 100%",
     "additions": 284,
     "deletions": 42,
@@ -75,7 +75,7 @@ VALUES
       {"name": "E2E Playwright", "status": "success", "description": "All browser workflows verified"}
     ]
   }'),
-  ('e2e-2', '2', 'theteamatx/x-benjamin-repo', 'Fix memory leak in worker', 'Issue', 'mention', 'https://api.github.com', 'https://github.com/theteamatx/x-benjamin-repo/issues/88', 'open', '', 'bob', '', 88, 1, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-5 minutes'), '{
+  ('e2e-2', '2', 'spencerjireh/githelp', 'Fix memory leak in worker', 'Issue', 'mention', 'https://api.github.com', 'https://github.com/spencerjireh/githelp/issues/88', 'open', '', 'bob', '', 88, 1, strftime('%Y-%m-%dT%H:%M:%SZ', 'now', '-5 minutes'), '{
     "body": "Worker goroutines are retaining database connection handles indefinitely when jobs timeout, leading to connection exhaustion after heavy load.",
     "comments_count": 5,
     "labels": [{"name": "bug", "color": "d73a4a"}, {"name": "backend", "color": "0075ca"}],
