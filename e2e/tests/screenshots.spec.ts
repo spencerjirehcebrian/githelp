@@ -26,7 +26,14 @@ test.describe('Capture Workstation Documentation Screenshots', () => {
     await wait(600);
     await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'dashboard.png') });
 
-    // 2. Files Changed & Diff view in Cockpit
+    // 2. Keyboard navigation active card
+    await page.keyboard.press('j');
+    await wait(400);
+    await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'keyboard-navigation.png') });
+    await page.keyboard.press('k');
+    await wait(200);
+
+    // 3. Files Changed & Diff view in Cockpit
     await page.locator('[data-testid="inspection-cockpit"]').getByRole('button', { name: /Files Changed/i }).click();
     await wait(400);
     await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'diff-inspector.png') });
