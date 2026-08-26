@@ -9,7 +9,6 @@ import type {
 } from './types';
 import { computeVisibilityMetrics, computeTaskBurndownMetrics } from './lib/utils';
 
-import { Sidebar } from './components/Sidebar';
 import { TopBar } from './components/TopBar';
 import { TaskSectionList } from './components/TaskSectionList';
 import { PipelineBoard } from './components/PipelineBoard';
@@ -139,90 +138,84 @@ export default function App() {
   };
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-github-dark font-sans text-github-text">
-      {/* Sidebar Navigation */}
-      <Sidebar
+    <div className="flex flex-col h-screen w-screen overflow-hidden bg-github-dark font-sans text-github-text">
+      {/* Auth Warning Banner if offline */}
+      <AuthBanner
+        auth={status?.auth}
+        onOpenSettings={() => setIsSettingsOpen(true)}
+      />
+
+      {/* Error Banner */}
+      {error && (
+        <div className="bg-rose-950/40 border-b border-rose-900/40 px-5 py-2 text-xs text-rose-300 flex items-center justify-between">
+          <span className="font-mono">{error}</span>
+          <button
+            onClick={() => refresh()}
+            className="text-xs font-semibold text-rose-200 hover:text-white underline underline-offset-2"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
+      {/* Unified Top Navigation & Command Header */}
+      <TopBar
         status={status}
         selectedBucket={selectedBucket}
         onSelectBucket={setSelectedBucket}
         selectedRepo={selectedRepo}
         onSelectRepo={setSelectedRepo}
+        selectedReason={selectedReason}
+        onSelectReason={setSelectedReason}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        isSyncing={isSyncing}
+        onSync={triggerSync}
+        onMarkAllDone={markAllDone}
+        onOpenShortcuts={() => setIsShortcutsOpen(true)}
+        onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
         onOpenSettings={() => setIsSettingsOpen(true)}
+        currentTheme={theme}
+        onToggleTheme={handleToggleTheme}
+        itemCount={notifications.length}
+        searchInputRef={searchInputRef}
+        layoutMode={layoutMode}
+        onToggleLayoutMode={handleToggleLayoutMode}
+        visibilityMetrics={visibilityMetrics}
+        burndownMetrics={burndownMetrics}
+        showCI={showCI}
+        onToggleCI={handleToggleCI}
       />
 
-      {/* Main Workstation Container */}
-      <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-        {/* Auth Warning Banner if offline */}
-        <AuthBanner
-          auth={status?.auth}
-          onOpenSettings={() => setIsSettingsOpen(true)}
-        />
-
-        {/* Error Banner */}
-        {error && (
-          <div className="bg-rose-950/40 border-b border-rose-900/40 px-5 py-2 text-xs text-rose-300 flex items-center justify-between">
-            <span className="font-mono">{error}</span>
-            <button
-              onClick={() => refresh()}
-              className="text-xs font-semibold text-rose-200 hover:text-white underline underline-offset-2"
-            >
-              Retry
-            </button>
+      {/* Main 2-Pane Workstation Container */}
+      <main className="flex-1 flex min-w-0 overflow-hidden bg-github-dark">
+        {layoutMode === 'board' ? (
+          /* Pipeline Board Mode (Full Width) */
+          <div className="flex-1 flex min-w-0 overflow-hidden">
+            <PipelineBoard
+              notifications={notifications}
+              selectedItemId={selectedItem?.id || null}
+              onSelectItem={(item) => {
+                const idx = notifications.findIndex((n) => n.id === item.id);
+                if (idx !== -1) setSelectedIndex(idx);
+              }}
+              activeColumnId={activeColumnId}
+              onSelectColumn={setActiveColumnId}
+              onMarkDone={markItemDone}
+              onOpenSnooze={(id) => setSnoozeModalId(id)}
+              onTogglePin={togglePin}
+              onToggleUnread={toggleUnread}
+              onToast={(msg) => setToastMessage(msg)}
+              isLoading={isLoading}
+              searchQuery={searchQuery}
+              showCI={showCI}
+            />
           </div>
-        )}
-
-        {/* Top Filter & Command Bar */}
-        <TopBar
-          selectedBucket={selectedBucket}
-          selectedRepo={selectedRepo}
-          selectedReason={selectedReason}
-          onSelectReason={setSelectedReason}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          isSyncing={isSyncing}
-          onSync={triggerSync}
-          onMarkAllDone={markAllDone}
-          onOpenShortcuts={() => setIsShortcutsOpen(true)}
-          onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
-          currentTheme={theme}
-          onToggleTheme={handleToggleTheme}
-          itemCount={notifications.length}
-          searchInputRef={searchInputRef}
-          layoutMode={layoutMode}
-          onToggleLayoutMode={handleToggleLayoutMode}
-          visibilityMetrics={visibilityMetrics}
-          burndownMetrics={burndownMetrics}
-          showCI={showCI}
-          onToggleCI={handleToggleCI}
-        />
-
-        {/* Developer Task Workstation: Task Sections vs Pipeline Board */}
-        <div className="flex-1 flex min-w-0 overflow-hidden bg-github-dark">
-          {layoutMode === 'board' ? (
-            /* Pipeline Board Mode */
-            <div className="flex-1 flex min-w-0 overflow-hidden">
-              <PipelineBoard
-                notifications={notifications}
-                selectedItemId={selectedItem?.id || null}
-                onSelectItem={(item) => {
-                  const idx = notifications.findIndex((n) => n.id === item.id);
-                  if (idx !== -1) setSelectedIndex(idx);
-                }}
-                activeColumnId={activeColumnId}
-                onSelectColumn={setActiveColumnId}
-                onMarkDone={markItemDone}
-                onOpenSnooze={(id) => setSnoozeModalId(id)}
-                onTogglePin={togglePin}
-                onToggleUnread={toggleUnread}
-                onToast={(msg) => setToastMessage(msg)}
-                isLoading={isLoading}
-                searchQuery={searchQuery}
-                showCI={showCI}
-              />
-            </div>
-          ) : (
-            /* Middle Column: Collapsible Task Section List */
-            <div className="w-full lg:w-[460px] xl:w-[500px] shrink-0 border-r border-github-border flex flex-col min-w-0 h-full overflow-hidden bg-github-dark">
+        ) : (
+          /* 2-Pane Stream Mode: Task Queue (Left) + Inspection Cockpit (Right) */
+          <div className="flex-1 flex min-w-0 overflow-hidden">
+            {/* Left Pane: Collapsible Task Section List */}
+            <div className="w-full lg:w-[520px] xl:w-[580px] 2xl:w-[640px] shrink-0 border-r border-github-border flex flex-col min-w-0 h-full overflow-hidden bg-github-dark">
               <TaskSectionList
                 notifications={notifications}
                 selectedItemId={selectedItem?.id || null}
@@ -240,27 +233,21 @@ export default function App() {
                 showCI={showCI}
               />
             </div>
-          )}
 
-          {/* Right Column: Git & PR Inspection Cockpit */}
-          <div
-            className={
-              layoutMode === 'board'
-                ? 'hidden lg:flex w-[380px] xl:w-[440px] 2xl:w-[480px] h-full overflow-hidden shrink-0'
-                : 'hidden lg:flex flex-1 min-w-0 h-full overflow-hidden'
-            }
-          >
-            <InspectionCockpit
-              item={selectedItem}
-              onMarkDone={markItemDone}
-              onOpenSnooze={(id) => setSnoozeModalId(id)}
-              onTogglePin={togglePin}
-              onToggleUnread={toggleUnread}
-              onUpdateNotes={updateNotes}
-              onToast={(msg) => setToastMessage(msg)}
-            />
+            {/* Right Pane: Expansive Git & PR Inspection Cockpit */}
+            <div className="hidden lg:flex flex-1 min-w-0 h-full overflow-hidden">
+              <InspectionCockpit
+                item={selectedItem}
+                onMarkDone={markItemDone}
+                onOpenSnooze={(id) => setSnoozeModalId(id)}
+                onTogglePin={togglePin}
+                onToggleUnread={toggleUnread}
+                onUpdateNotes={updateNotes}
+                onToast={(msg) => setToastMessage(msg)}
+              />
+            </div>
           </div>
-        </div>
+        )}
       </main>
 
       {/* Global Command Palette */}

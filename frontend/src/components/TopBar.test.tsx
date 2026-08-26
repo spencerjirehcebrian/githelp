@@ -2,20 +2,48 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
 import { TopBar } from './TopBar';
+import type { StatusResponse } from '../types';
 
 describe('components/TopBar', () => {
-  it('renders search input, reason pills, burndown pill, CI toggle, and handles interactions', () => {
+  const mockStatus: StatusResponse = {
+    auth: {
+      authenticated: true,
+      auth_mode: 'gh_cli',
+      username: 'spencer',
+      name: 'Spencer',
+      avatar_url: '',
+    },
+    bucket_counts: {
+      action_required: 4,
+      waiting_on_others: 2,
+      mentions: 1,
+      done: 10,
+    },
+    repo_counts: {
+      'owner/repo-a': 3,
+      'owner/repo-b': 1,
+    },
+    server_time: '',
+  };
+
+  it('renders brand, scope selector, repo dropdown, burndown pill, CI toggle, and handles interactions', () => {
     const onSearchChange = vi.fn();
+    const onSelectBucket = vi.fn();
+    const onSelectRepo = vi.fn();
     const onSelectReason = vi.fn();
     const onSync = vi.fn();
     const onToggleLayoutMode = vi.fn();
     const onToggleCI = vi.fn();
+    const onOpenSettings = vi.fn();
     const inputRef = React.createRef<HTMLInputElement>();
 
     render(
       <TopBar
+        status={mockStatus}
         selectedBucket="action_required"
+        onSelectBucket={onSelectBucket}
         selectedRepo=""
+        onSelectRepo={onSelectRepo}
         selectedReason=""
         onSelectReason={onSelectReason}
         searchQuery=""
@@ -24,6 +52,7 @@ describe('components/TopBar', () => {
         onSync={onSync}
         onMarkAllDone={vi.fn()}
         onOpenShortcuts={vi.fn()}
+        onOpenSettings={onOpenSettings}
         currentTheme="dark"
         onToggleTheme={vi.fn()}
         itemCount={5}
@@ -49,11 +78,22 @@ describe('components/TopBar', () => {
       />
     );
 
-    expect(screen.getByText('Action Required')).toBeInTheDocument();
+    // Brand
+    expect(screen.getByText('GitHelp')).toBeInTheDocument();
+
+    // Scope button
+    expect(screen.getByText('Active Tasks')).toBeInTheDocument();
     expect(screen.getByText('5')).toBeInTheDocument();
 
     // Today's Burndown Pill
     expect(screen.getByText('Today: 2/4 Done')).toBeInTheDocument();
+
+    // Repo dropdown trigger
+    expect(screen.getByText('All Repos')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('All Repos'));
+    expect(screen.getByText('owner/repo-a')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('owner/repo-a'));
+    expect(onSelectRepo).toHaveBeenCalledWith('owner/repo-a');
 
     // Visibility HUD strip metrics
     expect(screen.getByTestId('visibility-hud-strip')).toBeInTheDocument();
@@ -73,12 +113,12 @@ describe('components/TopBar', () => {
     fireEvent.click(toggleBtn);
     expect(onToggleLayoutMode).toHaveBeenCalledTimes(1);
 
-    // Reason pill
-    fireEvent.click(screen.getByText('Reviews'));
-    expect(onSelectReason).toHaveBeenCalledWith('review_requested');
+    // Settings trigger
+    fireEvent.click(screen.getByTitle('Preferences & Settings (s)'));
+    expect(onOpenSettings).toHaveBeenCalledTimes(1);
 
     // Sync button
-    fireEvent.click(screen.getByTitle('Refresh notifications (r)'));
+    fireEvent.click(screen.getByTitle('Refresh tasks (r)'));
     expect(onSync).toHaveBeenCalled();
   });
 });

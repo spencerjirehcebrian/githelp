@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Search,
   RotateCw,
@@ -15,18 +15,30 @@ import {
   Columns3,
   Star,
   Activity,
+  GitPullRequest,
+  FolderGit2,
+  Settings,
+  ChevronDown,
+  Archive,
+  Clock,
+  Inbox,
+  User,
 } from 'lucide-react';
 import type {
   BucketType,
   DashboardLayoutMode,
   VisibilityMetrics,
   TaskBurndownMetrics,
+  StatusResponse,
 } from '../types';
 import { cn } from '../lib/utils';
 
 interface TopBarProps {
+  status: StatusResponse | null;
   selectedBucket: BucketType;
+  onSelectBucket: (bucket: BucketType) => void;
   selectedRepo: string;
+  onSelectRepo: (repo: string) => void;
   selectedReason: string;
   onSelectReason: (reason: string) => void;
   searchQuery: string;
@@ -36,6 +48,7 @@ interface TopBarProps {
   onMarkAllDone: () => void;
   onOpenShortcuts: () => void;
   onOpenCommandPalette?: () => void;
+  onOpenSettings: () => void;
   currentTheme: 'dark' | 'light' | 'system';
   onToggleTheme: () => void;
   itemCount: number;
@@ -49,8 +62,11 @@ interface TopBarProps {
 }
 
 export const TopBar: React.FC<TopBarProps> = ({
+  status,
   selectedBucket,
+  onSelectBucket,
   selectedRepo,
+  onSelectRepo,
   selectedReason,
   onSelectReason,
   searchQuery,
@@ -60,6 +76,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   onMarkAllDone,
   onOpenShortcuts,
   onOpenCommandPalette,
+  onOpenSettings,
   currentTheme,
   onToggleTheme,
   itemCount,
@@ -71,53 +88,167 @@ export const TopBar: React.FC<TopBarProps> = ({
   showCI = false,
   onToggleCI,
 }) => {
-  const getBucketDisplayName = (bucket: BucketType) => {
-    switch (bucket) {
-      case 'action_required':
-        return 'Action Required';
-      case 'waiting_on_others':
-        return 'Waiting on Others';
-      case 'mentions':
-        return 'Mentions';
-      case 'assigned':
-        return 'Assigned to You';
-      case 'participating':
-        return 'Participating';
-      case 'done':
-        return 'Completed Tasks';
-      case 'snoozed':
-        return 'Snoozed';
-      default:
-        return 'Work Queue';
-    }
-  };
+  const [isRepoDropdownOpen, setIsRepoDropdownOpen] = useState(false);
+  const [isScopeDropdownOpen, setIsScopeDropdownOpen] = useState(false);
+  const repoDropdownRef = useRef<HTMLDivElement>(null);
+  const scopeDropdownRef = useRef<HTMLDivElement>(null);
 
-  const reasonFilters = [
-    { id: '', label: 'All' },
-    { id: 'review_requested', label: 'Reviews' },
-    { id: 'mention', label: 'Mentions' },
-    { id: 'assigned', label: 'Assigned' },
-    { id: 'author', label: 'Author' },
-    { id: 'ci_activity', label: 'CI' },
+  // Close dropdowns on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (repoDropdownRef.current && !repoDropdownRef.current.contains(e.target as Node)) {
+        setIsRepoDropdownOpen(false);
+      }
+      if (scopeDropdownRef.current && !scopeDropdownRef.current.contains(e.target as Node)) {
+        setIsScopeDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const scopes: { id: BucketType; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+    { id: 'action_required', label: 'Active Tasks', icon: Inbox },
+    { id: 'snoozed', label: 'Snoozed', icon: Clock },
+    { id: 'done', label: 'Completed Archive', icon: Archive },
   ];
 
+  const currentScope = scopes.find((s) => s.id === selectedBucket) || scopes[0];
+
+  const repoEntries = Object.entries(status?.repo_counts || {}).sort((a, b) =>
+    a[0].localeCompare(b[0])
+  );
+
   return (
-    <header className="h-12 border-b border-github-border bg-black/90 backdrop-blur px-4 flex items-center justify-between gap-3 select-none shrink-0 text-github-text">
-      {/* Title & Count & Minimalist Visibility HUD */}
-      <div className="flex items-center gap-3 min-w-0">
-        <div className="flex items-center gap-2 min-w-0">
-          <h1 className="text-xs font-semibold text-white tracking-tight truncate flex items-center gap-2">
-            <span>{getBucketDisplayName(selectedBucket)}</span>
-            {selectedRepo && (
-              <span className="text-[10px] font-mono font-normal text-zinc-400 bg-zinc-900 px-1.5 py-0.5 rounded border border-zinc-800">
-                {selectedRepo}
-              </span>
-            )}
-          </h1>
-          <span className="text-[10px] font-mono text-zinc-500 bg-zinc-900 border border-zinc-800/80 px-1.5 py-0.2 rounded tabular-nums">
-            {itemCount}
-          </span>
+    <header className="h-12 border-b border-github-border bg-black px-3.5 flex items-center justify-between gap-3 select-none shrink-0 text-github-text z-20">
+      {/* Left: Brand & Scope + Repo Selectors */}
+      <div className="flex items-center gap-2.5 min-w-0">
+        {/* Brand */}
+        <div className="flex items-center gap-1.5 shrink-0 pr-2 border-r border-zinc-800">
+          <div className="w-6 h-6 rounded bg-zinc-900 border border-zinc-700/80 flex items-center justify-center text-white">
+            <GitPullRequest className="w-3.5 h-3.5 text-zinc-100" />
+          </div>
+          <span className="text-xs font-bold text-white tracking-tight">GitHelp</span>
         </div>
+
+        {/* Task Scope Selector Dropdown */}
+        <div className="relative" ref={scopeDropdownRef}>
+          <button
+            onClick={() => setIsScopeDropdownOpen((prev) => !prev)}
+            className="flex items-center gap-1.5 px-2 py-1 bg-zinc-900/80 hover:bg-zinc-800/80 border border-zinc-800 rounded-md text-xs font-medium text-zinc-200 transition-colors"
+            title="Switch task view scope"
+          >
+            <currentScope.icon className="w-3 h-3 text-zinc-400" />
+            <span className="max-w-[110px] truncate">{currentScope.label}</span>
+            <span className="text-[10px] font-mono text-zinc-500 bg-black px-1 rounded border border-zinc-800">
+              {itemCount}
+            </span>
+            <ChevronDown className="w-3 h-3 text-zinc-500 ml-0.5" />
+          </button>
+
+          {isScopeDropdownOpen && (
+            <div className="absolute left-0 top-full mt-1 w-48 bg-zinc-950 border border-zinc-800 rounded-lg shadow-xl py-1 z-50">
+              <div className="px-2.5 py-1 text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">
+                Work Scope
+              </div>
+              {scopes.map((s) => {
+                const Icon = s.icon;
+                const isSelected = selectedBucket === s.id;
+                const count =
+                  s.id === 'done'
+                    ? status?.bucket_counts?.done || 0
+                    : s.id === 'snoozed'
+                    ? status?.bucket_counts?.snoozed || 0
+                    : (status?.bucket_counts?.action_required || 0) +
+                      (status?.bucket_counts?.waiting_on_others || 0) +
+                      (status?.bucket_counts?.mentions || 0) +
+                      (status?.bucket_counts?.assigned || 0);
+
+                return (
+                  <button
+                    key={s.id}
+                    onClick={() => {
+                      onSelectBucket(s.id);
+                      setIsScopeDropdownOpen(false);
+                    }}
+                    className={cn(
+                      'w-full flex items-center justify-between px-2.5 py-1.5 text-xs text-left transition-colors',
+                      isSelected
+                        ? 'bg-zinc-800 text-white font-medium'
+                        : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200'
+                    )}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Icon className="w-3.5 h-3.5 text-zinc-400" />
+                      <span>{s.label}</span>
+                    </div>
+                    <span className="text-[10px] font-mono text-zinc-500">{count}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Repository Filter Dropdown */}
+        {repoEntries.length > 0 && (
+          <div className="relative" ref={repoDropdownRef}>
+            <button
+              onClick={() => setIsRepoDropdownOpen((prev) => !prev)}
+              className={cn(
+                'flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium border transition-colors max-w-[160px] truncate',
+                selectedRepo
+                  ? 'bg-zinc-800 text-white border-zinc-700'
+                  : 'bg-zinc-900/80 text-zinc-400 hover:text-zinc-200 border-zinc-800'
+              )}
+              title="Filter by repository"
+            >
+              <FolderGit2 className="w-3 h-3 text-zinc-500 shrink-0" />
+              <span className="truncate">{selectedRepo ? selectedRepo.split('/')[1] || selectedRepo : 'All Repos'}</span>
+              <ChevronDown className="w-3 h-3 text-zinc-500 ml-0.5 shrink-0" />
+            </button>
+
+            {isRepoDropdownOpen && (
+              <div className="absolute left-0 top-full mt-1 w-56 bg-zinc-950 border border-zinc-800 rounded-lg shadow-xl py-1 z-50 max-h-60 overflow-y-auto">
+                <div className="px-2.5 py-1 text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">
+                  Filter Repository
+                </div>
+                <button
+                  onClick={() => {
+                    onSelectRepo('');
+                    setIsRepoDropdownOpen(false);
+                  }}
+                  className={cn(
+                    'w-full flex items-center justify-between px-2.5 py-1.5 text-xs text-left transition-colors',
+                    !selectedRepo
+                      ? 'bg-zinc-800 text-white font-medium'
+                      : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200'
+                  )}
+                >
+                  <span>All Repositories</span>
+                </button>
+                {repoEntries.map(([repo, count]) => (
+                  <button
+                    key={repo}
+                    onClick={() => {
+                      onSelectRepo(repo);
+                      setIsRepoDropdownOpen(false);
+                    }}
+                    className={cn(
+                      'w-full flex items-center justify-between px-2.5 py-1.5 text-xs text-left transition-colors',
+                      selectedRepo === repo
+                        ? 'bg-zinc-800 text-white font-medium'
+                        : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200'
+                    )}
+                  >
+                    <span className="truncate font-mono text-[11px]">{repo}</span>
+                    <span className="text-[10px] font-mono text-zinc-500 ml-2">{count}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Today's Focus Burndown Pill */}
         {burndownMetrics && burndownMetrics.todayTotal > 0 && (
@@ -133,7 +264,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           </div>
         )}
 
-        {/* Minimalist Visibility HUD Strip */}
+        {/* Visibility HUD Strip */}
         {visibilityMetrics && (
           <div
             data-testid="visibility-hud-strip"
@@ -187,17 +318,16 @@ export const TopBar: React.FC<TopBarProps> = ({
       </div>
 
       {/* Center: Command Palette Trigger & Search */}
-      <div className="flex items-center gap-2 flex-1 max-w-xl justify-center">
+      <div className="flex items-center gap-2 flex-1 max-w-md justify-center">
         {/* Command Palette button */}
         {onOpenCommandPalette && (
           <button
             onClick={onOpenCommandPalette}
             aria-label="Command Palette"
-            className="flex items-center gap-1.5 px-2.5 py-1 bg-zinc-900/80 hover:bg-zinc-800/80 border border-zinc-800 rounded-md text-xs text-zinc-400 hover:text-zinc-200 transition-colors shrink-0"
+            className="flex items-center gap-1.5 px-2 py-1 bg-zinc-900/80 hover:bg-zinc-800/80 border border-zinc-800 rounded-md text-xs text-zinc-400 hover:text-zinc-200 transition-colors shrink-0"
             title="Open Command Palette (Cmd+K / Ctrl+K)"
           >
             <Command className="w-3 h-3 text-zinc-400" />
-            <span className="hidden sm:inline text-[11px]">Command Palette</span>
             <kbd className="text-[9px] font-mono bg-black px-1 py-0.2 rounded border border-zinc-800 text-zinc-500">
               ⌘K
             </kbd>
@@ -228,24 +358,6 @@ export const TopBar: React.FC<TopBarProps> = ({
             </kbd>
           )}
         </div>
-
-        {/* Reason Filter Pills */}
-        <div className="hidden xl:flex items-center gap-0.5 bg-zinc-900/60 p-0.5 rounded-md border border-zinc-800">
-          {reasonFilters.map((rf) => (
-            <button
-              key={rf.id}
-              onClick={() => onSelectReason(rf.id)}
-              className={cn(
-                'px-2 py-0.5 text-[10px] font-medium rounded transition-colors',
-                selectedReason === rf.id
-                  ? 'bg-zinc-800 text-white font-semibold'
-                  : 'text-zinc-400 hover:text-zinc-200'
-              )}
-            >
-              {rf.label}
-            </button>
-          ))}
-        </div>
       </div>
 
       {/* Right: Actions & Toggles */}
@@ -264,7 +376,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             title={showCI ? 'Hide CI badges on cards' : 'Show CI badges on cards'}
           >
             <Activity className="w-3.5 h-3.5" />
-            <span className="hidden lg:inline text-[10px]">
+            <span className="hidden xl:inline text-[10px]">
               {showCI ? 'CI On' : 'CI Off'}
             </span>
           </button>
@@ -276,7 +388,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             onClick={onToggleLayoutMode}
             aria-label="Toggle Layout Mode"
             className={cn(
-              'flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border transition-colors',
+              'flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium border transition-colors',
               layoutMode === 'board'
                 ? 'bg-zinc-800 text-white border-zinc-700'
                 : 'bg-zinc-900/80 text-zinc-400 hover:text-zinc-200 border-zinc-800'
@@ -288,7 +400,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             ) : (
               <LayoutList className="w-3.5 h-3.5 text-zinc-400" />
             )}
-            <span className="hidden sm:inline text-[11px]">
+            <span className="hidden md:inline text-[11px]">
               {layoutMode === 'board' ? 'Board' : 'Tasks'}
             </span>
             <kbd className="text-[9px] font-mono bg-black px-1 py-0.2 rounded border border-zinc-800 text-zinc-500">
@@ -301,11 +413,11 @@ export const TopBar: React.FC<TopBarProps> = ({
         {itemCount > 0 && selectedBucket !== 'done' && (
           <button
             onClick={onMarkAllDone}
-            className="flex items-center gap-1 px-2.5 py-1 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-[11px] font-medium text-zinc-300 hover:text-white rounded-md transition-colors mr-1"
+            className="flex items-center gap-1 px-2 py-1 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-[11px] font-medium text-zinc-300 hover:text-white rounded-md transition-colors"
             title="Mark all items in this view as done"
           >
             <CheckCheck className="w-3 h-3 text-emerald-400" />
-            <span className="hidden md:inline">Mark All Done</span>
+            <span className="hidden xl:inline">Mark All Done</span>
           </button>
         )}
 
@@ -313,11 +425,11 @@ export const TopBar: React.FC<TopBarProps> = ({
         <button
           onClick={onSync}
           disabled={isSyncing}
-          className="flex items-center gap-1 px-2.5 py-1 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-[11px] font-medium text-zinc-300 hover:text-white rounded-md transition-colors disabled:opacity-50"
-          title="Refresh notifications (r)"
+          className="flex items-center gap-1 px-2 py-1 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-[11px] font-medium text-zinc-300 hover:text-white rounded-md transition-colors disabled:opacity-50"
+          title="Refresh tasks (r)"
         >
           <RotateCw className={cn('w-3 h-3 text-zinc-400', isSyncing && 'animate-spin text-white')} />
-          <span className="hidden sm:inline">{isSyncing ? 'Syncing...' : 'Sync'}</span>
+          <span className="hidden md:inline">{isSyncing ? 'Syncing...' : 'Sync'}</span>
         </button>
 
         {/* Keyboard shortcuts helper */}
@@ -336,6 +448,27 @@ export const TopBar: React.FC<TopBarProps> = ({
           title="Toggle Theme"
         >
           {currentTheme === 'light' ? <Moon className="w-3.5 h-3.5" /> : <Sun className="w-3.5 h-3.5" />}
+        </button>
+
+        {/* User Profile / Settings Trigger */}
+        <button
+          onClick={onOpenSettings}
+          className="flex items-center gap-1.5 pl-1.5 pr-2 py-1 rounded-md bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-800 text-xs text-zinc-300 hover:text-white transition-colors"
+          title="Preferences & Settings (s)"
+        >
+          {status?.auth?.avatar_url ? (
+            <img
+              src={status.auth.avatar_url}
+              alt=""
+              className="w-4 h-4 rounded-full bg-zinc-800 object-cover"
+            />
+          ) : (
+            <User className="w-3.5 h-3.5 text-zinc-400" />
+          )}
+          <span className="hidden lg:inline text-[11px] font-medium max-w-[80px] truncate">
+            {status?.auth?.name || status?.auth?.username || 'Settings'}
+          </span>
+          <Settings className="w-3 h-3 text-zinc-500" />
         </button>
       </div>
     </header>

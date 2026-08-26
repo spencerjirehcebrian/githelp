@@ -12,13 +12,13 @@ test.describe('GitHelp Triage & Workstation E2E Workflows', () => {
     await page.waitForLoadState('networkidle');
   });
 
-  test('1. loads home page, renders sidebar buckets, card stream and inspection cockpit', async ({ page }) => {
+  test('1. loads home page, renders top bar scope, card stream and inspection cockpit', async ({ page }) => {
     // Check brand title
     await expect(page.locator('text=GitHelp').first()).toBeVisible();
 
-    // Check buckets in sidebar
-    await expect(page.getByRole('button', { name: /Action Required/i })).toBeVisible();
-    await expect(page.getByRole('button', { name: /Waiting on Others/i })).toBeVisible();
+    // Check scope selector and repo dropdown in top bar
+    await expect(page.getByRole('button', { name: /Active Tasks/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: /All Repos/i })).toBeVisible();
 
     // Check notifications list items
     const firstCard = page.locator('[data-testid="notification-card"]').filter({ hasText: 'Add biometric login support' });
@@ -86,8 +86,8 @@ test.describe('GitHelp Triage & Workstation E2E Workflows', () => {
   });
 
   test('5. opens Settings modal, toggles theme, and adjusts preferences', async ({ page }) => {
-    // Click settings gear icon
-    await page.click('button[title*="Settings"]');
+    // Click settings user profile button in top bar
+    await page.click('button[title*="Preferences & Settings"]');
     await expect(page.getByText('Preferences & Settings')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'GitHub Authentication' })).toBeVisible();
 
@@ -106,7 +106,7 @@ test.describe('GitHelp Triage & Workstation E2E Workflows', () => {
     await expect(page.getByText('Preferences & Settings')).not.toBeVisible();
   });
 
-  test('6. snoozes notification (z key) and moves it to Snoozed bucket', async ({ page }) => {
+  test('6. snoozes notification (z key) and moves it to Snoozed scope', async ({ page }) => {
     const firstCard = page.locator('[data-testid="notification-card"]').filter({ hasText: 'Add biometric login support' });
     await expect(firstCard).toBeVisible();
 
@@ -120,14 +120,13 @@ test.describe('GitHelp Triage & Workstation E2E Workflows', () => {
     await expect(page.getByText('Snooze Notification')).not.toBeVisible();
     await expect(firstCard).not.toBeVisible();
 
-    // Switch to Snoozed bucket in sidebar
+    // Switch to Snoozed scope in top bar dropdown
+    await page.getByRole('button', { name: /Active Tasks/i }).click();
     await page.getByRole('button', { name: /Snoozed/i }).click();
     await expect(page.locator('[data-testid="notification-card"]').filter({ hasText: 'Add biometric login support' })).toBeVisible();
   });
 
   test('7. marks remaining notifications as done and verifies Inbox Zero transition', async ({ page }) => {
-    // Switch back to Action Required bucket
-    await page.getByRole('button', { name: /Action Required/i }).click();
     await expect(page.locator('[data-testid="notification-card"]').filter({ hasText: 'Fix memory leak in worker' })).toBeVisible();
 
     // Click Mark All Done in top bar

@@ -12,8 +12,6 @@ import {
   Keyboard,
   FileDiff,
   Flame,
-  UserCheck,
-  AtSign,
   Code2,
   Star,
   CheckSquare,
@@ -188,9 +186,9 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 
     // 2. Navigation
     list.push({
-      id: 'nav-action-req',
+      id: 'nav-active-tasks',
       category: 'Navigation',
-      title: 'Go to Action Required queue',
+      title: 'Go to Active Tasks Queue',
       icon: Flame,
       perform: () => {
         onSelectBucket('action_required');
@@ -199,42 +197,9 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     });
 
     list.push({
-      id: 'nav-waiting',
-      category: 'Navigation',
-      title: 'Go to Waiting on Others queue',
-      icon: Clock,
-      perform: () => {
-        onSelectBucket('waiting_on_others');
-        onSelectRepo('');
-      },
-    });
-
-    list.push({
-      id: 'nav-mentions',
-      category: 'Navigation',
-      title: 'Go to Mentions queue',
-      icon: AtSign,
-      perform: () => {
-        onSelectBucket('mentions');
-        onSelectRepo('');
-      },
-    });
-
-    list.push({
-      id: 'nav-assigned',
-      category: 'Navigation',
-      title: 'Go to Assigned tasks queue',
-      icon: UserCheck,
-      perform: () => {
-        onSelectBucket('assigned');
-        onSelectRepo('');
-      },
-    });
-
-    list.push({
       id: 'nav-snoozed',
       category: 'Navigation',
-      title: 'Go to Snoozed tasks',
+      title: 'Go to Snoozed Tasks',
       icon: Clock,
       perform: () => {
         onSelectBucket('snoozed');
@@ -245,7 +210,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     list.push({
       id: 'nav-done',
       category: 'Navigation',
-      title: 'Go to Completed Tasks',
+      title: 'Go to Completed Archive',
       icon: Archive,
       perform: () => {
         onSelectBucket('done');
