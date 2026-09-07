@@ -1,0 +1,14 @@
+load("@rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "worktree",
+    srcs = ["scanner.go"],
+    importpath = "github.com/spencerjireh/githelp/backend/internal/worktree",
+    visibility = ["//visibility:public"],
+)
+
+go_test(
+    name = "worktree_test",
+    srcs = ["scanner_test.go"],
+    embed = [":worktree"],
+)

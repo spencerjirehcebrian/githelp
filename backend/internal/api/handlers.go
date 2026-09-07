@@ -9,6 +9,8 @@ import (
 	"github.com/spencerjireh/githelp/backend/internal/auth"
 	"github.com/spencerjireh/githelp/backend/internal/db"
 	"github.com/spencerjireh/githelp/backend/internal/github"
+	"github.com/spencerjireh/githelp/backend/internal/standup"
+	"github.com/spencerjireh/githelp/backend/internal/worktree"
 )
 
 type APIHandler struct {
@@ -17,6 +19,8 @@ type APIHandler struct {
 	client      *github.Client
 	poller      *github.Poller
 	broadcaster *SSEBroadcaster
+	standupGen  *standup.Generator
+	wtScanner   *worktree.Scanner
 }
 
 func NewAPIHandler(database *db.DB, authMgr *auth.Manager, client *github.Client, poller *github.Poller, broadcaster *SSEBroadcaster) *APIHandler {
@@ -26,6 +30,8 @@ func NewAPIHandler(database *db.DB, authMgr *auth.Manager, client *github.Client
 		client:      client,
 		poller:      poller,
 		broadcaster: broadcaster,
+		standupGen:  standup.NewGenerator(database),
+		wtScanner:   worktree.NewScanner(),
 	}
 }
 
@@ -316,4 +322,72 @@ func (h *APIHandler) HandleGetRepos(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, repos)
+}
+
+// HandleGetStandup handles GET /api/standup?date=YYYY-MM-DD&repo=...
+func (h *APIHandler) HandleGetStandup(w http.ResponseWriter, r *http.Request) {
+	date := r.URL.Query().Get("date")
+	repo := r.URL.Query().Get("repo")
+
+	if repo == "" {
+		settings, err := h.db.GetSettings()
+		if err == nil && len(settings.TrackedRepos) > 0 {
+			repo = settings.TrackedRepos[0]
+		}
+	}
+
+	res, err := h.standupGen.GenerateStandup(date, repo)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, res)
+}
+
+// HandleSaveStandup handles POST /api/standup
+func (h *APIHandler) HandleSaveStandup(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		Date    string `json:"date"`
+		Content string `json:"content"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		writeError(w, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+	if body.Date == "" {
+		body.Date = time.Now().UTC().Format("2006-01-02")
+	}
+
+	if err := h.db.SaveStandup(body.Date, body.Content); err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{"status": "saved", "date": body.Date})
+}
+
+// HandleGetBacklog handles GET /api/backlog?repo=...
+func (h *APIHandler) HandleGetBacklog(w http.ResponseWriter, r *http.Request) {
+	repo := r.URL.Query().Get("repo")
+	if repo == "" {
+		settings, err := h.db.GetSettings()
+		if err == nil && len(settings.TrackedRepos) > 0 {
+			repo = settings.TrackedRepos[0]
+		}
+	}
+
+	issues, err := h.db.ListClaimableIssues(repo)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, issues)
+}
+
+// HandleGetWorktrees handles GET /api/worktrees
+func (h *APIHandler) HandleGetWorktrees(w http.ResponseWriter, r *http.Request) {
+	worktrees := h.wtScanner.ScanWorktrees()
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"worktrees": worktrees,
+	})
 }

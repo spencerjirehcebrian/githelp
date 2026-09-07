@@ -305,4 +305,48 @@ describe('hooks/useKeyboardNavigation', () => {
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'l' }));
     expect(onSelectColumn).toHaveBeenCalledWith('ci_failing');
   });
+
+  it('isolates shortcuts when layoutMode is standup', () => {
+    const onToggleLayoutMode = vi.fn();
+    const onOpenCommandPalette = vi.fn();
+    renderHook(() =>
+      useKeyboardNavigation({
+        notifications: mockNotifications,
+        selectedIndex: 0,
+        setSelectedIndex,
+        onMarkDone,
+        onOpenSnooze,
+        onTogglePin,
+        onToggleUnread,
+        onSync,
+        onOpenShortcuts,
+        onOpenCommandPalette,
+        onToggleLayoutMode,
+        layoutMode: 'standup',
+        onFocusSearch,
+        onToast,
+        isModalOpen: false,
+      })
+    );
+
+    // Feed actions should be blocked in standup mode
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'e' }));
+    expect(onMarkDone).not.toHaveBeenCalled();
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'j' }));
+    expect(setSelectedIndex).not.toHaveBeenCalled();
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'c' }));
+    expect(onToast).not.toHaveBeenCalled();
+
+    // v, ?, and Cmd+K should still work
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'v' }));
+    expect(onToggleLayoutMode).toHaveBeenCalledTimes(1);
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: '?' }));
+    expect(onOpenShortcuts).toHaveBeenCalledTimes(1);
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }));
+    expect(onOpenCommandPalette).toHaveBeenCalledTimes(1);
+  });
 });

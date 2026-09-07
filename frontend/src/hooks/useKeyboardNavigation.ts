@@ -86,6 +86,24 @@ export function useKeyboardNavigation({
         return;
       }
 
+      // In standup layout, StandupView manages task actions and navigation
+      if (layoutMode === 'standup') {
+        if (e.key === 'v') {
+          if (onToggleLayoutMode) {
+            e.preventDefault();
+            onToggleLayoutMode();
+            onToast('Switched to Task Sections view');
+          }
+          return;
+        }
+        if (e.key === '?') {
+          e.preventDefault();
+          onOpenShortcuts();
+          return;
+        }
+        return;
+      }
+
       switch (e.key) {
         // Selection Navigation
         case 'j':
@@ -123,15 +141,17 @@ export function useKeyboardNavigation({
           break;
         }
 
-        // Toggle Task Sections vs Board View
+        // Toggle Task Sections vs Board vs Standup View
         case 'v': {
           if (onToggleLayoutMode) {
             e.preventDefault();
             onToggleLayoutMode();
             onToast(
-              layoutMode === 'board'
-                ? 'Switched to Task Sections view'
-                : 'Switched to Pipeline Board view'
+              layoutMode === 'stream'
+                ? 'Switched to Pipeline Board view'
+                : layoutMode === 'board'
+                ? 'Switched to Daily Standup & Backlog'
+                : 'Switched to Task Sections view'
             );
           }
           break;

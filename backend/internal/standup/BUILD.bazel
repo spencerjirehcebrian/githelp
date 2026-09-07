@@ -1,0 +1,20 @@
+load("@rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "standup",
+    srcs = ["standup.go"],
+    importpath = "github.com/spencerjireh/githelp/backend/internal/standup",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//backend/internal/db",
+    ],
+)
+
+go_test(
+    name = "standup_test",
+    srcs = ["standup_test.go"],
+    embed = [":standup"],
+    deps = [
+        "//backend/internal/db",
+    ],
+)

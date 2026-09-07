@@ -23,6 +23,7 @@ import {
   Clock,
   Inbox,
   User,
+  Sparkles,
 } from 'lucide-react';
 import type {
   BucketType,
@@ -382,7 +383,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           </button>
         )}
 
-        {/* Layout Mode Switcher (Tasks vs Board) */}
+        {/* Layout Mode Switcher (Tasks vs Board vs Standup) */}
         {onToggleLayoutMode && (
           <button
             onClick={onToggleLayoutMode}
@@ -390,18 +391,22 @@ export const TopBar: React.FC<TopBarProps> = ({
             className={cn(
               'flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium border transition-colors',
               layoutMode === 'board'
-                ? 'bg-zinc-800 text-white border-zinc-700'
+                ? 'bg-zinc-800 text-blue-300 border-zinc-700'
+                : layoutMode === 'standup'
+                ? 'bg-blue-950/60 text-blue-300 border-blue-800/60'
                 : 'bg-zinc-900/80 text-zinc-400 hover:text-zinc-200 border-zinc-800'
             )}
-            title={`Switch to ${layoutMode === 'board' ? 'Task Sections' : 'Pipeline Board'} view (v)`}
+            title={`Current: ${layoutMode === 'board' ? 'Pipeline Board' : layoutMode === 'standup' ? 'Daily Standup & Backlog' : 'Task Feed'} (v to cycle)`}
           >
             {layoutMode === 'board' ? (
               <Columns3 className="w-3.5 h-3.5 text-blue-400" />
+            ) : layoutMode === 'standup' ? (
+              <Sparkles className="w-3.5 h-3.5 text-blue-400" />
             ) : (
               <LayoutList className="w-3.5 h-3.5 text-zinc-400" />
             )}
             <span className="hidden md:inline text-[11px]">
-              {layoutMode === 'board' ? 'Board' : 'Tasks'}
+              {layoutMode === 'board' ? 'Board' : layoutMode === 'standup' ? 'Standup' : 'Tasks'}
             </span>
             <kbd className="text-[9px] font-mono bg-black px-1 py-0.2 rounded border border-zinc-800 text-zinc-500">
               v

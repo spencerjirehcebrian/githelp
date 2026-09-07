@@ -12,6 +12,7 @@ import (
 	"github.com/spencerjireh/githelp/backend/internal/auth"
 	"github.com/spencerjireh/githelp/backend/internal/db"
 	"github.com/spencerjireh/githelp/backend/internal/triage"
+	"github.com/spencerjireh/githelp/backend/internal/worktree"
 )
 
 type Client struct {
@@ -337,7 +338,25 @@ func (c *Client) Sync(ctx context.Context) (int, error) {
 		ignoredMap[strings.ToLower(strings.TrimSpace(r))] = true
 	}
 
+	// 1. Scan local worktrees
+	wtScanner := worktree.NewScanner()
+	localWorktrees := wtScanner.ScanWorktrees()
+
 	syncedCount := 0
+
+	// 2. Sync repository-level state for configured tracked repos
+	for _, repo := range settings.TrackedRepos {
+		cleanRepo := strings.TrimSpace(repo)
+		if cleanRepo == "" || ignoredMap[strings.ToLower(cleanRepo)] {
+			continue
+		}
+		count, err := c.SyncRepositoryState(ctx, token, status.Username, cleanRepo, localWorktrees)
+		if err == nil {
+			syncedCount += count
+		}
+	}
+
+	// 3. Sync notification items
 	for _, raw := range rawList {
 		if ignoredMap[strings.ToLower(strings.TrimSpace(raw.Repository.FullName))] {
 			continue
@@ -348,20 +367,19 @@ func (c *Client) Sync(ctx context.Context) (int, error) {
 			continue
 		}
 
+		// Attach local worktree path if branch matches
+		if item.Branch != "" && localWorktrees != nil {
+			if path, ok := localWorktrees[item.Branch]; ok {
+				item.LocalWorktreePath = path
+			}
+		}
+
 		if err := c.db.UpsertNotification(item); err != nil {
 			continue
 		}
 
 		// Compute and upsert triage state
-		existingList, _ := c.db.ListEnrichedNotifications("", "", "", item.ID)
-		var existingTriage *db.TriageState
-		for _, ex := range existingList {
-			if ex.ID == item.ID {
-				existingTriage = &ex.Triage
-				break
-			}
-		}
-
+		existingTriage, _ := c.db.GetTriageState(item.ID)
 		tState := triage.ComputeTriageState(item, status.Username, existingTriage)
 		_ = c.db.UpsertTriageState(tState)
 		syncedCount++

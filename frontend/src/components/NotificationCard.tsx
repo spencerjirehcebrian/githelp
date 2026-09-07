@@ -19,6 +19,7 @@ import {
   UserCheck,
   PanelRightOpen,
   Check,
+  FolderGit2,
 } from 'lucide-react';
 import type { EnrichedNotification } from '../types';
 import { cn, formatTimeAgo, copyToClipboard, parsePRMetadata } from '../lib/utils';
@@ -302,6 +303,53 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
 
       {/* Right: Badges, Time, and Quick Action Buttons */}
       <div className="flex items-center gap-2 shrink-0">
+        {/* Local Worktree Pill */}
+        {item.local_worktree_path && (
+          <span
+            className="hidden xl:flex items-center gap-1 font-mono text-[10px] text-zinc-400 bg-zinc-900 px-1.5 py-0.2 rounded border border-zinc-700/80 shrink-0"
+            title={`Checked out in: ${item.local_worktree_path}`}
+          >
+            <FolderGit2 className="w-2.5 h-2.5 text-zinc-400" />
+            <span>{item.local_worktree_path.split('/').pop()}</span>
+          </span>
+        )}
+
+        {/* Explicit Review Badges */}
+        {item.approvers && item.approvers.length > 0 && (
+          <span
+            className="hidden md:flex items-center gap-1 text-[9px] font-mono px-1.5 py-0.2 rounded bg-emerald-950/50 text-emerald-300 border border-emerald-800/40 shrink-0"
+            title={`Approved by: ${item.approvers.join(', ')}`}
+          >
+            <Check className="w-2.5 h-2.5 text-emerald-400" />
+            <span>@{item.approvers[0]}</span>
+            {item.approvers.length > 1 && <span>+{item.approvers.length - 1}</span>}
+          </span>
+        )}
+
+        {item.pending_reviewers && item.pending_reviewers.length > 0 && (
+          <span
+            className="hidden md:flex items-center gap-1 text-[9px] font-mono px-1.5 py-0.2 rounded bg-amber-950/40 text-amber-300 border border-amber-800/40 shrink-0"
+            title={`Review pending from: ${item.pending_reviewers.join(', ')}`}
+          >
+            <Clock className="w-2.5 h-2.5 text-amber-400" />
+            <span>@{item.pending_reviewers[0]}</span>
+            {item.pending_reviewers.length > 1 && <span>+{item.pending_reviewers.length - 1}</span>}
+          </span>
+        )}
+
+        {item.ball_in_court && item.ball_in_court !== 'none' && (
+          <span
+            className={cn(
+              'hidden lg:flex items-center text-[9px] font-medium px-1.5 py-0.2 rounded border shrink-0',
+              item.ball_in_court === 'you'
+                ? 'bg-rose-950/40 text-rose-300 border-rose-800/40'
+                : 'bg-blue-950/30 text-blue-300 border-blue-800/30'
+            )}
+          >
+            {item.ball_in_court === 'you' ? 'Ball: You' : 'Ball: Reviewer'}
+          </span>
+        )}
+
         {/* Reason Badge */}
         {renderReasonBadge()}
 

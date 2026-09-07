@@ -13,6 +13,7 @@ import { computeVisibilityMetrics, computeTaskBurndownMetrics } from './lib/util
 import { TopBar } from './components/TopBar';
 import { TaskSectionList } from './components/TaskSectionList';
 import { PipelineBoard } from './components/PipelineBoard';
+import { StandupView } from './components/StandupView';
 import { InspectionDrawer } from './components/InspectionDrawer';
 import { CommandPalette } from './components/CommandPalette';
 import { AuthBanner } from './components/AuthBanner';
@@ -101,7 +102,11 @@ export default function App() {
   const selectedItem = notifications[selectedIndex] || null;
 
   const handleToggleLayoutMode = () => {
-    setLayoutMode((prev) => (prev === 'board' ? 'stream' : 'board'));
+    setLayoutMode((prev) => {
+      if (prev === 'stream') return 'board';
+      if (prev === 'board') return 'standup';
+      return 'stream';
+    });
   };
 
   const handleToggleCI = () => {
@@ -196,9 +201,18 @@ export default function App() {
         onToggleCI={handleToggleCI}
       />
 
-      {/* Main Single-Feed / Pipeline Workstation Container */}
+      {/* Main Single-Feed / Pipeline / Standup Workstation Container */}
       <main className="flex-1 flex min-w-0 overflow-hidden bg-github-dark">
-        {layoutMode === 'board' ? (
+        {layoutMode === 'standup' ? (
+          /* Daily Standup & Claimable Backlog Workstation */
+          <div className="flex-1 flex min-w-0 overflow-hidden">
+            <StandupView
+              onToast={(msg) => setToastMessage(msg)}
+              onInspectItem={handleInspectItem}
+              trackedRepo={selectedRepo || undefined}
+            />
+          </div>
+        ) : layoutMode === 'board' ? (
           /* Pipeline Board Mode (Full Screen) */
           <div className="flex-1 flex min-w-0 overflow-hidden">
             <PipelineBoard

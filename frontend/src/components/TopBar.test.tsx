@@ -108,7 +108,7 @@ describe('components/TopBar', () => {
     expect(onToggleCI).toHaveBeenCalledTimes(1);
 
     // Layout mode switcher
-    const toggleBtn = screen.getByTitle('Switch to Pipeline Board view (v)');
+    const toggleBtn = screen.getByLabelText('Toggle Layout Mode');
     expect(toggleBtn).toBeInTheDocument();
     fireEvent.click(toggleBtn);
     expect(onToggleLayoutMode).toHaveBeenCalledTimes(1);

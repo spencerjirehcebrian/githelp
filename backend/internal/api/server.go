@@ -69,6 +69,11 @@ func (s *Server) setupRoutes() {
 	s.mux.HandleFunc("GET /api/counts", s.handler.HandleGetBucketCounts)
 	s.mux.HandleFunc("GET /api/repos", s.handler.HandleGetRepos)
 
+	s.mux.HandleFunc("GET /api/standup", s.handler.HandleGetStandup)
+	s.mux.HandleFunc("POST /api/standup", s.handler.HandleSaveStandup)
+	s.mux.HandleFunc("GET /api/backlog", s.handler.HandleGetBacklog)
+	s.mux.HandleFunc("GET /api/worktrees", s.handler.HandleGetWorktrees)
+
 	s.mux.HandleFunc("GET /api/events", s.config.Broadcaster.HandleSSE)
 	s.mux.HandleFunc("GET /api/settings", s.handler.HandleGetSettings)
 	s.mux.HandleFunc("PUT /api/settings", s.handler.HandleUpdateSettings)

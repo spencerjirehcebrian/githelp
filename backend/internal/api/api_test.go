@@ -183,4 +183,47 @@ func TestAPIRoutesComprehensive(t *testing.T) {
 	if rr.Code != http.StatusOK {
 		t.Fatalf("expected 200 for /api/repos, got %d", rr.Code)
 	}
+
+	// 10. Test GET /api/standup
+	standupReq, _ := http.NewRequest("GET", "/api/standup", nil)
+	rr = httptest.NewRecorder()
+	handler.ServeHTTP(rr, standupReq)
+	if rr.Code != http.StatusOK {
+		t.Fatalf("expected 200 for /api/standup, got %d", rr.Code)
+	}
+	var standupResp db.StandupResponse
+	if err := json.NewDecoder(rr.Body).Decode(&standupResp); err != nil {
+		t.Fatalf("failed to decode standup response: %v", err)
+	}
+	if len(standupResp.FormattedText) == 0 {
+		t.Errorf("expected non-empty standup formatted text")
+	}
+
+	// 11. Test POST /api/standup
+	saveStandupPayload, _ := json.Marshal(map[string]string{
+		"date":    time.Now().UTC().Format("2006-01-02"),
+		"content": "Merged\nNone\n\nFor Review\nNone\n\nDone\nTesting API\n\nTodo\nRelease",
+	})
+	postStandupReq, _ := http.NewRequest("POST", "/api/standup", bytes.NewReader(saveStandupPayload))
+	rr = httptest.NewRecorder()
+	handler.ServeHTTP(rr, postStandupReq)
+	if rr.Code != http.StatusOK {
+		t.Fatalf("expected 200 for POST /api/standup, got %d", rr.Code)
+	}
+
+	// 12. Test GET /api/backlog
+	backlogReq, _ := http.NewRequest("GET", "/api/backlog", nil)
+	rr = httptest.NewRecorder()
+	handler.ServeHTTP(rr, backlogReq)
+	if rr.Code != http.StatusOK {
+		t.Fatalf("expected 200 for /api/backlog, got %d", rr.Code)
+	}
+
+	// 13. Test GET /api/worktrees
+	worktreesReq, _ := http.NewRequest("GET", "/api/worktrees", nil)
+	rr = httptest.NewRecorder()
+	handler.ServeHTTP(rr, worktreesReq)
+	if rr.Code != http.StatusOK {
+		t.Fatalf("expected 200 for /api/worktrees, got %d", rr.Code)
+	}
 }

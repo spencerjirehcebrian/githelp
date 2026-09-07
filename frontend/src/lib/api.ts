@@ -5,6 +5,9 @@ import type {
   NotificationStatus,
   StatusResponse,
   SyncResponse,
+  StandupResponse,
+  ClaimableIssue,
+  WorktreesResponse,
 } from '../types';
 
 const API_BASE = '/api';
@@ -103,5 +106,38 @@ export async function setPAT(token: string): Promise<AuthStatus> {
 export async function disconnectAuth(): Promise<AuthStatus> {
   const res = await fetch(`${API_BASE}/auth/disconnect`, { method: 'POST' });
   if (!res.ok) throw new Error(`Failed to disconnect: ${res.statusText}`);
+  return res.json();
+}
+
+export async function getStandup(date?: string, repo?: string): Promise<StandupResponse> {
+  const query = new URLSearchParams();
+  if (date) query.set('date', date);
+  if (repo) query.set('repo', repo);
+  const res = await fetch(`${API_BASE}/standup?${query.toString()}`);
+  if (!res.ok) throw new Error(`Failed to fetch standup: ${res.statusText}`);
+  return res.json();
+}
+
+export async function saveStandup(date: string, content: string): Promise<{ status: string; date: string }> {
+  const res = await fetch(`${API_BASE}/standup`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ date, content }),
+  });
+  if (!res.ok) throw new Error(`Failed to save standup: ${res.statusText}`);
+  return res.json();
+}
+
+export async function getBacklog(repo?: string): Promise<ClaimableIssue[]> {
+  const query = new URLSearchParams();
+  if (repo) query.set('repo', repo);
+  const res = await fetch(`${API_BASE}/backlog?${query.toString()}`);
+  if (!res.ok) throw new Error(`Failed to fetch backlog: ${res.statusText}`);
+  return res.json();
+}
+
+export async function getWorktrees(): Promise<WorktreesResponse> {
+  const res = await fetch(`${API_BASE}/worktrees`);
+  if (!res.ok) throw new Error(`Failed to fetch worktrees: ${res.statusText}`);
   return res.json();
 }

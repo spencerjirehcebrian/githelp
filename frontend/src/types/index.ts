@@ -11,7 +11,7 @@ export type NotificationStatus = 'inbox' | 'done' | 'snoozed';
 
 export type AppViewMode = 'tasks' | 'triage';
 
-export type DashboardLayoutMode = 'stream' | 'board';
+export type DashboardLayoutMode = 'stream' | 'board' | 'standup';
 
 export type TaskSectionId =
   | 'today'
@@ -137,10 +137,36 @@ export interface NotificationItem {
   updated_at: string;
   last_read_at?: string | null;
   raw_data?: string;
+  approvers?: string[];
+  pending_reviewers?: string[];
+  changes_requested_by?: string[];
+  ball_in_court?: 'you' | 'reviewer' | 'none';
+  latest_comment_author?: string;
+  latest_comment_body?: string;
+  local_worktree_path?: string;
 }
 
 export interface EnrichedNotification extends NotificationItem {
   triage: TriageState;
+}
+
+export interface StandupResponse {
+  date: string;
+  formatted_text: string;
+  is_saved: boolean;
+  merged: string[];
+  for_review: string[];
+  done: string[];
+  todo: string[];
+}
+
+export interface ClaimableIssue extends NotificationItem {
+  days_open: number;
+  subsystem?: string;
+}
+
+export interface WorktreesResponse {
+  worktrees: Record<string, string>;
 }
 
 export interface AuthStatus {
@@ -160,6 +186,7 @@ export interface AppSettings {
   enable_browser_notifications: boolean;
   enable_sound: boolean;
   ignored_repos: string[];
+  tracked_repos?: string[];
   theme: 'dark' | 'light' | 'system';
   preferred_editor?: 'cursor' | 'vscode' | 'zed' | 'terminal';
 }

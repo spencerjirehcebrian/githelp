@@ -77,8 +77,12 @@ export function generateGitCommands(item: EnrichedNotification) {
     ghPrMerge: num ? `gh pr merge ${num} --squash --delete-branch` : '',
     gitCherryPick: `git cherry-pick <commit-sha>`,
     gitApplyPatch: num ? `gh pr diff ${num} | git apply -v` : '',
-    openCursor: `cursor://file/${repo}`,
-    openVSCode: `vscode://file/${repo}`,
+    openCursor: item.local_worktree_path
+      ? `cursor://file${item.local_worktree_path.startsWith('/') ? item.local_worktree_path : '/' + item.local_worktree_path}`
+      : `cursor://file/${repo}`,
+    openVSCode: item.local_worktree_path
+      ? `vscode://file${item.local_worktree_path.startsWith('/') ? item.local_worktree_path : '/' + item.local_worktree_path}`
+      : `vscode://file/${repo}`,
   };
 }
 

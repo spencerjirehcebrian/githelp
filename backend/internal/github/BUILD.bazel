@@ -4,6 +4,7 @@ go_library(
     name = "github",
     srcs = [
         "client.go",
+        "graphql.go",
         "poller.go",
     ],
     importpath = "github.com/spencerjireh/githelp/backend/internal/github",
@@ -12,6 +13,7 @@ go_library(
         "//backend/internal/auth",
         "//backend/internal/db",
         "//backend/internal/triage",
+        "//backend/internal/worktree",
     ],
 )
 

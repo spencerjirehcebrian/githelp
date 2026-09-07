@@ -37,7 +37,7 @@ export const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose 
       title: 'Workstation & Navigation',
       items: [
         { key: '⌘K / Ctrl+K', desc: 'Open Command Palette' },
-        { key: 'v', desc: 'Toggle Task Sections / Board View' },
+        { key: 'v', desc: 'Cycle Layout (Tasks / Board / Standup)' },
         { key: 'h / l / ← / →', desc: 'Switch Board Columns (in Board mode)' },
         { key: 'j / k / ↓ / ↑', desc: 'Navigate Tasks / Cards' },
         { key: '/', desc: 'Focus search bar' },

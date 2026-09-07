@@ -8,7 +8,7 @@ describe('components/ShortcutsModal', () => {
     render(<ShortcutsModal isOpen={true} onClose={onClose} />);
 
     expect(screen.getByText('Keyboard Shortcuts')).toBeInTheDocument();
-    expect(screen.getByText('Toggle Task Sections / Board View')).toBeInTheDocument();
+    expect(screen.getByText('Cycle Layout (Tasks / Board / Standup)')).toBeInTheDocument();
     expect(screen.getByText('Navigate Tasks / Cards')).toBeInTheDocument();
     expect(screen.getByText('Complete Task (Mark Done)')).toBeInTheDocument();
 

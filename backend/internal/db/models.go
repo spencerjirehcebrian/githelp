@@ -20,10 +20,44 @@ type Notification struct {
 	AuthorAvatar    string     `json:"author_avatar"`
 	Branch          string     `json:"branch,omitempty"`
 	Number          int        `json:"number,omitempty"`
-	Unread          bool       `json:"unread"`
-	GitHubUpdatedAt time.Time  `json:"updated_at"`
-	LastReadAt      *time.Time `json:"last_read_at,omitempty"`
-	RawData         string     `json:"raw_data,omitempty"`
+	Unread              bool       `json:"unread"`
+	GitHubUpdatedAt     time.Time  `json:"updated_at"`
+	LastReadAt          *time.Time `json:"last_read_at,omitempty"`
+	RawData             string     `json:"raw_data,omitempty"`
+	Approvers           []string   `json:"approvers,omitempty"`
+	PendingReviewers    []string   `json:"pending_reviewers,omitempty"`
+	ChangesRequestedBy  []string   `json:"changes_requested_by,omitempty"`
+	BallInCourt         string     `json:"ball_in_court,omitempty"` // "you", "reviewer", "none"
+	LatestCommentAuthor string     `json:"latest_comment_author,omitempty"`
+	LatestCommentBody   string     `json:"latest_comment_body,omitempty"`
+	LocalWorktreePath   string     `json:"local_worktree_path,omitempty"`
+}
+
+// StandupEntry represents a daily standup record.
+type StandupEntry struct {
+	ID        string    `json:"id"`
+	Date      string    `json:"date"`
+	Content   string    `json:"content"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+// StandupResponse represents the generated or saved standup for a given day.
+type StandupResponse struct {
+	Date          string   `json:"date"`
+	FormattedText string   `json:"formatted_text"`
+	IsSaved       bool     `json:"is_saved"`
+	Merged        []string `json:"merged"`
+	ForReview     []string `json:"for_review"`
+	Done          []string `json:"done"`
+	Todo          []string `json:"todo"`
+}
+
+// ClaimableIssue represents an unassigned issue available to pick up.
+type ClaimableIssue struct {
+	Notification
+	DaysOpen  int    `json:"days_open"`
+	Subsystem string `json:"subsystem,omitempty"`
 }
 
 // TriageState represents the user's triage categorization, inbox status, and snooze rules.
@@ -51,6 +85,7 @@ type AppSettings struct {
 	EnableBrowserNotifications bool     `json:"enable_browser_notifications"`
 	EnableSound                bool     `json:"enable_sound"`
 	IgnoredRepos               []string `json:"ignored_repos"`
+	TrackedRepos               []string `json:"tracked_repos"`
 	Theme                      string   `json:"theme"` // "dark", "light", "system"
 }
 

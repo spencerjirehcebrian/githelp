@@ -53,6 +53,17 @@ describe('lib/utils', () => {
     expect(cmds.gitCheckout).toBe('git checkout feature/auth');
     expect(cmds.ghPrCheckout).toBe('gh pr checkout 42');
     expect(cmds.ghPrDiff).toBe('gh pr diff 42');
+    expect(cmds.openCursor).toBe('cursor://file/owner/repo');
+    expect(cmds.openVSCode).toBe('vscode://file/owner/repo');
+
+    // With local_worktree_path
+    const worktreeItem: any = {
+      ...item,
+      local_worktree_path: '/Users/test/git/worktree-repo',
+    };
+    const wtCmds = generateGitCommands(worktreeItem);
+    expect(wtCmds.openCursor).toBe('cursor://file/Users/test/git/worktree-repo');
+    expect(wtCmds.openVSCode).toBe('vscode://file/Users/test/git/worktree-repo');
   });
 
   it('categorizeIntoTaskSections should correctly sort into task sections', () => {
