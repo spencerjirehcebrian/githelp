@@ -69,14 +69,8 @@ export function generateGitCommands(item: EnrichedNotification) {
 
   return {
     gitCheckout: `git checkout ${branch}`,
-    gitCheckoutNew: `git checkout -b ${branch} origin/${branch}`,
     ghPrCheckout: num ? `gh pr checkout ${num}` : `git checkout ${branch}`,
     ghPrDiff: num ? `gh pr diff ${num}` : `git diff origin/main...${branch}`,
-    ghPrView: num ? `gh pr view ${num}` : `gh issue view ${num}`,
-    ghPrApprove: num ? `gh pr review ${num} --approve -b "LGTM!"` : '',
-    ghPrMerge: num ? `gh pr merge ${num} --squash --delete-branch` : '',
-    gitCherryPick: `git cherry-pick <commit-sha>`,
-    gitApplyPatch: num ? `gh pr diff ${num} | git apply -v` : '',
     openCursor: item.local_worktree_path
       ? `cursor://file${item.local_worktree_path.startsWith('/') ? item.local_worktree_path : '/' + item.local_worktree_path}`
       : `cursor://file/${repo}`,

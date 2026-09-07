@@ -82,7 +82,7 @@ describe('components/InspectionCockpit', () => {
     expect(screen.getByText('security')).toBeInTheDocument();
   });
 
-  it('switches between Overview, Files Changed, and Git Recipes tabs', () => {
+  it('switches between Overview and Files Changed tabs and does not display Git Recipes', () => {
     render(
       <InspectionCockpit
         item={sampleItem}
@@ -100,11 +100,8 @@ describe('components/InspectionCockpit', () => {
     expect(screen.getByText('src/auth.ts')).toBeInTheDocument();
     expect(screen.getByText('src/index.ts')).toBeInTheDocument();
 
-    // Switch to Git Recipes tab
-    const recipesTab = screen.getByRole('button', { name: /Git Recipes/i });
-    fireEvent.click(recipesTab);
-    expect(screen.getByText('1. Checkout & Switch to Branch')).toBeInTheDocument();
-    expect(screen.getByText('git checkout feature/biometrics')).toBeInTheDocument();
+    // Verify Git Recipes tab is not present
+    expect(screen.queryByRole('button', { name: /Git Recipes/i })).not.toBeInTheDocument();
   });
 
   it('allows editing and saving developer notes', () => {

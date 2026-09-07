@@ -11,7 +11,6 @@ import {
   Pin,
   ExternalLink,
   Archive,
-  Copy,
   Check,
   Terminal,
   FileCode2,
@@ -25,6 +24,7 @@ import {
   Save,
   Tag,
   Users,
+  FolderGit2,
 } from 'lucide-react';
 import type { EnrichedNotification } from '../types';
 import { cn, formatTimeAgo, copyToClipboard, parsePRMetadata, generateGitCommands } from '../lib/utils';
@@ -39,7 +39,7 @@ interface InspectionCockpitProps {
   onToast: (msg: string) => void;
 }
 
-type TabType = 'overview' | 'files' | 'git_actions' | 'ci_checks' | 'notes';
+type TabType = 'overview' | 'files' | 'ci_checks' | 'notes';
 
 export const InspectionCockpit: React.FC<InspectionCockpitProps> = ({
   item,
@@ -307,6 +307,70 @@ export const InspectionCockpit: React.FC<InspectionCockpitProps> = ({
           )}
         </div>
 
+        {/* Local Worktree Location Banner */}
+        {item.local_worktree_path && (
+          <div className="flex items-center justify-between p-2 rounded bg-zinc-900/60 border border-zinc-800 text-xs">
+            <div className="flex items-center gap-1.5 font-mono text-zinc-300 truncate">
+              <FolderGit2 className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+              <span className="text-zinc-500 shrink-0">Local Worktree:</span>
+              <span className="text-blue-400 font-semibold truncate">{item.local_worktree_path}</span>
+            </div>
+            <button
+              onClick={() => handleCopy('local-worktree', item.local_worktree_path!, 'Worktree Path')}
+              className="px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-mono text-[10px] shrink-0"
+            >
+              {copiedKey === 'local-worktree' ? <Check className="w-2.5 h-2.5 text-emerald-400 inline mr-1" /> : null}
+              Copy Path
+            </button>
+          </div>
+        )}
+
+        {/* Review Roster & Ball-in-Court Card */}
+        {((item.approvers && item.approvers.length > 0) ||
+          (item.pending_reviewers && item.pending_reviewers.length > 0) ||
+          (item.changes_requested_by && item.changes_requested_by.length > 0)) && (
+          <div className="p-2.5 rounded bg-zinc-900/40 border border-zinc-800/80 text-xs space-y-1.5">
+            <div className="flex items-center justify-between text-[11px]">
+              <span className="font-semibold text-zinc-400 uppercase tracking-wider text-[10px]">Review Status</span>
+              {item.ball_in_court && item.ball_in_court !== 'none' && (
+                <span
+                  className={cn(
+                    'px-1.5 py-0.5 rounded text-[10px] font-medium border',
+                    item.ball_in_court === 'you'
+                      ? 'bg-rose-950/40 text-rose-300 border-rose-800/40'
+                      : 'bg-blue-950/30 text-blue-300 border-blue-800/30'
+                  )}
+                >
+                  {item.ball_in_court === 'you' ? 'Action Required on You' : 'Waiting on Reviewers'}
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-2 flex-wrap text-[11px]">
+              {item.approvers?.map((a) => (
+                <span key={a} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-950/40 text-emerald-300 border border-emerald-800/40">
+                  <Check className="w-3 h-3 text-emerald-400" /> Approved by @{a}
+                </span>
+              ))}
+              {item.pending_reviewers?.map((r) => (
+                <span key={r} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-950/40 text-amber-300 border border-amber-800/40">
+                  <Clock className="w-3 h-3 text-amber-400" /> Pending review from @{r}
+                </span>
+              ))}
+              {item.changes_requested_by?.map((c) => (
+                <span key={c} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-rose-950/40 text-rose-300 border border-rose-800/40">
+                  <XCircle className="w-3 h-3 text-rose-400" /> Changes requested by @{c}
+                </span>
+              ))}
+            </div>
+            {item.latest_comment_author && (
+              <div className="mt-1 pt-1.5 border-t border-zinc-800/50 text-[11px] text-zinc-400">
+                <span className="text-zinc-500">Latest review comment by @{item.latest_comment_author}:</span>
+                <p className="font-mono text-zinc-300 mt-0.5 line-clamp-2">{item.latest_comment_body}</p>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Git Quick-Action Command Bar */}
         <div className="bg-black/50 p-1.5 rounded-md border border-zinc-900 flex items-center gap-1.5 flex-wrap">
           <span className="text-[10px] font-mono text-zinc-500 shrink-0 px-1">
@@ -399,18 +463,6 @@ export const InspectionCockpit: React.FC<InspectionCockpitProps> = ({
           </button>
         )}
 
-        <button
-          onClick={() => setActiveTab('git_actions')}
-          className={cn(
-            'px-2.5 py-1.5 text-xs font-medium border-b transition-colors flex items-center gap-1.5',
-            activeTab === 'git_actions'
-              ? 'border-zinc-200 text-white font-semibold'
-              : 'border-transparent text-zinc-500 hover:text-zinc-300'
-          )}
-        >
-          <Terminal className="w-3.5 h-3.5" />
-          <span>Git Recipes</span>
-        </button>
 
         {ciDetails.length > 0 && (
           <button
@@ -631,111 +683,7 @@ export const InspectionCockpit: React.FC<InspectionCockpitProps> = ({
           </div>
         )}
 
-        {/* TAB 3: GIT ACTIONS & RECIPES */}
-        {activeTab === 'git_actions' && (
-          <div className="space-y-2.5">
-            <div className="text-[11px] text-zinc-500">
-              Pre-configured Git commands formatted for this PR:
-            </div>
-
-            <div className="space-y-2">
-              {/* Recipe 1: Checkout branch */}
-              <div className="p-2.5 rounded-md bg-zinc-950 border border-zinc-900 space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-zinc-200">1. Checkout & Switch to Branch</span>
-                  <button
-                    onClick={() => handleCopy('recipe-co', gitCmds.gitCheckout, gitCmds.gitCheckout)}
-                    className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 text-[10px] font-mono text-zinc-300 transition-colors"
-                  >
-                    {copiedKey === 'recipe-co' ? <Check className="w-2.5 h-2.5 text-emerald-400" /> : <Copy className="w-2.5 h-2.5" />}
-                    <span>Copy</span>
-                  </button>
-                </div>
-                <pre className="p-2 rounded bg-black border border-zinc-900 text-[11px] font-mono text-zinc-300 overflow-x-auto">
-                  {gitCmds.gitCheckout}
-                </pre>
-              </div>
-
-              {/* Recipe 2: GitHub CLI Checkout */}
-              {item.number ? (
-                <div className="p-2.5 rounded-md bg-zinc-950 border border-zinc-900 space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-zinc-200">2. GitHub CLI One-Step Checkout</span>
-                    <button
-                      onClick={() => handleCopy('recipe-gh-co', gitCmds.ghPrCheckout, gitCmds.ghPrCheckout)}
-                      className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 text-[10px] font-mono text-zinc-300 transition-colors"
-                    >
-                      {copiedKey === 'recipe-gh-co' ? <Check className="w-2.5 h-2.5 text-emerald-400" /> : <Copy className="w-2.5 h-2.5" />}
-                      <span>Copy</span>
-                    </button>
-                  </div>
-                  <pre className="p-2 rounded bg-black border border-zinc-900 text-[11px] font-mono text-zinc-300 overflow-x-auto">
-                    {gitCmds.ghPrCheckout}
-                  </pre>
-                </div>
-              ) : null}
-
-              {/* Recipe 3: Quick Approve */}
-              {item.number && gitCmds.ghPrApprove ? (
-                <div className="p-2.5 rounded-md bg-zinc-950 border border-zinc-900 space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-zinc-200">3. Fast Approve via gh CLI</span>
-                    <button
-                      onClick={() => handleCopy('recipe-approve', gitCmds.ghPrApprove, gitCmds.ghPrApprove)}
-                      className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 text-[10px] font-mono text-zinc-300 transition-colors"
-                    >
-                      {copiedKey === 'recipe-approve' ? <Check className="w-2.5 h-2.5 text-emerald-400" /> : <Copy className="w-2.5 h-2.5" />}
-                      <span>Copy</span>
-                    </button>
-                  </div>
-                  <pre className="p-2 rounded bg-black border border-zinc-900 text-[11px] font-mono text-zinc-300 overflow-x-auto">
-                    {gitCmds.ghPrApprove}
-                  </pre>
-                </div>
-              ) : null}
-
-              {/* Recipe 4: Quick Squash & Merge */}
-              {item.number && gitCmds.ghPrMerge ? (
-                <div className="p-2.5 rounded-md bg-zinc-950 border border-zinc-900 space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-zinc-200">4. Squash & Merge PR</span>
-                    <button
-                      onClick={() => handleCopy('recipe-merge', gitCmds.ghPrMerge, gitCmds.ghPrMerge)}
-                      className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 text-[10px] font-mono text-zinc-300 transition-colors"
-                    >
-                      {copiedKey === 'recipe-merge' ? <Check className="w-2.5 h-2.5 text-emerald-400" /> : <Copy className="w-2.5 h-2.5" />}
-                      <span>Copy</span>
-                    </button>
-                  </div>
-                  <pre className="p-2 rounded bg-black border border-zinc-900 text-[11px] font-mono text-zinc-300 overflow-x-auto">
-                    {gitCmds.ghPrMerge}
-                  </pre>
-                </div>
-              ) : null}
-
-              {/* Recipe 5: Apply Patch */}
-              {item.number && gitCmds.gitApplyPatch ? (
-                <div className="p-2.5 rounded-md bg-zinc-950 border border-zinc-900 space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-zinc-200">5. Apply PR Patch Locally</span>
-                    <button
-                      onClick={() => handleCopy('recipe-patch', gitCmds.gitApplyPatch, gitCmds.gitApplyPatch)}
-                      className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 text-[10px] font-mono text-zinc-300 transition-colors"
-                    >
-                      {copiedKey === 'recipe-patch' ? <Check className="w-2.5 h-2.5 text-emerald-400" /> : <Copy className="w-2.5 h-2.5" />}
-                      <span>Copy</span>
-                    </button>
-                  </div>
-                  <pre className="p-2 rounded bg-black border border-zinc-900 text-[11px] font-mono text-zinc-300 overflow-x-auto">
-                    {gitCmds.gitApplyPatch}
-                  </pre>
-                </div>
-              ) : null}
-            </div>
-          </div>
-        )}
-
-        {/* TAB 4: CI DIAGNOSTICS */}
+        {/* TAB 3: CI DIAGNOSTICS */}
         {activeTab === 'ci_checks' && (
           <div className="space-y-2.5">
             <div className="flex items-center justify-between">
@@ -797,7 +745,7 @@ export const InspectionCockpit: React.FC<InspectionCockpitProps> = ({
           </div>
         )}
 
-        {/* TAB 5: LOCAL NOTES */}
+        {/* TAB 4: LOCAL NOTES */}
         {activeTab === 'notes' && (
           <div className="space-y-2.5">
             <div className="flex items-center justify-between">

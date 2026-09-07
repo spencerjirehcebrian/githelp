@@ -138,21 +138,19 @@ test.describe('GitHelp Triage & Workstation E2E Workflows', () => {
     await expect(page.getByText('All Tasks Completed!')).toBeVisible();
   });
 
-  test('8. inspects tabs in Cockpit Drawer: Files Changed, Git Recipes, and Notes', async ({ page }) => {
+  test('8. inspects tabs in Cockpit Drawer: Files Changed and Notes', async ({ page }) => {
     // Open drawer with Enter
     await page.keyboard.press('Enter');
     const drawer = page.locator('[data-testid="inspection-drawer"]');
     await expect(drawer).toBeVisible();
 
+    // Verify Git Recipes tab is not present
+    await expect(drawer.getByRole('button', { name: /Git Recipes/i })).not.toBeVisible();
+
     // Switch to Files Changed tab
     await drawer.getByRole('button', { name: /Files Changed/i }).click();
     await expect(drawer.getByText('src/auth/biometrics.ts')).toBeVisible();
     await expect(drawer.getByText('src/components/LoginModal.tsx')).toBeVisible();
-
-    // Switch to Git Recipes tab
-    await drawer.getByRole('button', { name: /Git Recipes/i }).click();
-    await expect(drawer.getByText('1. Checkout & Switch to Branch')).toBeVisible();
-    await expect(drawer.getByText('git checkout feature/biometrics')).toBeVisible();
 
     // Switch to Notes tab
     await drawer.getByRole('button', { name: /Notes/i }).click();
