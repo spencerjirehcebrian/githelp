@@ -9,8 +9,34 @@ import type {
   ClaimableIssue,
   WorktreesResponse,
 } from '../types';
+import type { Brief } from '../types/brief';
 
 const API_BASE = '/api';
+
+/**
+ * Fetches the complete ranked brief.
+ *
+ * This is the only call the brief makes. Filtering, grouping, collapsing, and
+ * exporting all happen on the payload in memory, so typing in the filter box
+ * costs nothing. Pass refresh to bypass the server's short cache, which is
+ * what the `r` key does.
+ */
+export async function getBrief(options?: {
+  repo?: string;
+  refresh?: boolean;
+}): Promise<Brief> {
+  const query = new URLSearchParams();
+  if (options?.repo) query.set('repo', options.repo);
+  if (options?.refresh) query.set('refresh', '1');
+
+  const suffix = query.toString();
+  const res = await fetch(`${API_BASE}/brief${suffix ? `?${suffix}` : ''}`);
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || `Failed to fetch brief: ${res.statusText}`);
+  }
+  return res.json();
+}
 
 export async function getStatus(): Promise<StatusResponse> {
   const res = await fetch(`${API_BASE}/status`);

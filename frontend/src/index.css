@@ -2,22 +2,65 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Near-monochrome, two schemes, no toggle.
+ *
+ * Greyscale carries the whole hierarchy: title, then signal, then metadata.
+ * A single accent is reserved for the action line so that colour always
+ * means "this is the thing to do" and never merely decorates.
+ *
+ * Values are space-separated RGB channels so Tailwind can apply opacity.
+ */
 @layer base {
+  :root {
+    --bg: 251 251 250;
+    --surface: 243 243 241;
+    --line: 224 224 220;
+    --text: 26 26 28;
+    --muted: 85 85 92;
+    --faint: 112 112 122;
+    --accent: 154 98 18;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: 11 11 12;
+      --surface: 20 20 22;
+      --line: 38 38 42;
+      --text: 232 232 234;
+      --muted: 154 154 163;
+      --faint: 112 112 122;
+      --accent: 224 164 76;
+    }
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
   body {
-    @apply bg-github-dark text-github-text antialiased selection:bg-github-accent/20 selection:text-github-textBright;
+    @apply bg-bg text-text antialiased;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 
-  /* Smooth interactive state transitions */
-  button, a, input, textarea, select {
-    @apply transition-colors duration-100 ease-out;
+  /* Issue numbers, counts, and timestamps must not shift width as they
+     change, or the whole column jitters on refresh. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* A visible, non-intrusive focus ring for keyboard users. */
+  :focus-visible {
+    @apply outline-none ring-1 ring-accent/60;
   }
 }
 
-/* Custom ultra-sleek minimalist scrollbars */
+/* Hairline scrollbars. The list is the content; the chrome should recede. */
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -25,20 +68,36 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #202024;
+  background: rgb(var(--line));
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #3f3f46;
+  background: rgb(var(--faint));
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.99); }
-  to { opacity: 1; transform: scale(1); }
+/* Motion is used only to signal state change, never to decorate. */
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
-.animate-fade-in {
-  animation: fadeIn 0.12s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+.animate-rise {
+  animation: riseIn 140ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

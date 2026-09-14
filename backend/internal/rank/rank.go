@@ -112,6 +112,11 @@ const (
 	mentionFreshDays = 7
 )
 
+// ActionWaitOnReviewer is the single outcome with nothing to do right now.
+// It is named so the client can collapse these into one summary line without
+// matching on prose, and so there is exactly one place to change the wording.
+const ActionWaitOnReviewer = "Nothing to do yet, nudge if it stalls"
+
 // Input is one raw work item as fetched from GitHub, before ranking.
 type Input struct {
 	Type   string
@@ -173,6 +178,11 @@ type Item struct {
 
 	Checkout string `json:"checkout,omitempty"`
 	Local    string `json:"local,omitempty"`
+
+	// Passive marks an item you cannot advance right now. The client folds
+	// these into a single summary line rather than spending a full row on
+	// work whose only instruction is to wait.
+	Passive bool `json:"passive,omitempty"`
 }
 
 // Rank classifies, scores, and orders a set of work items.
@@ -288,6 +298,7 @@ func build(in Input, viewer string, now time.Time) (Item, bool) {
 		LastActivity:   in.UpdatedAt,
 		Signal:         signal,
 		Action:         action,
+		Passive:        action == ActionWaitOnReviewer,
 		Local:          in.LocalWorktreePath,
 	}
 
@@ -516,7 +527,7 @@ func classify(in Input, viewer string, now time.Time) (Lane, int, string, string
 	reviewer := firstOr(in.PendingReviewers, "a reviewer")
 	return LaneLandInFlight, 30,
 		fmt.Sprintf("waiting on %s to review", reviewer),
-		"Nothing to do yet, nudge if it stalls",
+		ActionWaitOnReviewer,
 		true
 }
 

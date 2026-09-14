@@ -1,321 +1,242 @@
-import { useState, useRef, useMemo } from 'react';
-import { useNotifications } from './hooks/useNotifications';
-import { useTheme } from './hooks/useTheme';
-import { useSSE } from './hooks/useSSE';
-import { useKeyboardNavigation } from './hooks/useKeyboardNavigation';
-import type {
-  DashboardLayoutMode,
-  PipelineColumnId,
-  EnrichedNotification,
-} from './types';
-import { computeVisibilityMetrics, computeTaskBurndownMetrics } from './lib/utils';
+/**
+ * GitHelp.
+ *
+ * One page: a ranked brief of what to do next in one repository, generated
+ * on demand. There is no inbox, no board, no triage state, and nothing to
+ * mark as done - the brief is regenerated rather than maintained, so it
+ * cannot drift out of agreement with GitHub.
+ *
+ * The whole page is driven by a single fetch. Filtering, grouping,
+ * collapsing, and exporting are memoised derivations of that one payload.
+ */
 
-import { TopBar } from './components/TopBar';
-import { TaskSectionList } from './components/TaskSectionList';
-import { PipelineBoard } from './components/PipelineBoard';
-import { StandupView } from './components/StandupView';
-import { InspectionDrawer } from './components/InspectionDrawer';
-import { CommandPalette } from './components/CommandPalette';
-import { AuthBanner } from './components/AuthBanner';
-import { SnoozeModal } from './components/SnoozeModal';
-import { ShortcutsModal } from './components/ShortcutsModal';
-import { SettingsModal } from './components/SettingsModal';
-import { Toast } from './components/Toast';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
+import Brief from './components/brief/Brief';
+import Header from './components/brief/Header';
+import HelpSheet from './components/brief/HelpSheet';
+import SettingsSheet from './components/brief/SettingsSheet';
+import { useBrief } from './hooks/useBrief';
+import { useBriefKeys } from './hooks/useBriefKeys';
+import { buildView } from './lib/brief';
+import { copyText } from './lib/clipboard';
+import { toMarkdown } from './lib/export';
+import type { BriefItem, Lane } from './types/brief';
+
+/** How long a confirmation stays on screen. */
+const STATUS_MS = 2200;
 
 export default function App() {
-  const {
-    status,
-    notifications,
-    selectedBucket,
-    setSelectedBucket,
-    selectedRepo,
-    setSelectedRepo,
-    selectedReason,
-    setSelectedReason,
-    searchQuery,
-    setSearchQuery,
-    selectedIndex,
-    setSelectedIndex,
-    isLoading,
-    isSyncing,
-    error,
-    triggerSync,
-    markItemDone,
-    snoozeItem,
-    togglePin,
-    toggleUnread,
-    updateNotes,
-    markAllDone,
-    refresh,
-  } = useNotifications();
+  const [repo, setRepo] = useState<string | undefined>(undefined);
+  const { brief, isLoading, isRefreshing, error, refresh } = useBrief(repo);
 
-  const { theme, setTheme } = useTheme();
+  const [filter, setFilter] = useState('');
+  const [filtering, setFiltering] = useState(false);
+  const [selected, setSelected] = useState(0);
+  const [expanded, setExpanded] = useState<ReadonlySet<Lane>>(() => new Set());
+  const [sheet, setSheet] = useState<'help' | 'settings' | null>(null);
+  const [status, setStatus] = useState<string | null>(null);
 
-  // Dashboard Layout Mode (Task Sections vs Pipeline Board)
-  const [layoutMode, setLayoutMode] = useState<DashboardLayoutMode>('stream');
-  const [activeColumnId, setActiveColumnId] =
-    useState<PipelineColumnId>('review_required');
+  const filterRef = useRef<HTMLInputElement>(null);
 
-  // CI Badges Global Visibility (Hidden by default)
-  const [showCI, setShowCI] = useState<boolean>(false);
-
-  // Modals & Overlays state
-  const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
-  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState<boolean>(false);
-  const [snoozeModalId, setSnoozeModalId] = useState<string | null>(null);
-  const [isShortcutsOpen, setIsShortcutsOpen] = useState<boolean>(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-
-  const searchInputRef = useRef<HTMLInputElement>(null);
-
-  // Compute live visibility and task burndown metrics
-  const visibilityMetrics = useMemo(
-    () => computeVisibilityMetrics(notifications),
-    [notifications]
+  const view = useMemo(
+    () => buildView({ brief, filter, expanded }),
+    [brief, filter, expanded]
   );
 
-  const burndownMetrics = useMemo(
-    () => computeTaskBurndownMetrics(notifications),
-    [notifications]
-  );
+  // The row list shrinks when the filter narrows and grows when a lane is
+  // expanded, so the cursor has to be pulled back into range afterwards.
+  useEffect(() => {
+    setSelected((current) => Math.min(current, Math.max(0, view.rows.length - 1)));
+  }, [view.rows.length]);
 
-  // SSE real-time updates
-  useSSE({
-    onSyncCompleted: () => {
-      refresh();
-    },
-    onNotificationUpdated: () => {
-      refresh();
-    },
-    onSnoozeExpired: () => {
-      refresh();
-      setToastMessage('Snoozed tasks reactivated');
-    },
-  });
+  // Keep the cursor on screen without giving every row a ref.
+  useEffect(() => {
+    document
+      .querySelector('[aria-selected="true"]')
+      ?.scrollIntoView({ block: 'nearest' });
+  }, [selected, view.rows.length]);
 
-  // Global Keyboard Navigation
-  const isModalOpen = Boolean(
-    isCommandPaletteOpen || snoozeModalId || isShortcutsOpen || isSettingsOpen || isDrawerOpen
-  );
+  const announce = useCallback((message: string) => {
+    setStatus(message);
+  }, []);
 
-  const selectedItem = notifications[selectedIndex] || null;
+  useEffect(() => {
+    if (!status) return;
+    const timer = window.setTimeout(() => setStatus(null), STATUS_MS);
+    return () => window.clearTimeout(timer);
+  }, [status]);
 
-  const handleToggleLayoutMode = () => {
-    setLayoutMode((prev) => {
-      if (prev === 'stream') return 'board';
-      if (prev === 'board') return 'standup';
-      return 'stream';
-    });
-  };
+  const openItem = useCallback((item: BriefItem) => {
+    window.open(item.url, '_blank', 'noopener,noreferrer');
+  }, []);
 
-  const handleToggleCI = () => {
-    setShowCI((prev) => {
-      const next = !prev;
-      setToastMessage(next ? 'CI badges visible' : 'CI badges hidden');
+  const expandLane = useCallback((lane: Lane) => {
+    setExpanded((current) => {
+      const next = new Set(current);
+      next.add(lane);
       return next;
     });
-  };
+  }, []);
 
-  const handleInspectItem = (item: EnrichedNotification) => {
-    const idx = notifications.findIndex((n) => n.id === item.id);
-    if (idx !== -1) setSelectedIndex(idx);
-    setIsDrawerOpen(true);
-  };
+  const activate = useCallback(() => {
+    const row = view.rows[selected];
+    if (!row) return;
+    if (row.kind === 'more') {
+      expandLane(row.lane);
+      return;
+    }
+    openItem(row.item);
+  }, [expandLane, openItem, selected, view.rows]);
 
-  useKeyboardNavigation({
-    notifications,
-    selectedIndex,
-    setSelectedIndex,
-    onMarkDone: markItemDone,
-    onOpenSnooze: (id) => setSnoozeModalId(id),
-    onTogglePin: togglePin,
-    onToggleUnread: toggleUnread,
-    onSync: triggerSync,
-    onOpenShortcuts: () => setIsShortcutsOpen(true),
-    onOpenCommandPalette: () => setIsCommandPaletteOpen(true),
-    onOpenDrawer: () => setIsDrawerOpen(true),
-    onToggleLayoutMode: handleToggleLayoutMode,
-    layoutMode,
-    activeColumnId,
-    onSelectColumn: setActiveColumnId,
-    onFocusSearch: () => {
-      searchInputRef.current?.focus();
-      searchInputRef.current?.select();
+  const copyCheckout = useCallback(async () => {
+    const row = view.rows[selected];
+    if (!row || row.kind !== 'item') return;
+
+    const command = row.item.checkout;
+    if (!command) {
+      announce('No branch to check out');
+      return;
+    }
+
+    announce((await copyText(command)) ? 'Copied checkout command' : 'Copy failed');
+  }, [announce, selected, view.rows]);
+
+  const exportBrief = useCallback(async () => {
+    if (!brief) return;
+    const markdown = toMarkdown({ brief, view, filter });
+    announce((await copyText(markdown)) ? 'Copied brief as markdown' : 'Copy failed');
+  }, [announce, brief, filter, view]);
+
+  // A sheet owns the screen while it is open. Letting the list keys through
+  // would scroll and act on rows the user cannot see.
+  const busy = sheet !== null;
+
+  useBriefKeys({
+    onDown: () => {
+      if (busy) return;
+      setSelected((current) => Math.min(current + 1, Math.max(0, view.rows.length - 1)));
     },
-    onToast: (msg) => setToastMessage(msg),
-    isModalOpen,
+    onUp: () => {
+      if (busy) return;
+      setSelected((current) => Math.max(current - 1, 0));
+    },
+    onActivate: () => {
+      if (!busy) activate();
+    },
+    onCopyCheckout: () => {
+      if (!busy) void copyCheckout();
+    },
+    onExport: () => {
+      if (!busy) void exportBrief();
+    },
+    onRefresh: () => {
+      if (!busy) refresh();
+    },
+    onFilter: () => {
+      if (busy) return;
+      // The key handler is a native listener, so this update would otherwise
+      // be batched and committed after the next keystroke has already been
+      // delivered. Anything typed in that window reaches the global handler
+      // instead of the input, and typing "viewer" performs a refresh.
+      flushSync(() => setFiltering(true));
+      filterRef.current?.focus();
+    },
+    onEscape: () => {
+      if (sheet) {
+        setSheet(null);
+        return;
+      }
+      if (filter || filtering) {
+        setFilter('');
+        setFiltering(false);
+        filterRef.current?.blur();
+      }
+    },
+    onHelp: () => setSheet((current) => (current === 'help' ? null : 'help')),
   });
 
-  const handleToggleTheme = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
-  };
-
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden bg-github-dark font-sans text-github-text">
-      {/* Auth Warning Banner if offline */}
-      <AuthBanner
-        auth={status?.auth}
-        onOpenSettings={() => setIsSettingsOpen(true)}
-      />
+    <div className="min-h-full">
+      <main className="mx-auto max-w-brief px-6 py-12">
+        <Header
+          brief={brief}
+          isRefreshing={isRefreshing}
+          filteredCount={filter.trim() ? view.matched : null}
+          onRefresh={refresh}
+          onExport={() => void exportBrief()}
+          onOpenSettings={() => setSheet('settings')}
+        />
 
-      {/* Error Banner */}
-      {error && (
-        <div className="bg-rose-950/40 border-b border-rose-900/40 px-5 py-2 text-xs text-rose-300 flex items-center justify-between">
-          <span className="font-mono">{error}</span>
-          <button
-            onClick={() => refresh()}
-            className="text-xs font-semibold text-rose-200 hover:text-white underline underline-offset-2"
-          >
-            Retry
-          </button>
-        </div>
-      )}
-
-      {/* Unified Top Navigation & Command Header */}
-      <TopBar
-        status={status}
-        selectedBucket={selectedBucket}
-        onSelectBucket={setSelectedBucket}
-        selectedRepo={selectedRepo}
-        onSelectRepo={setSelectedRepo}
-        selectedReason={selectedReason}
-        onSelectReason={setSelectedReason}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        isSyncing={isSyncing}
-        onSync={triggerSync}
-        onMarkAllDone={markAllDone}
-        onOpenShortcuts={() => setIsShortcutsOpen(true)}
-        onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
-        onOpenSettings={() => setIsSettingsOpen(true)}
-        currentTheme={theme}
-        onToggleTheme={handleToggleTheme}
-        itemCount={notifications.length}
-        searchInputRef={searchInputRef}
-        layoutMode={layoutMode}
-        onToggleLayoutMode={handleToggleLayoutMode}
-        visibilityMetrics={visibilityMetrics}
-        burndownMetrics={burndownMetrics}
-        showCI={showCI}
-        onToggleCI={handleToggleCI}
-      />
-
-      {/* Main Single-Feed / Pipeline / Standup Workstation Container */}
-      <main className="flex-1 flex min-w-0 overflow-hidden bg-github-dark">
-        {layoutMode === 'standup' ? (
-          /* Daily Standup & Claimable Backlog Workstation */
-          <div className="flex-1 flex min-w-0 overflow-hidden">
-            <StandupView
-              onToast={(msg) => setToastMessage(msg)}
-              onInspectItem={handleInspectItem}
-              trackedRepo={selectedRepo || undefined}
-            />
-          </div>
-        ) : layoutMode === 'board' ? (
-          /* Pipeline Board Mode (Full Screen) */
-          <div className="flex-1 flex min-w-0 overflow-hidden">
-            <PipelineBoard
-              notifications={notifications}
-              selectedItemId={selectedItem?.id || null}
-              onSelectItem={(item) => {
-                const idx = notifications.findIndex((n) => n.id === item.id);
-                if (idx !== -1) setSelectedIndex(idx);
+        {filtering && (
+          <div className="mb-6 flex items-baseline gap-2 pl-3">
+            <span className="font-mono text-meta text-faint">/</span>
+            <input
+              ref={filterRef}
+              value={filter}
+              onChange={(event) => setFilter(event.target.value)}
+              onKeyDown={(event) => {
+                // Enter is not intercepted globally while typing, so the
+                // filter opts into it here: search, then press Enter to open
+                // the top match without reaching for the mouse.
+                if (event.key === 'Enter') {
+                  event.preventDefault();
+                  activate();
+                }
               }}
-              activeColumnId={activeColumnId}
-              onSelectColumn={setActiveColumnId}
-              onMarkDone={markItemDone}
-              onOpenSnooze={(id) => setSnoozeModalId(id)}
-              onTogglePin={togglePin}
-              onToggleUnread={toggleUnread}
-              onToast={(msg) => setToastMessage(msg)}
-              isLoading={isLoading}
-              searchQuery={searchQuery}
-              showCI={showCI}
-            />
-          </div>
-        ) : (
-          /* Centered Zen Single-Feed Task List */
-          <div className="flex-1 flex justify-center min-w-0 h-full overflow-hidden bg-github-dark">
-            <TaskSectionList
-              notifications={notifications}
-              selectedItemId={selectedItem?.id || null}
-              onSelectItem={(item) => {
-                const idx = notifications.findIndex((n) => n.id === item.id);
-                if (idx !== -1) setSelectedIndex(idx);
-              }}
-              onMarkDone={markItemDone}
-              onOpenSnooze={(id) => setSnoozeModalId(id)}
-              onTogglePin={togglePin}
-              onToggleUnread={toggleUnread}
-              onToast={(msg) => setToastMessage(msg)}
-              onInspect={handleInspectItem}
-              isLoading={isLoading}
-              searchQuery={searchQuery}
-              showCI={showCI}
+              placeholder="Filter"
+              aria-label="Filter the brief"
+              className="w-full bg-transparent text-body text-text placeholder:text-faint focus:outline-none focus-visible:ring-0"
             />
           </div>
         )}
+
+        {error && (
+          <p className="mb-6 pl-3 text-body text-accent">
+            {error}{' '}
+            <span className="text-faint">Press r to try again.</span>
+          </p>
+        )}
+
+        {isLoading && !brief && !error && (
+          <p className="pl-3 text-body text-faint">Reading GitHub</p>
+        )}
+
+        {brief && (
+          <Brief
+            view={view}
+            selectedIndex={selected}
+            filter={filter}
+            onSelect={setSelected}
+            onOpen={openItem}
+            onExpand={expandLane}
+          />
+        )}
+
+        <footer className="mt-12 pl-3 text-meta text-faint">
+          Press <span className="font-mono">?</span> for keys
+        </footer>
       </main>
 
-      {/* On-Demand Slide-over Inspection Drawer */}
-      <InspectionDrawer
-        isOpen={isDrawerOpen && Boolean(selectedItem)}
-        onClose={() => setIsDrawerOpen(false)}
-        item={selectedItem}
-        onMarkDone={markItemDone}
-        onOpenSnooze={(id) => setSnoozeModalId(id)}
-        onTogglePin={togglePin}
-        onToggleUnread={toggleUnread}
-        onUpdateNotes={updateNotes}
-        onToast={(msg) => setToastMessage(msg)}
-      />
+      <div
+        aria-live="polite"
+        className="pointer-events-none fixed bottom-5 left-1/2 -translate-x-1/2"
+      >
+        {status && (
+          <p className="animate-rise rounded border border-line bg-surface px-3 py-1.5 text-meta text-muted">
+            {status}
+          </p>
+        )}
+      </div>
 
-      {/* Global Command Palette */}
-      <CommandPalette
-        isOpen={isCommandPaletteOpen}
-        onClose={() => setIsCommandPaletteOpen(false)}
-        selectedItem={selectedItem}
-        onSelectBucket={setSelectedBucket}
-        onSelectRepo={setSelectedRepo}
-        onMarkDone={markItemDone}
-        onOpenSnooze={(id) => setSnoozeModalId(id)}
-        onTogglePin={togglePin}
-        onSync={triggerSync}
-        onOpenSettings={() => setIsSettingsOpen(true)}
-        onOpenShortcuts={() => setIsShortcutsOpen(true)}
-        onToggleTheme={handleToggleTheme}
-        currentTheme={theme}
-        onToast={(msg) => setToastMessage(msg)}
-      />
-
-      {/* Modals & Overlays */}
-      <SnoozeModal
-        isOpen={Boolean(snoozeModalId)}
-        notificationId={snoozeModalId}
-        onClose={() => setSnoozeModalId(null)}
-        onSnooze={snoozeItem}
-      />
-
-      <ShortcutsModal
-        isOpen={isShortcutsOpen}
-        onClose={() => setIsShortcutsOpen(false)}
-      />
-
-      <SettingsModal
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-        authStatus={status?.auth}
-        onAuthUpdated={refresh}
-        currentTheme={theme}
-        onThemeChange={setTheme}
-        onToast={(msg) => setToastMessage(msg)}
-      />
-
-      <Toast
-        message={toastMessage}
-        onClose={() => setToastMessage(null)}
-      />
+      {sheet === 'help' && <HelpSheet onClose={() => setSheet(null)} />}
+      {sheet === 'settings' && (
+        <SettingsSheet
+          activeRepo={repo ?? brief?.repo ?? ''}
+          onSelectRepo={setRepo}
+          onClose={() => setSheet(null)}
+        />
+      )}
     </div>
   );
 }
