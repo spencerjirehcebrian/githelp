@@ -24,6 +24,11 @@ import (
 //	             GitHub does not re-request your review after the author
 //	             responds, so these fall off every other dashboard.
 //	mentioned  - issues and PRs where somebody asked you a direct question.
+//
+// Comments and reviews are fetched with their timestamps rather than as a
+// single latest author, because who spoke last is only answerable by merging
+// the two lists. A batch of twenty covers the bot chatter that would
+// otherwise crowd out the last human comment.
 const briefQuery = `
 fragment prFields on PullRequest {
   __typename
@@ -43,7 +48,8 @@ fragment prFields on PullRequest {
   latestReviews(first: 20) { nodes { state author { login } } }
   reviewRequests(first: 10) { nodes { requestedReviewer { ... on User { login } } } }
   commits(last: 1) { nodes { commit { statusCheckRollup { state } } } }
-  comments(last: 1) { nodes { author { login } } }
+  comments(last: 20) { nodes { createdAt author { login } } }
+  reviews(last: 20) { nodes { submittedAt author { login } } }
 }
 
 fragment issueFields on Issue {
@@ -56,7 +62,8 @@ fragment issueFields on Issue {
   updatedAt
   author { login }
   labels(first: 10) { nodes { name } }
-  comments(last: 1) { nodes { author { login } } }
+  comments(last: 20) { nodes { createdAt author { login } } }
+  projectItems(first: 1) { nodes { status: fieldValueByName(name: "Status") { ... on ProjectV2ItemFieldSingleSelectValue { name } } } }
   timelineItems(first: 5, itemTypes: [CROSS_REFERENCED_EVENT]) {
     nodes {
       ... on CrossReferencedEvent {
@@ -153,11 +160,29 @@ type briefNode struct {
 
 	Comments struct {
 		Nodes []struct {
-			Author struct {
+			CreatedAt string `json:"createdAt"`
+			Author    struct {
 				Login string `json:"login"`
 			} `json:"author"`
 		} `json:"nodes"`
 	} `json:"comments"`
+
+	Reviews struct {
+		Nodes []struct {
+			SubmittedAt string `json:"submittedAt"`
+			Author      struct {
+				Login string `json:"login"`
+			} `json:"author"`
+		} `json:"nodes"`
+	} `json:"reviews"`
+
+	ProjectItems struct {
+		Nodes []struct {
+			Status struct {
+				Name string `json:"name"`
+			} `json:"status"`
+		} `json:"nodes"`
+	} `json:"projectItems"`
 
 	TimelineItems struct {
 		Nodes []struct {
@@ -233,12 +258,17 @@ func (c *Client) FetchBriefInputs(
 	return inputs, nil
 }
 
-// postBriefQuery executes the query, retrying once without mergeStateStatus if
-// the server rejects that field.
+// projectStatusField is stripped when the token cannot read project boards.
+// It must match the line in briefQuery byte for byte.
+const projectStatusField = `  projectItems(first: 1) { nodes { status: fieldValueByName(name: "Status") { ... on ProjectV2ItemFieldSingleSelectValue { name } } } }
+`
+
+// postBriefQuery executes the query, retrying once without the fields the
+// token is not allowed to select.
 //
-// mergeStateStatus requires push access to the repository. Rather than fail
-// the entire brief for a repo you only read, degrade to plain mergeable and
-// lose only the BEHIND distinction.
+// mergeStateStatus requires push access and the board status requires
+// read:project. Rather than fail the entire brief for a repo you only read,
+// degrade and lose one column instead of all of them.
 func (c *Client) postBriefQuery(
 	ctx context.Context,
 	token string,
@@ -249,16 +279,31 @@ func (c *Client) postBriefQuery(
 		return resp, nil
 	}
 
-	if !mentionsMergeStateStatus(err) {
+	degraded, changed := degradeQuery(briefQuery, err)
+	if !changed {
 		return nil, err
 	}
 
-	degraded := strings.ReplaceAll(briefQuery, "  mergeStateStatus\n", "")
 	return c.doBriefRequest(ctx, token, degraded, variables)
 }
 
-func mentionsMergeStateStatus(err error) bool {
-	return err != nil && strings.Contains(strings.ToLower(err.Error()), "mergestatestatus")
+// degradeQuery removes optional fields the error blames, reporting whether
+// anything was actually removed.
+func degradeQuery(query string, err error) (string, bool) {
+	if err == nil {
+		return query, false
+	}
+	message := strings.ToLower(err.Error())
+	out := query
+
+	if strings.Contains(message, "mergestatestatus") {
+		out = strings.ReplaceAll(out, "  mergeStateStatus\n", "")
+	}
+	if strings.Contains(message, "read:project") || strings.Contains(message, "projectitems") {
+		out = strings.ReplaceAll(out, projectStatusField, "")
+	}
+
+	return out, out != query
 }
 
 // graphQLRequest is the POST body GitHub's GraphQL endpoint expects.
@@ -377,8 +422,29 @@ func toRankInput(
 		}
 	}
 
-	if len(n.Comments.Nodes) > 0 {
-		in.LatestCommentAuthor = n.Comments.Nodes[0].Author.Login
+	// Comments and reviews are one conversation. The ranking engine decides
+	// who the ball is with; this only has to hand it every utterance.
+	for _, c := range n.Comments.Nodes {
+		if c.Author.Login == "" {
+			continue
+		}
+		in.Events = append(in.Events, rank.Event{
+			Actor: c.Author.Login,
+			At:    parseTime(c.CreatedAt),
+		})
+	}
+	for _, rv := range n.Reviews.Nodes {
+		if rv.Author.Login == "" {
+			continue
+		}
+		in.Events = append(in.Events, rank.Event{
+			Actor: rv.Author.Login,
+			At:    parseTime(rv.SubmittedAt),
+		})
+	}
+
+	if len(n.ProjectItems.Nodes) > 0 {
+		in.ProjectStatus = n.ProjectItems.Nodes[0].Status.Name
 	}
 
 	// An issue counts as in flight when an open PR references it.

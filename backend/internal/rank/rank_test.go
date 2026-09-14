@@ -16,6 +16,11 @@ func daysAgo(d int) time.Time {
 
 const viewer = "spencerjirehcebrian"
 
+// spoke returns a one-entry timeline: login said something d days ago.
+func spoke(login string, d int) []Event {
+	return []Event{{Actor: login, At: daysAgo(d)}}
+}
+
 // basePR returns a minimal open PR authored by the viewer.
 func basePR() Input {
 	return Input{
@@ -54,7 +59,7 @@ func TestClassify(t *testing.T) {
 			}(),
 			wantLane:   LaneUnblockOthers,
 			wantSignal: "charlesong-dev requested your review 2d ago",
-			wantAction: "Review and leave a decision",
+			wantAction: "Review it",
 		},
 		{
 			name: "you requested changes and the author replied",
@@ -63,12 +68,12 @@ func TestClassify(t *testing.T) {
 				in.Author = "charlesong-dev"
 				in.Source = SourceReviewedBy
 				in.ChangesRequestedBy = []string{viewer}
-				in.LatestCommentAuthor = "charlesong-dev"
+				in.Events = spoke("charlesong-dev", 1)
 				return in
 			}(),
 			wantLane:   LaneUnblockOthers,
-			wantSignal: "you requested changes, charlesong-dev has replied since",
-			wantAction: "Re-review and either approve or restate the blockers",
+			wantSignal: "you requested changes, charlesong-dev replied yesterday",
+			wantAction: "Re-review",
 		},
 		{
 			name: "your own reply does not re-raise a blocked PR",
@@ -77,7 +82,7 @@ func TestClassify(t *testing.T) {
 				in.Author = "charlesong-dev"
 				in.Source = SourceReviewedBy
 				in.ChangesRequestedBy = []string{viewer}
-				in.LatestCommentAuthor = viewer
+				in.Events = spoke(viewer, 1)
 				return in
 			}(),
 			wantDrop: true,
@@ -89,7 +94,7 @@ func TestClassify(t *testing.T) {
 				in.Type = TypeIssue
 				in.Author = "kgreatwood-abc"
 				in.Source = SourceMentioned
-				in.LatestCommentAuthor = "kgreatwood-abc"
+				in.Events = spoke("kgreatwood-abc", 3)
 				in.UpdatedAt = daysAgo(3)
 				return in
 			}(),
@@ -104,7 +109,7 @@ func TestClassify(t *testing.T) {
 				in.Type = TypeIssue
 				in.Source = SourceMentioned
 				in.Author = "kgreatwood-abc"
-				in.LatestCommentAuthor = viewer
+				in.Events = spoke(viewer, 1)
 				return in
 			}(),
 			wantDrop: true,
@@ -119,7 +124,7 @@ func TestClassify(t *testing.T) {
 			}(),
 			wantLane:   LaneLandInFlight,
 			wantSignal: "approved by antoniorafaelu-dev and mergeable",
-			wantAction: "Merge it",
+			wantAction: "Merge",
 		},
 		{
 			name: "approved but behind main means rebase first",
@@ -132,7 +137,7 @@ func TestClassify(t *testing.T) {
 			}(),
 			wantLane:   LaneLandInFlight,
 			wantSignal: "approved by antoniorafaelu-dev, branch is behind main",
-			wantAction: "Rebase, verify CI, then merge",
+			wantAction: "Update branch, then merge",
 		},
 		{
 			name: "approved but conflicting",
@@ -145,7 +150,7 @@ func TestClassify(t *testing.T) {
 			}(),
 			wantLane:   LaneLandInFlight,
 			wantSignal: "approved by antoniorafaelu-dev, but the branch has conflicts",
-			wantAction: "Resolve the conflicts, then merge",
+			wantAction: "Resolve conflicts",
 		},
 		{
 			name: "failing CI",
@@ -168,7 +173,7 @@ func TestClassify(t *testing.T) {
 			}(),
 			wantLane:   LaneLandInFlight,
 			wantSignal: "kgreatwood-abc requested changes",
-			wantAction: "Address the review feedback and re-request review",
+			wantAction: "Address review",
 		},
 		{
 			name: "draft",
@@ -181,7 +186,7 @@ func TestClassify(t *testing.T) {
 			}(),
 			wantLane:   LaneLandInFlight,
 			wantSignal: "still a draft after 4d",
-			wantAction: "Mark it ready for review, or close it",
+			wantAction: "Finish draft",
 		},
 		{
 			name: "no reviewer engaged past the nudge threshold",
@@ -192,7 +197,7 @@ func TestClassify(t *testing.T) {
 			}(),
 			wantLane:   LaneNeedsDecision,
 			wantSignal: "no reviewer engaged in 10d",
-			wantAction: "Rebase and request a reviewer",
+			wantAction: "Request a reviewer",
 		},
 		{
 			name: "stale past the stale threshold",
@@ -203,7 +208,7 @@ func TestClassify(t *testing.T) {
 			}(),
 			wantLane:   LaneNeedsDecision,
 			wantSignal: "no review decision in 45d",
-			wantAction: "Chase a reviewer, or close it if it is superseded",
+			wantAction: "Chase a reviewer",
 		},
 		{
 			name: "stale and conflicting is a kill-or-fix decision",
@@ -215,7 +220,7 @@ func TestClassify(t *testing.T) {
 			}(),
 			wantLane:   LaneNeedsDecision,
 			wantSignal: "conflicting and untouched for 63d",
-			wantAction: "Resolve the conflicts, or close it if it is superseded",
+			wantAction: "Resolve conflicts",
 		},
 		{
 			name: "fresh PR waiting on a named reviewer is low priority",
@@ -226,7 +231,7 @@ func TestClassify(t *testing.T) {
 			}(),
 			wantLane:   LaneLandInFlight,
 			wantSignal: "waiting on antoniorafaelu-dev to review",
-			wantAction: "Nothing to do yet, nudge if it stalls",
+			wantAction: "",
 		},
 		{
 			name: "assigned issue with a priority label is a blocker",
@@ -243,7 +248,7 @@ func TestClassify(t *testing.T) {
 			},
 			wantLane:   LaneUnblockOthers,
 			wantSignal: "assigned to you and labelled priority-high",
-			wantAction: "Start it, or hand it off if you cannot take it",
+			wantAction: "Start it",
 		},
 		{
 			name: "assigned issue with no PR needs scoping",
@@ -258,7 +263,7 @@ func TestClassify(t *testing.T) {
 			},
 			wantLane:   LaneNeedsDecision,
 			wantSignal: "assigned to you 5d ago with no PR opened",
-			wantAction: "Scope it, or hand it off",
+			wantAction: "Scope it",
 		},
 		{
 			name: "assigned issue that already has a PR is in flight",
@@ -274,7 +279,7 @@ func TestClassify(t *testing.T) {
 			},
 			wantLane:   LaneLandInFlight,
 			wantSignal: "assigned to you, work already open against it",
-			wantAction: "Finish the open PR and close this out",
+			wantAction: "Finish the open PR",
 		},
 		{
 			name: "claimable issue",
@@ -289,7 +294,7 @@ func TestClassify(t *testing.T) {
 			},
 			wantLane:   LanePickUpNext,
 			wantSignal: "open and unassigned for 149d",
-			wantAction: "Claim it if it fits your current work",
+			wantAction: "",
 		},
 		{
 			name: "claimable issue lists its labels",
@@ -305,7 +310,7 @@ func TestClassify(t *testing.T) {
 			},
 			wantLane:   LanePickUpNext,
 			wantSignal: "open and unassigned for 1 day, labelled bug",
-			wantAction: "Claim it if it fits your current work",
+			wantAction: "",
 		},
 		{
 			name: "someone else's PR you have no relationship to is dropped",
@@ -587,7 +592,7 @@ func TestRelativeTimeRendering(t *testing.T) {
 		in.Type = TypeIssue
 		in.Author = "asker"
 		in.Source = SourceMentioned
-		in.LatestCommentAuthor = "asker"
+		in.Events = spoke("asker", 0)
 		in.UpdatedAt = now
 
 		got := Rank([]Input{in}, viewer, now)
@@ -609,8 +614,8 @@ func TestStaleMentionsAreDropped(t *testing.T) {
 		return Input{
 			Type: TypeIssue, Number: 1, Repo: "o/r",
 			Author: "asker", Source: SourceMentioned, State: "open",
-			LatestCommentAuthor: "asker",
-			UpdatedAt:           daysAgo(ageDays), CreatedAt: daysAgo(ageDays),
+			Events:    spoke("asker", ageDays),
+			UpdatedAt: daysAgo(ageDays), CreatedAt: daysAgo(ageDays),
 		}
 	}
 
@@ -627,7 +632,7 @@ func TestAssignmentOutranksMention(t *testing.T) {
 	// mention misattributes work you already own.
 	base := Input{
 		Type: TypeIssue, Number: 1939, Repo: "o/r",
-		State: "open", LatestCommentAuthor: "gerarldpaul-dev",
+		State: "open", Events: spoke("gerarldpaul-dev", 3),
 		UpdatedAt: daysAgo(3), CreatedAt: daysAgo(200),
 	}
 
@@ -654,5 +659,125 @@ func TestEmptyInput(t *testing.T) {
 	got := Rank(nil, viewer, now)
 	if len(got) != 0 {
 		t.Errorf("expected empty result, got %d items", len(got))
+	}
+}
+
+func TestBall(t *testing.T) {
+	t.Run("automation is not a reply", func(t *testing.T) {
+		// The failure this prevents: a bot comments after a human question,
+		// the engine reads the bot as the last word, and the human waits.
+		events := []Event{
+			{Actor: "charlesong-dev", At: daysAgo(5)},
+			{Actor: "gemini-code-assist", At: daysAgo(1)},
+			{Actor: "github-actions", At: daysAgo(1)},
+			{Actor: "dependabot[bot]", At: now},
+		}
+
+		who, at := ball(events, viewer)
+		if who != "charlesong-dev" {
+			t.Errorf("ball = %q, want charlesong-dev", who)
+		}
+		if !at.Equal(daysAgo(5)) {
+			t.Errorf("ball time = %v, want %v", at, daysAgo(5))
+		}
+	})
+
+	t.Run("reviews and comments are one conversation", func(t *testing.T) {
+		// A review submitted after the last comment is the last word.
+		events := []Event{
+			{Actor: viewer, At: daysAgo(4)},
+			{Actor: "antoniorafaelu-dev", At: daysAgo(2)},
+		}
+
+		if who, _ := ball(events, viewer); who != "antoniorafaelu-dev" {
+			t.Errorf("ball = %q, want antoniorafaelu-dev", who)
+		}
+	})
+
+	t.Run("your own last word leaves the ball with you", func(t *testing.T) {
+		events := []Event{
+			{Actor: "antoniorafaelu-dev", At: daysAgo(6)},
+			{Actor: viewer, At: daysAgo(2)},
+		}
+
+		if who, _ := ball(events, viewer); who != "" {
+			t.Errorf("ball = %q, want empty", who)
+		}
+	})
+
+	t.Run("silence leaves the ball with you", func(t *testing.T) {
+		if who, _ := ball(nil, viewer); who != "" {
+			t.Errorf("ball = %q, want empty", who)
+		}
+	})
+
+	t.Run("undated events are ignored", func(t *testing.T) {
+		events := []Event{{Actor: "charlesong-dev"}}
+		if who, _ := ball(events, viewer); who != "" {
+			t.Errorf("ball = %q, want empty", who)
+		}
+	})
+}
+
+func TestAReplyWaitingOnYouIsNotPassive(t *testing.T) {
+	// Regression: with only the latest comment author and no timestamps, a
+	// reviewer's question read as "waiting on antoniorafaelu-dev to review"
+	// with nothing to do. Somebody was in fact waiting on the viewer.
+	in := basePR()
+	in.PendingReviewers = []string{"antoniorafaelu-dev"}
+	in.Events = spoke("antoniorafaelu-dev", 3)
+
+	got := Rank([]Input{in}, viewer, now)
+	if len(got) != 1 {
+		t.Fatalf("expected 1 item, got %d", len(got))
+	}
+
+	if got[0].Lane != LaneUnblockOthers {
+		t.Errorf("lane = %q, want %q", got[0].Lane, LaneUnblockOthers)
+	}
+	if got[0].Action != "Reply to antoniorafaelu-dev" {
+		t.Errorf("action = %q", got[0].Action)
+	}
+	if got[0].Signal != "antoniorafaelu-dev commented 3d ago and has not had a reply" {
+		t.Errorf("signal = %q", got[0].Signal)
+	}
+	if got[0].Ball != "antoniorafaelu-dev" {
+		t.Errorf("ball = %q", got[0].Ball)
+	}
+}
+
+func TestYourOwnCommentDoesNotRaiseAPR(t *testing.T) {
+	in := basePR()
+	in.PendingReviewers = []string{"antoniorafaelu-dev"}
+	in.Events = spoke(viewer, 1)
+
+	got := Rank([]Input{in}, viewer, now)
+	if len(got) != 1 {
+		t.Fatalf("expected 1 item, got %d", len(got))
+	}
+	if got[0].Lane != LaneLandInFlight {
+		t.Errorf("lane = %q, want %q", got[0].Lane, LaneLandInFlight)
+	}
+	if got[0].Action != "" {
+		t.Errorf("action = %q, want no next step", got[0].Action)
+	}
+}
+
+func TestBoardStatusIsReported(t *testing.T) {
+	in := Input{
+		Type: TypeIssue, Number: 3237, Repo: "o/r",
+		Source: SourceAssigned, State: "open",
+		ProjectStatus: "In Progress",
+		UpdatedAt:     daysAgo(5), CreatedAt: daysAgo(5),
+	}
+
+	got := Rank([]Input{in}, viewer, now)[0]
+
+	want := "assigned to you 5d ago with no PR opened, board status In Progress"
+	if got.Signal != want {
+		t.Errorf("signal\n got: %q\nwant: %q", got.Signal, want)
+	}
+	if got.ProjectStatus != "In Progress" {
+		t.Errorf("project status = %q", got.ProjectStatus)
 	}
 }

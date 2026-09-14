@@ -7,7 +7,11 @@
 // Each item is placed in exactly one lane, scored, and given two strings:
 //
 //	Signal - why this item is in front of you, stated as fact.
-//	Action - the single next step, stated as an imperative.
+//	Action - the single next step, stated as an imperative, or empty when
+//	         there is no step you can take.
+//
+// An action is never advice. It does not suggest closing, handing off,
+// claiming, or abandoning anything, and it never estimates effort or value.
 //
 // Both strings are computed here and shipped to the client verbatim so the
 // on-screen text and the agent export can never disagree.
@@ -112,10 +116,14 @@ const (
 	mentionFreshDays = 7
 )
 
-// ActionWaitOnReviewer is the single outcome with nothing to do right now.
-// It is named so the client can collapse these into one summary line without
-// matching on prose, and so there is exactly one place to change the wording.
-const ActionWaitOnReviewer = "Nothing to do yet, nudge if it stalls"
+// Event is one entry in an item's conversation: a comment or a review.
+//
+// Both are folded into a single timeline because, to the person waiting, a
+// review and a comment are the same act of speaking.
+type Event struct {
+	Actor string
+	At    time.Time
+}
 
 // Input is one raw work item as fetched from GitHub, before ranking.
 type Input struct {
@@ -138,8 +146,13 @@ type Input struct {
 	ChangesRequestedBy []string
 	PendingReviewers   []string
 
-	LatestCommentAuthor string
-	Labels              []string
+	// Events is the merged comment and review timeline in any order.
+	Events []Event
+	Labels []string
+
+	// ProjectStatus is the item's column on a project board, empty when the
+	// item is not on one.
+	ProjectStatus string
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -150,6 +163,11 @@ type Input struct {
 
 	// LocalWorktreePath is set when the branch is already checked out locally.
 	LocalWorktreePath string
+
+	// Ball and BallAt are derived from Events by build. Callers do not set
+	// them; anything they put here is overwritten.
+	Ball   string
+	BallAt time.Time
 }
 
 // Item is a ranked work item ready for display or export.
@@ -173,16 +191,21 @@ type Item struct {
 	AgeDays      int       `json:"age_days"`
 	LastActivity time.Time `json:"last_activity"`
 
+	// Ball is the last person other than you to speak, empty when that was
+	// you or when nobody has.
+	Ball string `json:"ball,omitempty"`
+
+	// ProjectStatus is the board column, empty when the item is not on one.
+	ProjectStatus string `json:"project_status,omitempty"`
+
 	Signal string `json:"signal"`
+
+	// Action is the next step, empty when there is none. Empty is a fact
+	// about the item rather than a verdict on whether it matters.
 	Action string `json:"action"`
 
 	Checkout string `json:"checkout,omitempty"`
 	Local    string `json:"local,omitempty"`
-
-	// Passive marks an item you cannot advance right now. The client folds
-	// these into a single summary line rather than spending a full row on
-	// work whose only instruction is to wait.
-	Passive bool `json:"passive,omitempty"`
 }
 
 // Rank classifies, scores, and orders a set of work items.
@@ -254,8 +277,11 @@ func dedupe(inputs []Input) []Input {
 		if merged.CI == "" {
 			merged.CI = in.CI
 		}
-		if merged.LatestCommentAuthor == "" {
-			merged.LatestCommentAuthor = in.LatestCommentAuthor
+		if len(in.Events) > len(merged.Events) {
+			merged.Events = in.Events
+		}
+		if merged.ProjectStatus == "" {
+			merged.ProjectStatus = in.ProjectStatus
 		}
 		if merged.LocalWorktreePath == "" {
 			merged.LocalWorktreePath = in.LocalWorktreePath
@@ -273,6 +299,9 @@ func dedupe(inputs []Input) []Input {
 
 // build classifies one input and assembles the display item.
 func build(in Input, viewer string, now time.Time) (Item, bool) {
+	// Derived before classification because half the rule table turns on it.
+	in.Ball, in.BallAt = ball(in.Events, viewer)
+
 	lane, base, signal, action, ok := classify(in, viewer, now)
 	if !ok {
 		return Item{}, false
@@ -296,9 +325,10 @@ func build(in Input, viewer string, now time.Time) (Item, bool) {
 		CI:             in.CI,
 		AgeDays:        age,
 		LastActivity:   in.UpdatedAt,
+		Ball:           in.Ball,
+		ProjectStatus:  in.ProjectStatus,
 		Signal:         signal,
 		Action:         action,
-		Passive:        action == ActionWaitOnReviewer,
 		Local:          in.LocalWorktreePath,
 	}
 
@@ -349,9 +379,15 @@ const staleCapDays = 20
 
 // classify applies the rule table. The first matching rule wins, so ordering
 // within this function is the priority policy.
+//
+// An action is the next step and nothing else. It never suggests closing,
+// handing off, claiming, or abandoning anything, and it is empty when there
+// is no step to take. An empty action is a fact about the item, not a verdict
+// on whether it deserves your time.
 func classify(in Input, viewer string, now time.Time) (Lane, int, string, string, bool) {
 	age := ageDays(in.UpdatedAt, now)
 	isMine := equalUser(in.Author, viewer)
+	ballAge := ageDays(in.BallAt, now)
 
 	// Claimable work is terminal: it is never anything else.
 	if in.Source == SourceUnassigned {
@@ -360,7 +396,7 @@ func classify(in Input, viewer string, now time.Time) (Lane, int, string, string
 		if len(in.Labels) > 0 {
 			signal = fmt.Sprintf("%s, labelled %s", signal, strings.Join(in.Labels, ", "))
 		}
-		return LanePickUpNext, 10, signal, "Claim it if it fits your current work", true
+		return LanePickUpNext, 10, signal, "", true
 	}
 
 	// Someone explicitly asked for your review. Strongest possible signal
@@ -372,19 +408,17 @@ func classify(in Input, viewer string, now time.Time) (Lane, int, string, string
 		}
 		return LaneUnblockOthers, 100,
 			fmt.Sprintf("%s requested your review %s", who, ago(age)),
-			"Review and leave a decision",
+			"Review it",
 			true
 	}
 
 	// You blocked this PR and the author has since responded. GitHub does not
 	// re-request review in this case, so it silently falls off most dashboards.
-	if !isMine && contains(in.ChangesRequestedBy, viewer) {
-		if replier := in.LatestCommentAuthor; replier != "" && !equalUser(replier, viewer) {
-			return LaneUnblockOthers, 95,
-				fmt.Sprintf("you requested changes, %s has replied since", replier),
-				"Re-review and either approve or restate the blockers",
-				true
-		}
+	if !isMine && contains(in.ChangesRequestedBy, viewer) && in.Ball != "" {
+		return LaneUnblockOthers, 95,
+			fmt.Sprintf("you requested changes, %s replied %s", in.Ball, ago(ballAge)),
+			"Re-review",
+			true
 	}
 
 	// An unanswered mention. Someone asked you a direct question.
@@ -392,17 +426,16 @@ func classify(in Input, viewer string, now time.Time) (Lane, int, string, string
 	// Gated by age on purpose. A mention nobody followed up on for weeks is
 	// not blocking anyone; treating it as urgent buries the things that are.
 	if in.Source == SourceMentioned {
-		asker := in.LatestCommentAuthor
 		switch {
-		case asker == "" || equalUser(asker, viewer):
+		case in.Ball == "":
 			// You spoke last, so the ball is not in your court.
 			return "", 0, "", "", false
-		case age > mentionFreshDays:
+		case ballAge > mentionFreshDays:
 			return "", 0, "", "", false
 		default:
 			return LaneUnblockOthers, 85,
-				fmt.Sprintf("%s mentioned you %s and has not had a reply", asker, ago(age)),
-				fmt.Sprintf("Reply to %s", asker),
+				fmt.Sprintf("%s mentioned you %s and has not had a reply", in.Ball, ago(ballAge)),
+				fmt.Sprintf("Reply to %s", in.Ball),
 				true
 		}
 	}
@@ -411,19 +444,19 @@ func classify(in Input, viewer string, now time.Time) (Lane, int, string, string
 	if in.Type == TypeIssue && in.Source == SourceAssigned {
 		if label, ok := priorityLabel(in.Labels); ok {
 			return LaneUnblockOthers, 90,
-				fmt.Sprintf("assigned to you and labelled %s", label),
-				"Start it, or hand it off if you cannot take it",
+				withStatus(fmt.Sprintf("assigned to you and labelled %s", label), in.ProjectStatus),
+				"Start it",
 				true
 		}
 		if in.HasLinkedPR {
 			return LaneLandInFlight, 45,
-				"assigned to you, work already open against it",
-				"Finish the open PR and close this out",
+				withStatus("assigned to you, work already open against it", in.ProjectStatus),
+				"Finish the open PR",
 				true
 		}
 		return LaneNeedsDecision, 35,
-			fmt.Sprintf("assigned to you %s with no PR opened", ago(age)),
-			"Scope it, or hand it off",
+			withStatus(fmt.Sprintf("assigned to you %s with no PR opened", ago(age)), in.ProjectStatus),
+			"Scope it",
 			true
 	}
 
@@ -437,12 +470,12 @@ func classify(in Input, viewer string, now time.Time) (Lane, int, string, string
 		if in.Mergeable == MergeConflicting {
 			return LaneNeedsDecision, 52,
 				fmt.Sprintf("opened by %s, assigned to you, conflicting for %s", author, duration(age)),
-				"Confirm ownership: take it over and resolve, or unassign yourself",
+				"Resolve conflicts",
 				true
 		}
 		return LaneNeedsDecision, 40,
 			fmt.Sprintf("opened by %s and assigned to you", author),
-			"Confirm ownership: take it over, or unassign yourself",
+			"",
 			true
 	}
 
@@ -456,7 +489,7 @@ func classify(in Input, viewer string, now time.Time) (Lane, int, string, string
 	if in.Mergeable == MergeConflicting && age > staleAfterDays {
 		return LaneNeedsDecision, 55,
 			fmt.Sprintf("conflicting and untouched for %s", duration(age)),
-			"Resolve the conflicts, or close it if it is superseded",
+			"Resolve conflicts",
 			true
 	}
 
@@ -466,22 +499,22 @@ func classify(in Input, viewer string, now time.Time) (Lane, int, string, string
 		case MergeConflicting:
 			return LaneLandInFlight, 78,
 				fmt.Sprintf("approved by %s, but the branch has conflicts", approver),
-				"Resolve the conflicts, then merge",
+				"Resolve conflicts",
 				true
 		case MergeBehind:
 			return LaneLandInFlight, 75,
 				fmt.Sprintf("approved by %s, branch is behind main", approver),
-				"Rebase, verify CI, then merge",
+				"Update branch, then merge",
 				true
 		case MergeBlocked:
 			return LaneLandInFlight, 72,
 				fmt.Sprintf("approved by %s, but merging is blocked", approver),
-				"Clear the blocking requirement, then merge",
+				"Clear the merge block",
 				true
 		default:
 			return LaneLandInFlight, 80,
 				fmt.Sprintf("approved by %s and mergeable", approver),
-				"Merge it",
+				"Merge",
 				true
 		}
 	}
@@ -497,14 +530,24 @@ func classify(in Input, viewer string, now time.Time) (Lane, int, string, string
 		reviewer := firstOr(in.ChangesRequestedBy, "a reviewer")
 		return LaneLandInFlight, 65,
 			fmt.Sprintf("%s requested changes", reviewer),
-			"Address the review feedback and re-request review",
+			"Address review",
+			true
+	}
+
+	// Somebody who is not you spoke last. GitHub surfaces this nowhere, and
+	// it is the most common reason a PR with no review decision sits: the
+	// author is waiting on the reviewer while the reviewer waits on a reply.
+	if in.Ball != "" {
+		return LaneUnblockOthers, 88,
+			fmt.Sprintf("%s commented %s and has not had a reply", in.Ball, ago(ballAge)),
+			fmt.Sprintf("Reply to %s", in.Ball),
 			true
 	}
 
 	if in.IsDraft {
 		return LaneLandInFlight, 40,
 			fmt.Sprintf("still a draft after %s", duration(age)),
-			"Mark it ready for review, or close it",
+			"Finish draft",
 			true
 	}
 
@@ -515,20 +558,65 @@ func classify(in Input, viewer string, now time.Time) (Lane, int, string, string
 	case age > staleAfterDays:
 		return LaneNeedsDecision, 45,
 			fmt.Sprintf("no review decision in %s", duration(age)),
-			"Chase a reviewer, or close it if it is superseded",
+			"Chase a reviewer",
 			true
 	case age > nudgeAfterDays && noReviewer:
 		return LaneNeedsDecision, 50,
 			fmt.Sprintf("no reviewer engaged in %s", duration(age)),
-			"Rebase and request a reviewer",
+			"Request a reviewer",
 			true
 	}
 
 	reviewer := firstOr(in.PendingReviewers, "a reviewer")
 	return LaneLandInFlight, 30,
 		fmt.Sprintf("waiting on %s to review", reviewer),
-		ActionWaitOnReviewer,
+		"",
 		true
+}
+
+// ball reports who an item is waiting on, and when they last spoke.
+//
+// Comments and reviews are one conversation, so they are merged into a single
+// timeline and the last human to speak wins. An empty login means the ball is
+// in your court: either you spoke last, or nobody has spoken at all.
+func ball(events []Event, viewer string) (string, time.Time) {
+	var last Event
+	for _, e := range events {
+		if e.Actor == "" || e.At.IsZero() || isBot(e.Actor) {
+			continue
+		}
+		if last.At.IsZero() || e.At.After(last.At) {
+			last = e
+		}
+	}
+
+	if last.Actor == "" || equalUser(last.Actor, viewer) {
+		return "", time.Time{}
+	}
+	return last.Actor, last.At
+}
+
+// botActors are the automations that comment on nearly every pull request.
+// Counting their output as a reply would leave the ball in your court forever
+// and hide the humans actually waiting on you.
+var botActors = map[string]bool{
+	"gemini-code-assist": true,
+	"github-actions":     true,
+	"codecov":            true,
+}
+
+func isBot(login string) bool {
+	lower := strings.ToLower(strings.TrimSpace(login))
+	return strings.HasSuffix(lower, "[bot]") || botActors[lower]
+}
+
+// withStatus appends a project board status to a signal, when the issue is on
+// a board at all.
+func withStatus(signal, status string) string {
+	if status == "" {
+		return signal
+	}
+	return fmt.Sprintf("%s, board status %s", signal, status)
 }
 
 // priorityLabel reports whether any label marks the item as elevated.

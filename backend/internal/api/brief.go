@@ -39,9 +39,11 @@ type BriefResponse struct {
 }
 
 // BriefCounts summarizes the brief for the header line.
+//
+// Total only. A count of how much is blocking somebody reads as urgency, and
+// the lane that would be counted is already the first thing on the page.
 type BriefCounts struct {
-	Total    int `json:"total"`
-	Blocking int `json:"blocking"`
+	Total int `json:"total"`
 }
 
 // briefCache holds the last generated brief per repo and viewer.
@@ -153,22 +155,12 @@ func (h *APIHandler) generateBrief(
 		items = []rank.Item{}
 	}
 
-	blocking := 0
-	for _, it := range items {
-		if it.Lane == rank.LaneUnblockOthers {
-			blocking++
-		}
-	}
-
 	response := &BriefResponse{
 		Repo:        repo,
 		Viewer:      viewer,
 		GeneratedAt: now,
 		Items:       items,
-		Counts: BriefCounts{
-			Total:    len(items),
-			Blocking: blocking,
-		},
+		Counts:      BriefCounts{Total: len(items)},
 	}
 
 	return &briefCacheEntry{

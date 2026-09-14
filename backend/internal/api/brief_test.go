@@ -140,20 +140,17 @@ func TestBriefReturnsRankedItems(t *testing.T) {
 	if brief.Counts.Total != 3 {
 		t.Errorf("total = %d, want 3", brief.Counts.Total)
 	}
-	if brief.Counts.Blocking != 1 {
-		t.Errorf("blocking = %d, want 1", brief.Counts.Blocking)
-	}
 	if len(brief.Items) != 3 {
 		t.Fatalf("items = %d, want 3", len(brief.Items))
 	}
 
-	// The blocker must lead, and every item must be actionable.
+	// The blocker must lead, and every item must explain itself.
 	if brief.Items[0].Number != 3152 {
 		t.Errorf("first item = #%d, want #3152", brief.Items[0].Number)
 	}
 	for _, it := range brief.Items {
-		if it.Signal == "" || it.Action == "" {
-			t.Errorf("#%d shipped without signal or action", it.Number)
+		if it.Signal == "" {
+			t.Errorf("#%d shipped without a signal", it.Number)
 		}
 	}
 }

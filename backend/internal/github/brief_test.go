@@ -3,8 +3,10 @@ package github
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -104,7 +106,12 @@ func TestToRankInputPullRequest(t *testing.T) {
       "commits": { "nodes": [
         { "commit": { "statusCheckRollup": { "state": "SUCCESS" } } }
       ]},
-      "comments": { "nodes": [ { "author": { "login": "charlesong-dev" } } ] }
+      "comments": { "nodes": [
+        { "createdAt": "2026-09-08T10:00:00Z", "author": { "login": "charlesong-dev" } }
+      ]},
+      "reviews": { "nodes": [
+        { "submittedAt": "2026-09-09T10:00:00Z", "author": { "login": "antoniorafaelu-dev" } }
+      ]}
     }`
 
 	var node briefNode
@@ -142,8 +149,12 @@ func TestToRankInputPullRequest(t *testing.T) {
 	if len(in.PendingReviewers) != 1 || in.PendingReviewers[0] != "pending-person" {
 		t.Errorf("pendingReviewers = %v", in.PendingReviewers)
 	}
-	if in.LatestCommentAuthor != "charlesong-dev" {
-		t.Errorf("latestCommentAuthor = %q", in.LatestCommentAuthor)
+	wantEvents := []rank.Event{
+		{Actor: "charlesong-dev", At: time.Date(2026, 9, 8, 10, 0, 0, 0, time.UTC)},
+		{Actor: "antoniorafaelu-dev", At: time.Date(2026, 9, 9, 10, 0, 0, 0, time.UTC)},
+	}
+	if !reflect.DeepEqual(in.Events, wantEvents) {
+		t.Errorf("events\n got: %v\nwant: %v", in.Events, wantEvents)
 	}
 	if in.LocalWorktreePath != "/Users/me/git/repo" {
 		t.Errorf("worktree = %q", in.LocalWorktreePath)
@@ -391,7 +402,7 @@ func TestFetchBriefInputsEndToEnd(t *testing.T) {
 		if it.Lane != rank.LaneLandInFlight {
 			t.Errorf("#3130 lane = %q", it.Lane)
 		}
-		if it.Action != "Rebase, verify CI, then merge" {
+		if it.Action != "Update branch, then merge" {
 			t.Errorf("#3130 action = %q", it.Action)
 		}
 		if it.Checkout != "gh pr checkout 3130" {
@@ -400,5 +411,92 @@ func TestFetchBriefInputsEndToEnd(t *testing.T) {
 	}
 	if !found {
 		t.Error("#3130 missing from ranked output")
+	}
+}
+
+func TestDegradeQuery(t *testing.T) {
+	t.Run("push access missing drops mergeStateStatus", func(t *testing.T) {
+		out, changed := degradeQuery(briefQuery, errors.New("Field 'mergeStateStatus' requires push access"))
+		if !changed {
+			t.Fatal("expected the query to change")
+		}
+		if strings.Contains(out, "mergeStateStatus") {
+			t.Error("mergeStateStatus survived the degrade")
+		}
+		if !strings.Contains(out, "projectItems") {
+			t.Error("the board status should be untouched by a merge-state failure")
+		}
+	})
+
+	t.Run("project scope missing drops the board status", func(t *testing.T) {
+		out, changed := degradeQuery(briefQuery, errors.New(
+			"Your token has not been granted the required scopes: ['read:project']"))
+		if !changed {
+			t.Fatal("expected the query to change")
+		}
+		if strings.Contains(out, "projectItems") {
+			t.Error("projectItems survived the degrade")
+		}
+		if !strings.Contains(out, "mergeStateStatus") {
+			t.Error("mergeStateStatus should be untouched by a scope failure")
+		}
+	})
+
+	t.Run("an unrelated failure degrades nothing", func(t *testing.T) {
+		out, changed := degradeQuery(briefQuery, errors.New("rate limit exceeded"))
+		if changed || out != briefQuery {
+			t.Error("expected the query to be left alone")
+		}
+	})
+}
+
+func TestToRankInputIssueBoardStatus(t *testing.T) {
+	raw := `{
+      "__typename": "Issue",
+      "number": 3237,
+      "state": "OPEN",
+      "createdAt": "2026-09-01T10:00:00Z",
+      "updatedAt": "2026-09-09T10:00:00Z",
+      "comments": { "nodes": [
+        { "createdAt": "2026-09-09T10:00:00Z", "author": { "login": "kgreatwood-abc" } }
+      ]},
+      "projectItems": { "nodes": [ { "status": { "name": "In Progress" } } ] }
+    }`
+
+	var node briefNode
+	if err := json.Unmarshal([]byte(raw), &node); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+
+	in, ok := toRankInput(node, "o/r", rank.SourceAssigned, nil)
+	if !ok {
+		t.Fatal("expected node to convert")
+	}
+	if in.ProjectStatus != "In Progress" {
+		t.Errorf("projectStatus = %q", in.ProjectStatus)
+	}
+	if len(in.Events) != 1 || in.Events[0].Actor != "kgreatwood-abc" {
+		t.Errorf("events = %v", in.Events)
+	}
+}
+
+// TestToRankInputIssueOffTheBoard covers the common case: most issues are not
+// on a project, and the status field comes back as an empty object.
+func TestToRankInputIssueOffTheBoard(t *testing.T) {
+	raw := `{
+      "__typename": "Issue",
+      "number": 1,
+      "state": "OPEN",
+      "projectItems": { "nodes": [] }
+    }`
+
+	var node briefNode
+	if err := json.Unmarshal([]byte(raw), &node); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+
+	in, _ := toRankInput(node, "o/r", rank.SourceAssigned, nil)
+	if in.ProjectStatus != "" {
+		t.Errorf("projectStatus = %q, want empty", in.ProjectStatus)
 	}
 }

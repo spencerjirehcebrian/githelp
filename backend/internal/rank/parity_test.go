@@ -1,6 +1,7 @@
 package rank
 
 import (
+	"strings"
 	"testing"
 	"time"
 )
@@ -30,9 +31,9 @@ func realBrief() []Input {
 			Title:  "Update Images.AvailableProtoFields by join on BQ object_ext",
 			Author: "charlesong-dev", Source: SourceReviewedBy,
 			State: "open", ReviewDecision: DecisionChangesRequested,
-			ChangesRequestedBy:  []string{me},
-			LatestCommentAuthor: "charlesong-dev",
-			Mergeable:           MergeClean, CI: CISuccess,
+			ChangesRequestedBy: []string{me},
+			Events:             []Event{{Actor: "charlesong-dev", At: on(2026, 9, 11)}},
+			Mergeable:          MergeClean, CI: CISuccess,
 			UpdatedAt: on(2026, 9, 11), CreatedAt: on(2026, 8, 30),
 		},
 		// daily-gh Priority 1: priority raised, sync job timing out.
@@ -121,7 +122,8 @@ func realBrief() []Input {
 			Type: TypeIssue, Number: 3287, Repo: repo,
 			Title:  "QC_FORM_FACTOR batch handling",
 			Author: "kgreatwood-abc", Source: SourceMentioned,
-			State: "open", LatestCommentAuthor: "kgreatwood-abc",
+			State:     "open",
+			Events:    []Event{{Actor: "kgreatwood-abc", At: on(2026, 9, 9)}},
 			UpdatedAt: on(2026, 9, 9), CreatedAt: on(2026, 9, 2),
 		},
 		// daily-gh Claimable backlog.
@@ -210,16 +212,34 @@ func TestParityTopOfBrief(t *testing.T) {
 	}
 }
 
-// TestParitySignalsAreActionable asserts no item reaches the user without both
-// an explanation and a next step. An item with neither is the noise this
-// product exists to remove.
-func TestParitySignalsAreActionable(t *testing.T) {
+// TestParityEveryItemExplainsItself asserts no item reaches the user without
+// an explanation. An item with no stated reason is the noise this product
+// exists to remove.
+//
+// An action is not required. Some items genuinely have no next step, and
+// inventing one for them is how a report turns into advice.
+func TestParityEveryItemExplainsItself(t *testing.T) {
 	for _, it := range Rank(realBrief(), me, briefDay) {
 		if it.Signal == "" {
 			t.Errorf("#%d has no signal", it.Number)
 		}
-		if it.Action == "" {
-			t.Errorf("#%d has no action", it.Number)
+	}
+}
+
+// TestActionsNeverAdvise pins the one rule the vocabulary must keep: an action
+// states the next step and never suggests giving the work up.
+func TestActionsNeverAdvise(t *testing.T) {
+	banned := []string{
+		"hand it off", "unassign", "close it", "claim it",
+		"if it fits", "abandon", "worth", "quick",
+	}
+
+	for _, it := range Rank(realBrief(), me, briefDay) {
+		lower := strings.ToLower(it.Action)
+		for _, phrase := range banned {
+			if strings.Contains(lower, phrase) {
+				t.Errorf("#%d action %q contains banned advice %q", it.Number, it.Action, phrase)
+			}
 		}
 	}
 }
@@ -237,7 +257,7 @@ func TestParityOwnershipAmbiguity(t *testing.T) {
 		if it.Signal != wantSignal {
 			t.Errorf("signal\n got: %q\nwant: %q", it.Signal, wantSignal)
 		}
-		wantAction := "Confirm ownership: take it over and resolve, or unassign yourself"
+		wantAction := "Resolve conflicts"
 		if it.Action != wantAction {
 			t.Errorf("action\n got: %q\nwant: %q", it.Action, wantAction)
 		}
