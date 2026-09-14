@@ -261,12 +261,18 @@ func mentionsMergeStateStatus(err error) bool {
 	return err != nil && strings.Contains(strings.ToLower(err.Error()), "mergestatestatus")
 }
 
+// graphQLRequest is the POST body GitHub's GraphQL endpoint expects.
+type graphQLRequest struct {
+	Query     string                 `json:"query"`
+	Variables map[string]interface{} `json:"variables,omitempty"`
+}
+
 func (c *Client) doBriefRequest(
 	ctx context.Context,
 	token, query string,
 	variables map[string]interface{},
 ) (*briefResponse, error) {
-	body, err := json.Marshal(GraphQLRequest{Query: query, Variables: variables})
+	body, err := json.Marshal(graphQLRequest{Query: query, Variables: variables})
 	if err != nil {
 		return nil, err
 	}

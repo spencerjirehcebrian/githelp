@@ -15,14 +15,12 @@ import (
 )
 
 type ServerConfig struct {
-	Host        string
-	Port        int
-	DB          *db.DB
-	AuthMgr     *auth.Manager
-	Client      *github.Client
-	Poller      *github.Poller
-	Broadcaster *SSEBroadcaster
-	StaticFS    fs.FS
+	Host     string
+	Port     int
+	DB       *db.DB
+	AuthMgr  *auth.Manager
+	Client   *github.Client
+	StaticFS fs.FS
 }
 
 type Server struct {
@@ -39,11 +37,7 @@ func NewServer(cfg ServerConfig) *Server {
 	if cfg.Port == 0 {
 		cfg.Port = 8080
 	}
-	if cfg.Broadcaster == nil {
-		cfg.Broadcaster = NewSSEBroadcaster()
-	}
-
-	handler := NewAPIHandler(cfg.DB, cfg.AuthMgr, cfg.Client, cfg.Poller, cfg.Broadcaster)
+	handler := NewAPIHandler(cfg.DB, cfg.AuthMgr, cfg.Client)
 	mux := http.NewServeMux()
 
 	s := &Server{
@@ -57,7 +51,8 @@ func NewServer(cfg ServerConfig) *Server {
 }
 
 func (s *Server) setupRoutes() {
-	// API Endpoints
+	// Six endpoints. The brief is the product; the rest is auth and the
+	// tracked repository list.
 	s.mux.HandleFunc("GET /api/status", s.handler.HandleGetStatus)
 	s.mux.HandleFunc("POST /api/auth/pat", s.handler.HandleAuthPAT)
 	s.mux.HandleFunc("POST /api/auth/disconnect", s.handler.HandleAuthDisconnect)
@@ -67,20 +62,6 @@ func (s *Server) setupRoutes() {
 	// Pass ?refresh=1 to bypass the server-side cache.
 	s.mux.HandleFunc("GET /api/brief", s.handler.HandleGetBrief)
 
-	// Legacy notification-inbox routes. Removed once the brief UI lands.
-	s.mux.HandleFunc("GET /api/notifications", s.handler.HandleGetNotifications)
-	s.mux.HandleFunc("POST /api/notifications/sync", s.handler.HandleSyncNotifications)
-	s.mux.HandleFunc("PATCH /api/notifications/{id}/state", s.handler.HandleUpdateNotificationState)
-	s.mux.HandleFunc("POST /api/notifications/bulk", s.handler.HandleBulkUpdate)
-	s.mux.HandleFunc("GET /api/counts", s.handler.HandleGetBucketCounts)
-	s.mux.HandleFunc("GET /api/repos", s.handler.HandleGetRepos)
-
-	s.mux.HandleFunc("GET /api/standup", s.handler.HandleGetStandup)
-	s.mux.HandleFunc("POST /api/standup", s.handler.HandleSaveStandup)
-	s.mux.HandleFunc("GET /api/backlog", s.handler.HandleGetBacklog)
-	s.mux.HandleFunc("GET /api/worktrees", s.handler.HandleGetWorktrees)
-
-	s.mux.HandleFunc("GET /api/events", s.config.Broadcaster.HandleSSE)
 	s.mux.HandleFunc("GET /api/settings", s.handler.HandleGetSettings)
 	s.mux.HandleFunc("PUT /api/settings", s.handler.HandleUpdateSettings)
 

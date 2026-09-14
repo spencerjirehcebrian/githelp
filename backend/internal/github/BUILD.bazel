@@ -5,8 +5,6 @@ go_library(
     srcs = [
         "brief.go",
         "client.go",
-        "graphql.go",
-        "poller.go",
     ],
     importpath = "github.com/spencerjireh/githelp/backend/internal/github",
     visibility = ["//visibility:public"],
@@ -14,21 +12,12 @@ go_library(
         "//backend/internal/auth",
         "//backend/internal/db",
         "//backend/internal/rank",
-        "//backend/internal/triage",
-        "//backend/internal/worktree",
     ],
 )
 
 go_test(
     name = "github_test",
-    srcs = [
-        "brief_test.go",
-        "client_test.go",
-    ],
+    srcs = ["brief_test.go"],
     embed = [":github"],
-    deps = [
-        "//backend/internal/auth",
-        "//backend/internal/db",
-        "//backend/internal/rank",
-    ],
+    deps = ["//backend/internal/rank"],
 )

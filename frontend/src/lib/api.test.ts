@@ -1,80 +1,66 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import * as api from './api';
+
+function respond(body: unknown, ok = true, statusText = 'OK') {
+  return vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+    ok,
+    statusText,
+    json: async () => body,
+  } as Response);
+}
 
 describe('lib/api', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
   });
 
-  it('getStatus fetches from /api/status', async () => {
-    const mockData = {
-      auth: { authenticated: true, auth_mode: 'gh_cli', username: 'test' },
-      bucket_counts: { action_required: 2 },
-      repo_counts: {},
-      server_time: '2026-08-25T10:00:00Z',
-    };
-    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockData,
-    } as Response);
+  it('requests the brief with no query string by default', async () => {
+    respond({ repo: 'acme/widgets', items: [] });
+
+    await api.getBrief();
+    expect(fetch).toHaveBeenCalledWith('/api/brief');
+  });
+
+  it('passes the repository and the cache bypass through', async () => {
+    respond({ repo: 'acme/other', items: [] });
+
+    await api.getBrief({ repo: 'acme/other', refresh: true });
+    expect(fetch).toHaveBeenCalledWith('/api/brief?repo=acme%2Fother&refresh=1');
+  });
+
+  it('surfaces the server error message rather than the status text', async () => {
+    respond({ error: 'Not authenticated with GitHub' }, false, 'Unauthorized');
+
+    await expect(api.getBrief()).rejects.toThrow('Not authenticated with GitHub');
+  });
+
+  it('falls back to the status text when there is no error body', async () => {
+    respond({}, false, 'Bad Gateway');
+
+    await expect(api.getBrief()).rejects.toThrow('Failed to fetch brief: Bad Gateway');
+  });
+
+  it('reads the auth status', async () => {
+    respond({
+      auth: { authenticated: true, auth_mode: 'gh_cli', username: 'ada' },
+      server_time: '2026-09-14T06:00:00Z',
+    });
 
     const data = await api.getStatus();
-    expect(data.auth.username).toBe('test');
+    expect(data.auth.username).toBe('ada');
     expect(fetch).toHaveBeenCalledWith('/api/status');
   });
 
-  it('getNotifications queries /api/notifications with params', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
-      ok: true,
-      json: async () => [{ id: '1', title: 'Test PR' }],
-    } as Response);
+  it('writes settings as a partial update', async () => {
+    respond({});
 
-    const items = await api.getNotifications({ bucket: 'action_required', q: 'search' });
-    expect(items.length).toBe(1);
-    expect(fetch).toHaveBeenCalledWith('/api/notifications?bucket=action_required&q=search');
-  });
-
-  it('syncNotifications calls POST /api/notifications/sync', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ synced_count: 5, bucket_counts: {}, repo_counts: {} }),
-    } as Response);
-
-    const res = await api.syncNotifications();
-    expect(res.synced_count).toBe(5);
-    expect(fetch).toHaveBeenCalledWith('/api/notifications/sync', { method: 'POST' });
-  });
-
-  it('updateNotificationState sends PATCH with state body', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ status: 'updated' }),
-    } as Response);
-
-    await api.updateNotificationState('item-1', { status: 'done' });
+    await api.updateSettings({ tracked_repos: ['acme/widgets'] });
     expect(fetch).toHaveBeenCalledWith(
-      '/api/notifications/item-1/state',
+      '/api/settings',
       expect.objectContaining({
-        method: 'PATCH',
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'done' }),
-      })
-    );
-  });
-
-  it('bulkUpdateNotifications sends POST with ids and status', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ updated_count: 2 }),
-    } as Response);
-
-    await api.bulkUpdateNotifications(['1', '2'], 'done');
-    expect(fetch).toHaveBeenCalledWith(
-      '/api/notifications/bulk',
-      expect.objectContaining({
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ids: ['1', '2'], status: 'done' }),
+        body: JSON.stringify({ tracked_repos: ['acme/widgets'] }),
       })
     );
   });

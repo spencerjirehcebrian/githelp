@@ -9,8 +9,8 @@
 
 import { memo } from 'react';
 import BriefRow from './BriefRow';
-import { rowKey, type BriefView, type LaneGroup, type Row } from '../../lib/brief';
-import type { BriefItem } from '../../types/brief';
+import { rowKey, type BriefView, type LaneGroup, type Row } from '../lib/brief';
+import type { BriefItem } from '../types/brief';
 
 export interface BriefProps {
   view: BriefView;

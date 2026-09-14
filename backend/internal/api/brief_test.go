@@ -56,7 +56,7 @@ func newBriefHarness(t *testing.T, fetch briefFetchFunc) *briefHarness {
 	authMgr.SetHTTPClient(ghStub.Client())
 
 	var calls int32
-	handler := NewAPIHandler(database, authMgr, nil, nil, nil)
+	handler := NewAPIHandler(database, authMgr, nil)
 	handler.fetchBriefInputs = func(
 		ctx context.Context,
 		token, viewer, repo string,
@@ -278,7 +278,7 @@ func TestBriefRequiresAuthentication(t *testing.T) {
 	authMgr.SetBaseURL(ghStub.URL)
 	authMgr.SetHTTPClient(ghStub.Client())
 
-	handler := NewAPIHandler(database, authMgr, nil, nil, nil)
+	handler := NewAPIHandler(database, authMgr, nil)
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /api/brief", handler.HandleGetBrief)
 

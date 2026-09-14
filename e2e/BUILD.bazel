@@ -4,8 +4,8 @@ filegroup(
     name = "e2e_files",
     srcs = glob([
         "tests/**/*",
+        "fixtures/**/*",
         "playwright.config.ts",
-        "seed.sh",
     ]),
 )
 

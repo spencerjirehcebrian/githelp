@@ -6,7 +6,6 @@ go_library(
         "brief.go",
         "handlers.go",
         "server.go",
-        "sse.go",
     ],
     importpath = "github.com/spencerjireh/githelp/backend/internal/api",
     visibility = ["//visibility:public"],
@@ -15,7 +14,6 @@ go_library(
         "//backend/internal/db",
         "//backend/internal/github",
         "//backend/internal/rank",
-        "//backend/internal/standup",
         "//backend/internal/worktree",
     ],
 )

@@ -7,7 +7,7 @@
  */
 
 import { memo } from 'react';
-import type { Brief } from '../../types/brief';
+import type { Brief } from '../types/brief';
 
 export interface HeaderProps {
   brief: Brief | null;

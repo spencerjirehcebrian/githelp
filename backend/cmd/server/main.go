@@ -73,10 +73,6 @@ func main() {
 
 	authMgr := auth.NewManager(database)
 	client := github.NewClient(authMgr, database)
-	broadcaster := api.NewSSEBroadcaster()
-	poller := github.NewPoller(client, database, broadcaster)
-	poller.Start()
-	defer poller.Stop()
 
 	var staticFS fs.FS
 	if !*devFlag {
@@ -86,15 +82,15 @@ func main() {
 		}
 	}
 
+	// There is no background poller. The brief is generated when the client
+	// asks for it, so a server that nobody is looking at does no work.
 	srv := api.NewServer(api.ServerConfig{
-		Host:        host,
-		Port:        port,
-		DB:          database,
-		AuthMgr:     authMgr,
-		Client:      client,
-		Poller:      poller,
-		Broadcaster: broadcaster,
-		StaticFS:    staticFS,
+		Host:     host,
+		Port:     port,
+		DB:       database,
+		AuthMgr:  authMgr,
+		Client:   client,
+		StaticFS: staticFS,
 	})
 
 	serverErrChan := make(chan error, 1)

@@ -11,7 +11,7 @@
  */
 
 import { memo } from 'react';
-import type { BriefItem } from '../../types/brief';
+import type { BriefItem } from '../types/brief';
 
 export interface BriefRowProps {
   item: BriefItem;

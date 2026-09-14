@@ -10,8 +10,8 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Sheet from './Sheet';
-import { getSettings, getStatus, updateSettings } from '../../lib/api';
-import type { AuthStatus } from '../../types';
+import { getSettings, getStatus, updateSettings } from '../lib/api';
+import type { AuthStatus } from '../types';
 
 export interface SettingsSheetProps {
   activeRepo: string;

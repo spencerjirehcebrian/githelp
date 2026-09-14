@@ -12,10 +12,10 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
-import Brief from './components/brief/Brief';
-import Header from './components/brief/Header';
-import HelpSheet from './components/brief/HelpSheet';
-import SettingsSheet from './components/brief/SettingsSheet';
+import Brief from './components/Brief';
+import Header from './components/Header';
+import HelpSheet from './components/HelpSheet';
+import SettingsSheet from './components/SettingsSheet';
 import { useBrief } from './hooks/useBrief';
 import { useBriefKeys } from './hooks/useBriefKeys';
 import { buildView } from './lib/brief';
