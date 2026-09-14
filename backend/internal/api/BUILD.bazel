@@ -3,6 +3,7 @@ load("@rules_go//go:def.bzl", "go_library", "go_test")
 go_library(
     name = "api",
     srcs = [
+        "brief.go",
         "handlers.go",
         "server.go",
         "sse.go",
@@ -13,6 +14,7 @@ go_library(
         "//backend/internal/auth",
         "//backend/internal/db",
         "//backend/internal/github",
+        "//backend/internal/rank",
         "//backend/internal/standup",
         "//backend/internal/worktree",
     ],
@@ -20,13 +22,15 @@ go_library(
 
 go_test(
     name = "api_test",
-    srcs = ["api_test.go"],
+    srcs = [
+        "api_test.go",
+        "brief_test.go",
+    ],
     embed = [":api"],
     deps = [
         "//backend/internal/auth",
         "//backend/internal/db",
         "//backend/internal/github",
-        "//backend/internal/standup",
-        "//backend/internal/worktree",
+        "//backend/internal/rank",
     ],
 )

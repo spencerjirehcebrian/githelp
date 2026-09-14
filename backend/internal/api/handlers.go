@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"strings"
@@ -9,6 +10,7 @@ import (
 	"github.com/spencerjireh/githelp/backend/internal/auth"
 	"github.com/spencerjireh/githelp/backend/internal/db"
 	"github.com/spencerjireh/githelp/backend/internal/github"
+	"github.com/spencerjireh/githelp/backend/internal/rank"
 	"github.com/spencerjireh/githelp/backend/internal/standup"
 	"github.com/spencerjireh/githelp/backend/internal/worktree"
 )
@@ -21,10 +23,23 @@ type APIHandler struct {
 	broadcaster *SSEBroadcaster
 	standupGen  *standup.Generator
 	wtScanner   *worktree.Scanner
+	briefCache  *briefCache
+
+	// fetchBriefInputs is the seam between the handler and GitHub. Tests
+	// substitute it to exercise caching and conditional requests without a
+	// network round trip.
+	fetchBriefInputs briefFetchFunc
 }
 
+// briefFetchFunc retrieves raw work items for the brief.
+type briefFetchFunc func(
+	ctx context.Context,
+	token, viewer, repo string,
+	worktrees map[string]string,
+) ([]rank.Input, error)
+
 func NewAPIHandler(database *db.DB, authMgr *auth.Manager, client *github.Client, poller *github.Poller, broadcaster *SSEBroadcaster) *APIHandler {
-	return &APIHandler{
+	h := &APIHandler{
 		db:          database,
 		authMgr:     authMgr,
 		client:      client,
@@ -32,7 +47,14 @@ func NewAPIHandler(database *db.DB, authMgr *auth.Manager, client *github.Client
 		broadcaster: broadcaster,
 		standupGen:  standup.NewGenerator(database),
 		wtScanner:   worktree.NewScanner(),
+		briefCache:  newBriefCache(),
 	}
+
+	if client != nil {
+		h.fetchBriefInputs = client.FetchBriefInputs
+	}
+
+	return h
 }
 
 func writeJSON(w http.ResponseWriter, status int, data interface{}) {

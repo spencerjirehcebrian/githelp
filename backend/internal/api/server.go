@@ -62,6 +62,12 @@ func (s *Server) setupRoutes() {
 	s.mux.HandleFunc("POST /api/auth/pat", s.handler.HandleAuthPAT)
 	s.mux.HandleFunc("POST /api/auth/disconnect", s.handler.HandleAuthDisconnect)
 
+	// The daily brief. This is the only data request the client makes:
+	// everything after it (filtering, grouping, export) happens locally.
+	// Pass ?refresh=1 to bypass the server-side cache.
+	s.mux.HandleFunc("GET /api/brief", s.handler.HandleGetBrief)
+
+	// Legacy notification-inbox routes. Removed once the brief UI lands.
 	s.mux.HandleFunc("GET /api/notifications", s.handler.HandleGetNotifications)
 	s.mux.HandleFunc("POST /api/notifications/sync", s.handler.HandleSyncNotifications)
 	s.mux.HandleFunc("PATCH /api/notifications/{id}/state", s.handler.HandleUpdateNotificationState)
