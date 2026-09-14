@@ -3,6 +3,7 @@ load("@rules_go//go:def.bzl", "go_library", "go_test")
 go_library(
     name = "github",
     srcs = [
+        "brief.go",
         "client.go",
         "graphql.go",
         "poller.go",
@@ -12,6 +13,7 @@ go_library(
     deps = [
         "//backend/internal/auth",
         "//backend/internal/db",
+        "//backend/internal/rank",
         "//backend/internal/triage",
         "//backend/internal/worktree",
     ],
@@ -19,10 +21,14 @@ go_library(
 
 go_test(
     name = "github_test",
-    srcs = ["client_test.go"],
+    srcs = [
+        "brief_test.go",
+        "client_test.go",
+    ],
     embed = [":github"],
     deps = [
         "//backend/internal/auth",
         "//backend/internal/db",
+        "//backend/internal/rank",
     ],
 )
