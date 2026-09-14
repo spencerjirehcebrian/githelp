@@ -1,108 +1,114 @@
 # GitHelp
 
-Local-first, keyboard-driven Git & PR Developer Task Workstation and workflow execution center.
+A ranked daily brief of your GitHub work, generated on demand, in one page.
 
-![GitHelp Task Workstation](docs/screenshots/dashboard.png)
+![GitHelp](docs/screenshots/brief-light.png)
 
-GitHelp bridges remote GitHub activity with your local terminal and IDE. Built with a distraction-free, centered single-feed layout inspired by Superhuman and Linear, GitHelp transforms passive notification noise into an active **Developer Task Workstation** organized into prioritized sections: **Today's Focus**, **PRs Needing Your Review**, **Your Authored PRs**, and **Assigned Issues**, with an on-demand **Slide-over Inspection Drawer (`Enter`/`i`/`d`)**, instant **Git checkout runners**, and a spotlight **Command Palette (`Cmd+K`)**.
+GitHelp answers one question: what should I do next in this repository. It queries GitHub, ranks everything you are involved in, and prints a short document. Each item gets three lines: what it is, why it is in front of you, and the single next step.
 
----
-
-## Features & Workstation Architecture
-
-- **Zen Task Workstation (Linear & Superhuman Style)**:
-  - **Centered Single-Feed Interface**: A distraction-free, centered work queue (~780px) with clean negative space and single-line task rows, eliminating 100% of split-panel clutter.
-  - **Today's Focus Queue (`t`)**: Pin top daily priority tasks with a real-time burndown progress pill (`Today: 2/4 Done`).
-  - **Collapsible Priority Sections**: Structured into *Today's Focus*, *PRs Needing Your Review*, *Your Authored PRs*, *Assigned Issues & Tasks*, and *Completed Today*.
-  - **1-Click Checkbox Completion (`Space` / `e`)**: Complete tasks immediately with tactile checkmark feedback and automatic archiving.
-- **On-Demand Slide-Over Inspection Drawer (`Enter` / `i` / `d`)**:
-  - Review rich PR overviews, line diffs, file trees, commits, and private notes in an on-demand slide-over sheet that dismisses cleanly on `Esc` or `q`.
-- **Dual View Modes (`v`)**:
-  - **Single-Feed Task View**: High-density, scan-optimized task queue with inline diff metrics (`+284 -42`), branch tags, and vim-style `j`/`k` navigation.
-  - **Pipeline Board View**: 4-column visual kanban (*Needs Your Review*, *CI Failing*, *Ready to Merge*, *Waiting on Others*) with full 2D keyboard navigation (`h`/`l`/arrows for columns, `j`/`k` for items).
-- **Clean CI by Default**: Passing CI badges are hidden by default to eliminate noise, with a global toggle button in the top bar to reveal status badges on demand.
-- **One-Click Git Actions**: Immediately checkout branches (`git checkout <branch>` / `gh pr checkout <num>`), copy PR diffs, or open repositories in Cursor/VS Code.
-- **Global Command Palette (`Cmd+K` / `Ctrl+K`)**: Fast spotlight launcher for search, task completion, focus pinning, and navigation.
-- **Zero-Config Auth**: Automatically uses existing `gh` CLI credentials (or configured PAT).
-
-| Pipeline Board (`v`) | Inspection Drawer (`Enter`/`i`) |
-| :---: | :---: |
-| ![Pipeline Board](docs/screenshots/pipeline-board.png) | ![Diff Inspector](docs/screenshots/diff-inspector.png) |
-
-| Command Palette (`Cmd+K`) | Keyboard Navigation (`j`/`k`) |
-| :---: | :---: |
-| ![Command Palette](docs/screenshots/command-palette.png) | ![Keyboard Navigation](docs/screenshots/keyboard-navigation.png) |
-
-| Shortcuts Reference (`?`) | Snooze Presets (`z`) |
-| :---: | :---: |
-| ![Keyboard Shortcuts](docs/screenshots/shortcuts-modal.png) | ![Snooze Modal](docs/screenshots/snooze-modal.png) |
+It is not an inbox. There is nothing to triage, snooze, pin, or mark as done, because the brief is regenerated rather than maintained and so cannot drift out of agreement with GitHub.
 
 ---
 
-## Quick Start
+## Lanes
 
-### Build and Run Standalone
-```bash
-make run
-```
-Open **http://127.0.0.1:8080**.
+Work is sorted into four bands, rendered in the order you should work through them.
 
-### Development Mode
-```bash
-make dev
-```
-- Frontend: `http://localhost:5173` (Vite HMR)
-- Backend: `http://127.0.0.1:8080`
+| Lane | What is in it |
+| :--- | :--- |
+| Unblock others | Somebody is actively waiting on you |
+| Land work in flight | Your own work that is close to done |
+| Needs a decision | Stalled work to revive or kill |
+| Pick up next | Unassigned work you could claim |
+
+Two rules keep the page short enough to read in one pass. Items whose only instruction is to wait are folded into a single line per lane (`2 PRs waiting on reviewers: #203, #204`). The claimable lane is capped at three, with the rest behind an expand row, because browsing available work should not out-compete your blockers for space.
+
+Ranking is a deterministic Go function with no I/O and no model behind it. Given the same items and the same clock it always produces the same order, which means the reasoning is testable and the output is reproducible.
 
 ---
 
-## Keyboard Shortcuts
+## Export
+
+`y` copies the brief as markdown, ready to paste into a coding agent. Every item carries its link and, where one exists, the command to check it out, so the agent does not have to ask a follow-up question before starting.
+
+The export is what is on screen. It respects the active filter and the collapse state, and says so when it is showing a subset, because an agent handed a silently truncated list will confidently work on the wrong thing.
+
+---
+
+## One request
+
+The page issues a single `GET /api/brief` on load. Filtering, grouping, collapsing, and exporting are all local operations on that one payload, so typing in the filter box costs nothing.
+
+Only two things go back to the network: pressing `r`, and switching repository. This is covered by an end-to-end test that counts requests.
+
+---
+
+## Keys
 
 | Key | Action |
 | :--- | :--- |
-| `Enter` / `i` / `d` | Inspect PR / Open Slide-Over Drawer |
-| `Space` / `e` | Complete Task (Mark Done) |
-| `t` | Pin / Toggle item in Today's Focus |
-| `Cmd+K` / `Ctrl+K` | Open Command Palette |
-| `v` | Toggle Task Sections / Pipeline Board View |
-| `h` / `l` / `←` / `→` | Switch Pipeline Board Columns (in Board mode) |
-| `j` / `k` / `↓` / `↑` | Navigate items in task list or column |
-| `o` | Open in browser / GitHub |
-| `z` | Snooze (`1`: 1h, `2`: 3h, `3`: tomorrow, `4`: next Monday) |
-| `c` | Copy `git checkout <branch>` or URL |
-| `u` | Toggle Read / Unread |
-| `p` | Pin / Unpin item |
-| `/` | Focus search bar |
-| `r` | Sync tasks with GitHub |
-| `?` | Keyboard shortcuts reference cheat sheet |
-| `Esc` / `q` | Close drawer / modal / command palette |
+| `j` / `k` | Move down and up |
+| `Enter` | Open on GitHub, or expand a collapsed lane |
+| `c` | Copy the checkout command |
+| `y` | Copy the brief as markdown |
+| `r` | Regenerate from GitHub |
+| `/` | Filter |
+| `Esc` | Clear the filter, or close |
+| `?` | Key reference |
+
+| Filtering (`/`) | Key reference (`?`) |
+| :---: | :---: |
+| ![Filtering](docs/screenshots/filter-dark.png) | ![Keys](docs/screenshots/keys-dark.png) |
+
+The interface follows your operating system for light and dark. There is no toggle.
 
 ---
 
-## Build & Test
+## Quick start
 
-### Make
 ```bash
-make run            # Build and launch standalone binary
-make build          # Build standalone binary (./bin/githelp)
-make test           # Run backend, frontend (Vitest), and Playwright E2E tests
-make lint           # Go vet & TypeScript check
+make run
 ```
 
-### Bazel
+Open http://127.0.0.1:8080. Authentication uses your existing `gh` CLI credentials, or a personal access token set in the settings sheet.
+
+Development mode runs Vite with hot reload on http://localhost:5173 against the backend on port 8080.
+
 ```bash
-./bazel build //... # Hermetic workspace build
-./bazel test //...  # Run all test targets
-./bazel run //:githelp # Build and launch server
+make dev
+```
+
+---
+
+## Build and test
+
+```bash
+make build          # Standalone binary at ./bin/githelp
+make test           # Go, Vitest, and Playwright
+make lint           # go vet and tsc --noEmit
+```
+
+```bash
+./bazel build //...
+./bazel test //...
 ```
 
 ---
 
 ## Architecture
 
-- **Backend**: Go (`net/http`, pure Go `modernc.org/sqlite` with WAL mode).
-- **Frontend**: React 19, TypeScript, Tailwind CSS, Lucide icons.
-- **Distribution**: Single executable with embedded assets (`//go:embed all:dist`).
+The server holds no copy of GitHub. It fetches, ranks, and answers.
+
+```
+auth.Manager.GetToken
+  -> github.Client.FetchBriefInputs   one GraphQL request, six searches
+  -> rank.Rank                        pure, clock-injected, no I/O
+  -> GET /api/brief                   30s cache, ETag
+```
+
+- Backend: Go, `net/http`, `modernc.org/sqlite` in WAL mode. SQLite stores one table: your settings.
+- Frontend: React 19, TypeScript, Tailwind.
+- Distribution: a single executable with the assets embedded.
 
 ---
 
