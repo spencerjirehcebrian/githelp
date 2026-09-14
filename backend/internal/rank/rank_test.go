@@ -619,10 +619,10 @@ func TestStaleMentionsAreDropped(t *testing.T) {
 		}
 	}
 
-	if got := Rank([]Input{mention(mentionFreshDays)}, viewer, now); len(got) != 1 {
-		t.Errorf("a %dd mention should surface, got %d items", mentionFreshDays, len(got))
+	if got := Rank([]Input{mention(replyFreshDays)}, viewer, now); len(got) != 1 {
+		t.Errorf("a %dd mention should surface, got %d items", replyFreshDays, len(got))
 	}
-	if got := Rank([]Input{mention(mentionFreshDays + 1)}, viewer, now); len(got) != 0 {
+	if got := Rank([]Input{mention(replyFreshDays + 1)}, viewer, now); len(got) != 0 {
 		t.Errorf("a stale mention should be dropped, got %d items", len(got))
 	}
 }
@@ -779,5 +779,27 @@ func TestBoardStatusIsReported(t *testing.T) {
 	}
 	if got.ProjectStatus != "In Progress" {
 		t.Errorf("project status = %q", got.ProjectStatus)
+	}
+}
+
+func TestAStaleCommentIsNotSomebodyWaiting(t *testing.T) {
+	// Somebody who spoke six weeks ago and never chased it is not blocked on
+	// you. The PR is stale, and the staleness rules describe it better.
+	in := basePR()
+	in.UpdatedAt = daysAgo(45)
+	in.Events = spoke("kgreatwood-abc", 45)
+
+	got := Rank([]Input{in}, viewer, now)[0]
+
+	if got.Lane != LaneNeedsDecision {
+		t.Errorf("lane = %q, want %q", got.Lane, LaneNeedsDecision)
+	}
+	if got.Signal != "no review decision in 45d" {
+		t.Errorf("signal = %q", got.Signal)
+	}
+
+	// The ball is still reported, it just does not drive the lane.
+	if got.Ball != "kgreatwood-abc" {
+		t.Errorf("ball = %q", got.Ball)
 	}
 }

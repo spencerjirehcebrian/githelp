@@ -111,9 +111,10 @@ const (
 	nudgeAfterDays = 7
 	staleAfterDays = 30
 
-	// mentionFreshDays bounds how long an unanswered mention counts as
-	// blocking somebody. Past this, nobody is waiting on a reply.
-	mentionFreshDays = 7
+	// replyFreshDays bounds how long an unanswered message counts as
+	// blocking somebody. Past this, nobody is waiting on a reply; they have
+	// moved on, and treating it as urgent buries the things that are.
+	replyFreshDays = 7
 )
 
 // Event is one entry in an item's conversation: a comment or a review.
@@ -430,7 +431,7 @@ func classify(in Input, viewer string, now time.Time) (Lane, int, string, string
 		case in.Ball == "":
 			// You spoke last, so the ball is not in your court.
 			return "", 0, "", "", false
-		case ballAge > mentionFreshDays:
+		case ballAge > replyFreshDays:
 			return "", 0, "", "", false
 		default:
 			return LaneUnblockOthers, 85,
@@ -537,7 +538,10 @@ func classify(in Input, viewer string, now time.Time) (Lane, int, string, string
 	// Somebody who is not you spoke last. GitHub surfaces this nowhere, and
 	// it is the most common reason a PR with no review decision sits: the
 	// author is waiting on the reviewer while the reviewer waits on a reply.
-	if in.Ball != "" {
+	//
+	// Gated on freshness like a mention. A comment nobody chased for six
+	// weeks is a stale PR, which the rules below describe better.
+	if in.Ball != "" && ballAge <= replyFreshDays {
 		return LaneUnblockOthers, 88,
 			fmt.Sprintf("%s commented %s and has not had a reply", in.Ball, ago(ballAge)),
 			fmt.Sprintf("Reply to %s", in.Ball),
