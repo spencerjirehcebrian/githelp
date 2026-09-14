@@ -1,0 +1,17 @@
+load("@rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "rank",
+    srcs = ["rank.go"],
+    importpath = "github.com/spencerjireh/githelp/backend/internal/rank",
+    visibility = ["//backend:__subpackages__"],
+)
+
+go_test(
+    name = "rank_test",
+    srcs = [
+        "parity_test.go",
+        "rank_test.go",
+    ],
+    embed = [":rank"],
+)
