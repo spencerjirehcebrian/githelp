@@ -6,8 +6,8 @@
  * mark as done - the brief is regenerated rather than maintained, so it
  * cannot drift out of agreement with GitHub.
  *
- * The whole page is driven by a single fetch. Filtering, grouping,
- * collapsing, and exporting are memoised derivations of that one payload.
+ * The whole page is driven by a single fetch. Filtering, grouping, and
+ * exporting are memoised derivations of that one payload.
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -21,7 +21,7 @@ import { useBriefKeys } from './hooks/useBriefKeys';
 import { buildView } from './lib/brief';
 import { copyText } from './lib/clipboard';
 import { toMarkdown } from './lib/export';
-import type { BriefItem, Lane } from './types/brief';
+import type { BriefItem } from './types/brief';
 
 /** How long a confirmation stays on screen. */
 const STATUS_MS = 2200;
@@ -33,19 +33,15 @@ export default function App() {
   const [filter, setFilter] = useState('');
   const [filtering, setFiltering] = useState(false);
   const [selected, setSelected] = useState(0);
-  const [expanded, setExpanded] = useState<ReadonlySet<Lane>>(() => new Set());
   const [sheet, setSheet] = useState<'help' | 'settings' | null>(null);
   const [status, setStatus] = useState<string | null>(null);
 
   const filterRef = useRef<HTMLInputElement>(null);
 
-  const view = useMemo(
-    () => buildView({ brief, filter, expanded }),
-    [brief, filter, expanded]
-  );
+  const view = useMemo(() => buildView({ brief, filter }), [brief, filter]);
 
-  // The row list shrinks when the filter narrows and grows when a lane is
-  // expanded, so the cursor has to be pulled back into range afterwards.
+  // The row list shrinks as the filter narrows, so the cursor has to be
+  // pulled back into range afterwards.
   useEffect(() => {
     setSelected((current) => Math.min(current, Math.max(0, view.rows.length - 1)));
   }, [view.rows.length]);
@@ -71,27 +67,14 @@ export default function App() {
     window.open(item.url, '_blank', 'noopener,noreferrer');
   }, []);
 
-  const expandLane = useCallback((lane: Lane) => {
-    setExpanded((current) => {
-      const next = new Set(current);
-      next.add(lane);
-      return next;
-    });
-  }, []);
-
   const activate = useCallback(() => {
     const row = view.rows[selected];
-    if (!row) return;
-    if (row.kind === 'more') {
-      expandLane(row.lane);
-      return;
-    }
-    openItem(row.item);
-  }, [expandLane, openItem, selected, view.rows]);
+    if (row) openItem(row.item);
+  }, [openItem, selected, view.rows]);
 
   const copyCheckout = useCallback(async () => {
     const row = view.rows[selected];
-    if (!row || row.kind !== 'item') return;
+    if (!row) return;
 
     const command = row.item.checkout;
     if (!command) {
@@ -209,7 +192,6 @@ export default function App() {
             filter={filter}
             onSelect={setSelected}
             onOpen={openItem}
-            onExpand={expandLane}
           />
         )}
 

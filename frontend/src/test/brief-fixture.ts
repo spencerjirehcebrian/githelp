@@ -1,6 +1,6 @@
 /**
- * A small brief shaped like a real one: every lane populated, one passive
- * item, and enough claimable work to trigger the collapse.
+ * A small brief shaped like a real one: every lane populated, items with and
+ * without a next step, and more than a handful of claimable issues.
  */
 
 import type { Brief, BriefItem, Lane } from '../types/brief';
@@ -28,10 +28,7 @@ export function brief(items: BriefItem[]): Brief {
     viewer: 'ada',
     generated_at: '2026-09-14T06:00:00Z',
     items,
-    counts: {
-      total: items.length,
-      blocking: items.filter((i) => i.lane === 'unblock_others').length,
-    },
+    counts: { total: items.length },
   };
 }
 
@@ -43,10 +40,20 @@ export function sampleBrief(): Brief {
       score: 90,
       title: 'Add retry to the uploader',
       signal: 'grace requested your review today',
-      action: 'Review and leave a decision',
+      action: 'Review it',
       checkout: 'gh pr checkout 101',
       author: 'grace',
       branch: 'grace/retry',
+    }),
+    item({
+      number: 102,
+      lane: 'unblock_others',
+      score: 88,
+      title: 'Split the ingest worker',
+      signal: 'hopper commented 3d ago and has not had a reply',
+      action: 'Reply to hopper',
+      ball: 'hopper',
+      checkout: 'gh pr checkout 102',
     }),
     item({
       number: 202,
@@ -54,7 +61,7 @@ export function sampleBrief(): Brief {
       score: 70,
       title: 'Drop the legacy exporter',
       signal: 'approved by grace, branch is behind main',
-      action: 'Rebase, verify CI, then merge',
+      action: 'Update branch, then merge',
       checkout: 'gh pr checkout 202',
     }),
     item({
@@ -62,18 +69,16 @@ export function sampleBrief(): Brief {
       lane: 'land_in_flight',
       score: 40,
       title: 'Tidy the config loader',
-      signal: 'waiting on review since yesterday',
-      action: 'Nothing to do yet, nudge if it stalls',
-      passive: true,
+      signal: 'waiting on grace to review',
+      action: '',
     }),
     item({
       number: 204,
       lane: 'land_in_flight',
       score: 39,
       title: 'Bump the pinned toolchain',
-      signal: 'waiting on review since yesterday',
-      action: 'Nothing to do yet, nudge if it stalls',
-      passive: true,
+      signal: 'waiting on grace to review',
+      action: '',
     }),
     item({
       number: 301,
@@ -81,8 +86,9 @@ export function sampleBrief(): Brief {
       score: 30,
       type: 'issue',
       title: 'Flaky integration suite',
-      signal: 'assigned to you 18d ago with no PR opened',
-      action: 'Scope it, or hand it off',
+      signal: 'assigned to you 18d ago with no PR opened, board status Todo',
+      action: 'Scope it',
+      project_status: 'Todo',
     }),
     ...claimable(),
   ]);
@@ -97,7 +103,7 @@ function claimable(): BriefItem[] {
       score: 20 - index,
       title: `Claimable ${number}`,
       signal: 'open and unassigned for 4d',
-      action: 'Claim it if it fits your current work',
+      action: '',
     })
   );
 }

@@ -2,8 +2,8 @@
  * Types mirroring the payload from GET /api/brief.
  *
  * The server sends the complete ranked set in one response. Everything the
- * interface does afterwards - filtering, grouping, collapsing, exporting -
- * operates on this object in memory, with no further requests.
+ * interface does afterwards - filtering, grouping, exporting - operates on
+ * this object in memory, with no further requests.
  */
 
 export type Lane =
@@ -30,19 +30,20 @@ export interface BriefItem {
   ci?: string;
   age_days: number;
   last_activity: string;
+  /** The last person other than you to speak, absent when that was you. */
+  ball?: string;
+  /** The project board column, absent when the item is not on a board. */
+  project_status?: string;
   /** Why this item surfaced, stated as fact. */
   signal: string;
-  /** The single next step, stated as an imperative. */
+  /** The next step, empty when there is none. */
   action: string;
   checkout?: string;
   local?: string;
-  /** True when there is nothing to do yet. Folded into a summary line. */
-  passive?: boolean;
 }
 
 export interface BriefCounts {
   total: number;
-  blocking: number;
 }
 
 export interface Brief {
@@ -60,11 +61,3 @@ export const LANES: ReadonlyArray<{ id: Lane; label: string }> = [
   { id: 'needs_decision', label: 'Needs a decision' },
   { id: 'pick_up_next', label: 'Pick up next' },
 ];
-
-/**
- * How many claimable items to show before collapsing.
- *
- * Claimable work made up roughly 60% of a real brief. It is browsing, not
- * doing, so it should not out-compete your blockers for vertical space.
- */
-export const PICK_UP_NEXT_VISIBLE = 3;

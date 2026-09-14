@@ -2,15 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { buildView } from './brief';
 import { toMarkdown } from './export';
 import { brief, sampleBrief } from '../test/brief-fixture';
-import type { Lane } from '../types/brief';
 
-const NONE: ReadonlySet<Lane> = new Set();
-
-function render(filter = '', expanded: ReadonlySet<Lane> = NONE): string {
+function render(filter = ''): string {
   const source = sampleBrief();
   return toMarkdown({
     brief: source,
-    view: buildView({ brief: source, filter, expanded }),
+    view: buildView({ brief: source, filter }),
     filter,
   });
 }
@@ -20,43 +17,57 @@ describe('toMarkdown', () => {
     expect(render()).toMatchInlineSnapshot(`
       "# acme/widgets
 
-      Generated 2026-09-14 06:00 UTC for ada. 10 items, 1 blocking.
+      Generated 2026-09-14 06:00 UTC for ada. 11 items.
 
       ## Unblock others
 
       - [#101](https://github.com/acme/widgets/pull/101) Add retry to the uploader
         - Signal: grace requested your review today
-        - Action: Review and leave a decision
+        - Next step: Review it
         - Checkout: \`gh pr checkout 101\`
+      - [#102](https://github.com/acme/widgets/pull/102) Split the ingest worker
+        - Signal: hopper commented 3d ago and has not had a reply
+        - Next step: Reply to hopper
+        - Waiting on you since: hopper spoke last
+        - Checkout: \`gh pr checkout 102\`
 
       ## Land work in flight
 
       - [#202](https://github.com/acme/widgets/pull/202) Drop the legacy exporter
         - Signal: approved by grace, branch is behind main
-        - Action: Rebase, verify CI, then merge
+        - Next step: Update branch, then merge
         - Checkout: \`gh pr checkout 202\`
-
-      2 PRs waiting on reviewers: #203, #204
+      - [#203](https://github.com/acme/widgets/pull/203) Tidy the config loader
+        - Signal: waiting on grace to review
+        - Next step: none
+      - [#204](https://github.com/acme/widgets/pull/204) Bump the pinned toolchain
+        - Signal: waiting on grace to review
+        - Next step: none
 
       ## Needs a decision
 
       - [#301](https://github.com/acme/widgets/pull/301) Flaky integration suite
-        - Signal: assigned to you 18d ago with no PR opened
-        - Action: Scope it, or hand it off
+        - Signal: assigned to you 18d ago with no PR opened, board status Todo
+        - Next step: Scope it
+        - Board status: Todo
 
       ## Pick up next
 
       - [#401](https://github.com/acme/widgets/pull/401) Claimable 401
         - Signal: open and unassigned for 4d
-        - Action: Claim it if it fits your current work
+        - Next step: none
       - [#402](https://github.com/acme/widgets/pull/402) Claimable 402
         - Signal: open and unassigned for 4d
-        - Action: Claim it if it fits your current work
+        - Next step: none
       - [#403](https://github.com/acme/widgets/pull/403) Claimable 403
         - Signal: open and unassigned for 4d
-        - Action: Claim it if it fits your current work
-
-      2 more not shown. Expand in GitHelp to include them.
+        - Next step: none
+      - [#404](https://github.com/acme/widgets/pull/404) Claimable 404
+        - Signal: open and unassigned for 4d
+        - Next step: none
+      - [#405](https://github.com/acme/widgets/pull/405) Claimable 405
+        - Signal: open and unassigned for 4d
+        - Next step: none
       "
     `);
   });
@@ -67,17 +78,18 @@ describe('toMarkdown', () => {
     expect(output).not.toContain('#101');
   });
 
-  it('drops the truncation notice once the lane is expanded', () => {
-    const output = render('', new Set<Lane>(['pick_up_next']));
-    expect(output).toContain('#405');
-    expect(output).not.toContain('more not shown');
+  it('never omits a row from an unfiltered export', () => {
+    const output = render();
+    for (const number of [101, 102, 202, 203, 204, 301, 401, 402, 403, 404, 405]) {
+      expect(output).toContain(`#${number}`);
+    }
   });
 
   it('says so when there is nothing to report', () => {
     const source = brief([]);
     const output = toMarkdown({
       brief: source,
-      view: buildView({ brief: source, filter: '', expanded: NONE }),
+      view: buildView({ brief: source, filter: '' }),
     });
     expect(output).toContain('Nothing is waiting on you.');
   });

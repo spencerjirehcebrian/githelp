@@ -1,6 +1,5 @@
 /**
- * The brief itself: lanes, rows, and the lines that stand in for the rows
- * not worth showing.
+ * The brief itself: lanes and rows, all of them.
  *
  * Lanes are separated by whitespace and a quiet eyebrow rather than rules or
  * cards. The page should read as a document you scan top to bottom, because
@@ -9,7 +8,7 @@
 
 import { memo } from 'react';
 import BriefRow from './BriefRow';
-import { rowKey, type BriefView, type LaneGroup, type Row } from '../lib/brief';
+import { rowKey, type BriefView } from '../lib/brief';
 import type { BriefItem } from '../types/brief';
 
 export interface BriefProps {
@@ -19,10 +18,9 @@ export interface BriefProps {
   filter: string;
   onSelect: (index: number) => void;
   onOpen: (item: BriefItem) => void;
-  onExpand: (lane: LaneGroup['lane']) => void;
 }
 
-function Brief({ view, selectedIndex, filter, onSelect, onOpen, onExpand }: BriefProps) {
+function Brief({ view, selectedIndex, filter, onSelect, onOpen }: BriefProps) {
   if (view.groups.length === 0) {
     return <EmptyState filtered={filter.trim().length > 0} available={view.available} />;
   }
@@ -39,73 +37,26 @@ function Brief({ view, selectedIndex, filter, onSelect, onOpen, onExpand }: Brie
 
         return (
           <section key={group.lane}>
-            <h2 className="mb-2 pl-3 text-eyebrow font-medium uppercase text-faint">
+            <h2 className="mb-2 flex items-baseline gap-2 pl-3 text-eyebrow font-medium uppercase text-faint">
               {group.label}
+              <span className="tabular font-normal normal-case">{group.rows.length}</span>
             </h2>
 
             <div className="space-y-px">
               {group.rows.map((row, offset) => (
-                <RowView
+                <BriefRow
                   key={rowKey(row)}
-                  row={row}
-                  index={start + offset}
+                  item={row.item}
                   selected={selectedIndex === start + offset}
-                  onSelect={onSelect}
-                  onOpen={onOpen}
-                  onExpand={onExpand}
+                  onSelect={() => onSelect(start + offset)}
+                  onOpen={() => onOpen(row.item)}
                 />
               ))}
             </div>
-
-            {group.summary && (
-              <p className="mt-2 pl-3 text-meta text-faint tabular">{group.summary}</p>
-            )}
           </section>
         );
       })}
     </div>
-  );
-}
-
-interface RowViewProps {
-  row: Row;
-  index: number;
-  selected: boolean;
-  onSelect: (index: number) => void;
-  onOpen: (item: BriefItem) => void;
-  onExpand: (lane: LaneGroup['lane']) => void;
-}
-
-function RowView({ row, index, selected, onSelect, onOpen, onExpand }: RowViewProps) {
-  if (row.kind === 'more') {
-    return (
-      <button
-        type="button"
-        role="option"
-        aria-selected={selected}
-        onClick={() => {
-          onSelect(index);
-          onExpand(row.lane);
-        }}
-        className={[
-          'block w-full border-l-2 py-1.5 pl-3 pr-2 text-left text-meta transition-colors duration-150 ease-out',
-          selected
-            ? 'border-accent bg-surface text-muted'
-            : 'border-transparent text-faint hover:bg-surface/60 hover:text-muted',
-        ].join(' ')}
-      >
-        <span className="tabular">{row.count} more</span>
-      </button>
-    );
-  }
-
-  return (
-    <BriefRow
-      item={row.item}
-      selected={selected}
-      onSelect={() => onSelect(index)}
-      onOpen={() => onOpen(row.item)}
-    />
   );
 }
 

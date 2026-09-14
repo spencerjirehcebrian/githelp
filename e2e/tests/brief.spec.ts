@@ -34,36 +34,48 @@ test.describe('the brief', () => {
   test('renders lanes in priority order with a row per item', async ({ page }) => {
     await load(page);
 
+    // Each heading carries its own count, so the shape of the brief is
+    // readable without counting rows.
     const headings = page.getByRole('heading', { level: 2 });
     await expect(headings).toHaveText([
-      'Unblock others',
-      'Land work in flight',
-      'Needs a decision',
-      'Pick up next',
+      'Unblock others2',
+      'Land work in flight3',
+      'Needs a decision1',
+      'Pick up next5',
     ]);
 
     const first = page.getByRole('option').first();
     await expect(first).toContainText('#101');
     await expect(first).toContainText('Add retry to the uploader');
     await expect(first).toContainText('grace requested your review today');
-    await expect(first).toContainText('Review and leave a decision');
+    await expect(first).toContainText('Review it');
   });
 
-  test('collapses items that are only waiting into one line', async ({ page }) => {
+  test('gives every item a row, including the ones you cannot advance', async ({ page }) => {
     await load(page);
 
-    await expect(page.getByText('2 PRs waiting on reviewers: #203, #204')).toBeVisible();
-    await expect(page.getByRole('option', { name: /Tidy the config loader/ })).toHaveCount(0);
-  });
-
-  test('caps the claimable lane and expands it on demand', async ({ page }) => {
-    await load(page);
-
-    await expect(page.getByText('Claimable 405')).toHaveCount(0);
-
-    await page.getByText('2 more').click();
+    await expect(page.getByRole('option')).toHaveCount(11);
+    await expect(page.getByText('Tidy the config loader')).toBeVisible();
     await expect(page.getByText('Claimable 405')).toBeVisible();
-    await expect(page.getByText('2 more')).toHaveCount(0);
+  });
+
+  test('spends no line on an item with no next step', async ({ page }) => {
+    await load(page);
+
+    // The signal still explains why it is here; there is simply no third
+    // line, because a brief carries a dozen of these and they all read the
+    // same.
+    const row = page.getByRole('option').filter({ hasText: 'Tidy the config loader' });
+    await expect(row).toContainText('waiting on grace to review');
+    await expect(row.locator('p')).toHaveCount(1);
+  });
+
+  test('names who a pull request is waiting on', async ({ page }) => {
+    await load(page);
+
+    const row = page.getByRole('option').filter({ hasText: 'Split the ingest worker' });
+    await expect(row).toContainText('hopper commented 3d ago and has not had a reply');
+    await expect(row).toContainText('Reply to hopper');
   });
 
   test('fetches once and never again while you use it', async ({ page }) => {
@@ -80,8 +92,7 @@ test.describe('the brief', () => {
     await expect(page.getByRole('option')).toHaveCount(5);
     await page.keyboard.press('Escape');
 
-    // Expand a lane and export.
-    await page.getByText('2 more').click();
+    // Export.
     await page.keyboard.press('y');
     await expect(page.getByText('Copied brief as markdown')).toBeVisible();
 
@@ -131,7 +142,7 @@ test.describe('the brief', () => {
 
     await page.keyboard.press('Escape');
     await expect(page.getByRole('option').first()).toContainText('#101');
-    await expect(page.getByRole('option')).toHaveCount(7);
+    await expect(page.getByRole('option')).toHaveCount(11);
   });
 
   test('explains an empty filter result instead of showing a blank page', async ({ page }) => {
@@ -141,7 +152,7 @@ test.describe('the brief', () => {
     await page.keyboard.type('kubernetes');
 
     await expect(page.getByText('No matches.')).toBeVisible();
-    await expect(page.getByText(/10 items in the brief/)).toBeVisible();
+    await expect(page.getByText(/11 items in the brief/)).toBeVisible();
   });
 
   test('copies the checkout command for the selected row', async ({ page, context }) => {
@@ -155,7 +166,7 @@ test.describe('the brief', () => {
     expect(copied).toBe('gh pr checkout 101');
   });
 
-  test('exports the brief as markdown, disclosing what it left out', async ({ page, context }) => {
+  test('exports every row as markdown', async ({ page, context }) => {
     await context.grantPermissions(['clipboard-read', 'clipboard-write']);
     await load(page);
 
@@ -166,10 +177,13 @@ test.describe('the brief', () => {
     expect(copied).toContain('# acme/widgets');
     expect(copied).toContain('## Unblock others');
     expect(copied).toContain('- [#101](https://github.com/acme/widgets/pull/101)');
-    expect(copied).toContain('- Action: Review and leave a decision');
+    expect(copied).toContain('- Next step: Review it');
     expect(copied).toContain('- Checkout: `gh pr checkout 101`');
-    expect(copied).toContain('2 PRs waiting on reviewers: #203, #204');
-    expect(copied).toContain('2 more not shown');
+    expect(copied).toContain('- Waiting on you since: hopper spoke last');
+    expect(copied).toContain('- Board status: Todo');
+    expect(copied).toContain('- Next step: none');
+    expect(copied).toContain('#405');
+    expect(copied).not.toContain('not shown');
   });
 
   test('shows the key reference and closes it with Escape', async ({ page }) => {

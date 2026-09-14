@@ -1,13 +1,17 @@
 /**
- * One item, three lines.
+ * One item, two or three lines.
  *
  *   identity - what it is, so you recognise it
  *   signal   - why it is in front of you, stated as fact
- *   action   - the single next step, stated as an imperative
+ *   action   - the next step, stated as an imperative, when there is one
  *
  * The action line carries the only colour in the interface. Everything else
  * is greyscale, so colour reliably means "this is the thing to do" rather
  * than merely decorating a row.
+ *
+ * Items with no next step get no third line. A brief typically carries a
+ * dozen or more of them, and a repeated "nothing to do here" says nothing
+ * the signal has not already said.
  */
 
 import { memo } from 'react';
@@ -45,7 +49,7 @@ function BriefRow({ item, selected, onSelect, onOpen }: BriefRowProps) {
       </div>
 
       <p className="mt-0.5 text-meta text-muted">{item.signal}</p>
-      <p className="mt-0.5 text-meta text-accent">{item.action}</p>
+      {item.action && <p className="mt-0.5 text-meta text-accent">{item.action}</p>}
     </div>
   );
 }

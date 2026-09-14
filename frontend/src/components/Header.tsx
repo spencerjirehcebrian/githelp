@@ -1,9 +1,13 @@
 /**
  * The one line of chrome above the brief.
  *
- * It answers three questions and nothing else: which repo, how old is this,
- * and how much of it is actually blocking someone. Controls are text, not
- * icons, because there are only two of them and a label is unambiguous.
+ * It answers two questions and nothing else: which repo, and how old is
+ * this. Controls are text, not icons, because there are only three of them
+ * and a label is unambiguous.
+ *
+ * There is deliberately no count of how much is blocking somebody. That is
+ * urgency framing, and the lane it would count is already the first thing
+ * under the header.
  */
 
 import { memo } from 'react';
@@ -68,12 +72,6 @@ function Header({
                 <>
                   <Separator />
                   {counts.total} {counts.total === 1 ? 'item' : 'items'}
-                  {counts.blocking > 0 && (
-                    <>
-                      <Separator />
-                      <span className="text-muted">{counts.blocking} blocking</span>
-                    </>
-                  )}
                 </>
               )}
               {filteredCount !== null && (
